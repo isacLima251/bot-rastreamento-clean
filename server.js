@@ -1,0 +1,227 @@
+// server.js (VERSÃO FINAL E OTIMIZADA)
+require('dotenv').config();
+const express = require('express');
+const venom = require('venom-bot');
+const http = require('http');
+const { WebSocketServer } = require('ws');
+const { initDb } = require('./src/database/database.js');
+
+// --- Importações dos controllers e serviços ---
+const reportsController = require('./src/controllers/reportsController');
+const pedidosController = require('./src/controllers/pedidosController');
+const envioController = require('./src/controllers/envioController');
+const rastreamentoController = require('./src/controllers/rastreamentoController');
+const automationsController = require('./src/controllers/automationsController');
+const integrationsController = require('./src/controllers/integrationsController'); // Apenas um import para integrações
+const whatsappService = require('./src/services/whatsappService');
+const pedidoService = require('./src/services/pedidoService');
+const webhookRastreioController = require('./src/controllers/webhookRastreioController');
+
+
+// --- GERENCIAMENTO DE ESTADO ---
+let whatsappStatus = 'DISCONNECTED';
+let qrCodeData = null;
+let venomClient = null;
+let botInfo = null;
+
+const app = express();
+const PORT = 3000;
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
+const clients = new Set();
+
+// --- Funções de Broadcast e WebSocket ---
+function broadcast(data) {
+    const jsonData = JSON.stringify(data);
+    console.log(`[WebSocket] A transmitir: ${jsonData}`);
+    for (const client of clients) {
+        if (client.readyState === client.OPEN) {
+            client.send(jsonData);
+        }
+    }
+}
+
+function broadcastStatus(newStatus, data = {}) {
+    whatsappStatus = newStatus;
+    qrCodeData = data.qrCode || null;
+    console.log(`Status do WhatsApp alterado para: ${newStatus}`);
+    broadcast({ type: 'status_update', status: newStatus, ...data });
+}
+
+wss.on('connection', (ws) => {
+    console.log('🔗 Novo painel conectado via WebSocket.');
+    clients.add(ws);
+    ws.send(JSON.stringify({ type: 'status_update', status: whatsappStatus, qrCode: qrCodeData, botInfo: botInfo }));
+    ws.on('close', () => clients.delete(ws));
+});
+
+// --- Lógica de Conexão e Desconexão do WhatsApp ---
+async function connectToWhatsApp() {
+    if (venomClient || whatsappStatus === 'CONNECTING' || whatsappStatus === 'CONNECTED') {
+        console.warn('⚠️ Tentativa de conectar com sessão já ativa ou em andamento.');
+        return;
+    }
+    console.log('Iniciando conexão com o WhatsApp...');
+    broadcastStatus('CONNECTING');
+
+    venom.create({
+        session: 'automaza-bot',
+        useChrome: false,
+        headless: 'new',
+        browserArgs: ['--no-sandbox', '--disable-setuid-sandbox']
+    },
+    (base64Qr) => broadcastStatus('QR_CODE', { qrCode: base64Qr }),
+    (statusSession) => console.log('[Status da Sessão]', statusSession)
+    )
+    .then(async (client) => {
+        console.log('✅ Cliente Venom criado com SUCESSO.');
+        venomClient = client;
+        
+        try {
+            const hostDevice = await client.getHostDevice();
+            if (hostDevice && hostDevice.id && hostDevice.id._serialized) {
+                const numeroBot = hostDevice.id.user;
+                const nomeBot = hostDevice.pushname || hostDevice.verifiedName || 'Nome Indisponível';
+                
+                // Tentativa mais robusta de obter a foto de perfil
+                let fotoUrl = null;
+                try {
+                    fotoUrl = await client.getProfilePicFromServer(hostDevice.id._serialized);
+                    console.log("✔️ Foto obtida com getProfilePicFromServer.");
+                } catch (picError) {
+                    console.warn("⚠️ Falha ao buscar foto com getProfilePicFromServer, tentando com eurl.", picError.message);
+                    fotoUrl = hostDevice.eurl || null; // Fallback para a propriedade 'eurl'
+                }
+
+                botInfo = { numero: numeroBot, nome: nomeBot, fotoUrl: fotoUrl };
+                console.log('Informações do Bot Coletadas:', botInfo);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao obter dados do hostDevice:', error);
+        } finally {
+            start(client);
+            broadcastStatus('CONNECTED', { botInfo });
+        }
+    })
+    .catch((erro) => {
+        console.error('❌ Erro DETALHADO ao criar cliente Venom:', erro);
+        broadcastStatus('DISCONNECTED');
+        venomClient = null;
+        botInfo = null;
+    });
+}
+
+async function disconnectFromWhatsApp() {
+    if (venomClient) {
+        try {
+            await venomClient.logout();
+            await venomClient.close();
+        } catch (error) {
+            console.error('Erro ao desconectar o cliente:', error);
+        } finally {
+            venomClient = null;
+            botInfo = null;
+            broadcastStatus('DISCONNECTED');
+            console.log('🔌 Cliente WhatsApp desconectado.');
+        }
+    }
+}
+
+// --- Função 'start' que configura as rotinas do bot ---
+function start(client) {
+    whatsappService.iniciarWhatsApp(client);
+    
+    client.onMessage(async (message) => {
+        if (message.isGroupMsg || !message.body || message.from === 'status@broadcast') return;
+        const telefoneCliente = message.from.replace('@c.us', '');
+        console.log(`[onMessage] Mensagem de ${telefoneCliente}: "${message.body}"`);
+        
+        try {
+            const db = app.get('db');
+            let pedido = await pedidoService.findPedidoByTelefone(db, telefoneCliente);
+            
+            if (!pedido) {
+                const nomeContato = message.notifyName || message.pushName || telefoneCliente;
+                const novoPedidoData = { nome: nomeContato, telefone: telefoneCliente };
+                pedido = await pedidoService.criarPedido(db, novoPedidoData, client);
+                broadcast({ type: 'novo_contato', pedido });
+            } else {
+                await pedidoService.incrementarNaoLidas(db, pedido.id);
+            }
+            await pedidoService.addMensagemHistorico(db, pedido.id, message.body, 'recebida', 'cliente');
+            broadcast({ type: 'nova_mensagem', pedidoId: pedido.id });
+        } catch (error) {
+            console.error("[onMessage] Erro CRÍTICO ao processar mensagem:", error);
+        }
+    });
+    
+    console.log('✅ Cliente WhatsApp iniciado e pronto para receber mensagens.');
+}
+
+// --- Função Principal da Aplicação ---
+const startApp = async () => {
+    try {
+        const db = await initDb();
+        app.set('db', db);
+        console.log("Banco de dados pronto.");
+
+        app.use(express.json());
+        app.use(express.static('public'));
+        
+        app.use((req, res, next) => { 
+            req.db = db;
+            req.venomClient = venomClient;
+            req.broadcast = broadcast;
+            next(); 
+        });
+
+        console.log("✔️ Registrando rotas da API...");
+        
+        // Rotas de Pedidos
+        app.get('/api/pedidos', pedidosController.listarPedidos);
+        app.post('/api/pedidos', pedidosController.criarPedido);
+        app.put('/api/pedidos/:id', pedidosController.atualizarPedido);
+        app.delete('/api/pedidos/:id', pedidosController.deletarPedido);
+        app.get('/api/pedidos/:id/historico', pedidosController.getHistoricoDoPedido);
+        app.post('/api/pedidos/:id/enviar-mensagem', pedidosController.enviarMensagemManual);
+        app.post('/api/pedidos/:id/atualizar-foto', pedidosController.atualizarFotoDoPedido);
+        app.put('/api/pedidos/:id/marcar-como-lido', pedidosController.marcarComoLido);
+        
+        // Rotas de SITE RASTREIO
+        app.post('/api/webhook-site-rastreio', webhookRastreioController.receberWebhook);
+        // Rotas de Automações
+        app.get('/api/automations', automationsController.listarAutomacoes);
+        app.post('/api/automations', automationsController.salvarAutomacoes);
+
+        // Rotas de Relatórios
+        app.get('/api/reports/summary', reportsController.getReportSummary);
+
+        // Rotas de Integrações (UNIFICADAS)
+        app.post('/api/postback', integrationsController.receberPostback);
+        app.get('/api/integrations/info', integrationsController.getIntegrationInfo);
+        app.post('/api/integrations/regenerate', integrationsController.regenerateApiKey);
+
+        // Rotas do WhatsApp
+        app.get('/api/whatsapp/status', (req, res) => res.json({ status: whatsappStatus, qrCode: qrCodeData, botInfo: botInfo }));
+        app.post('/api/whatsapp/connect', (req, res) => {
+            connectToWhatsApp();
+            res.status(202).json({ message: "Processo de conexão iniciado." });
+        });
+        app.post('/api/whatsapp/disconnect', async (req, res) => {
+            await disconnectFromWhatsApp();
+            res.status(200).json({ message: "Desconectado com sucesso." });
+        });
+
+        // Tarefas em Background
+        setInterval(() => { if (venomClient) rastreamentoController.verificarRastreios(db, broadcast) }, 300000);
+        setInterval(() => { if (venomClient) envioController.enviarMensagensComRegras(db) }, 60000);
+        
+        server.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
+
+    } catch (error) {
+        console.error("❌ Falha fatal ao iniciar a aplicação:", error);
+        process.exit(1);
+    }
+};
+
+startApp();

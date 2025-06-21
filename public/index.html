@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Automaza</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <nav class="main-nav">
+            <ul>
+                <li><button class="nav-btn active" data-view="chat-view" title="Conversas"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></button></li>
+                <li><button class="nav-btn" data-view="contacts-view" title="Contatos"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></button></li>
+                <li><button class="nav-btn" data-view="automations-view" title="Automações"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16.5 3.5 10l.9-8.6L13 1l8.6.9L18 10l-4 1 3 3-3 3-4-1zM2 22l4-4"></path><path d="m14.2 11.2 4.6-4.6"></path></svg></button></li>
+                <li><button class="nav-btn" data-view="integrations-view" title="Integrações"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path></svg></button></li>
+                <li><button class="nav-btn" data-view="reports-view" title="Relatórios"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18.7 8a6 6 0 0 0-6-6H3.3"></path><path d="M7 12h5"></path><path d="M7 16h9"></path></svg></button></li>
+            </ul>
+            <ul>
+                <li><button class="nav-btn" data-view="settings-view" title="Configurações"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button></li>
+            </ul>
+        </nav>
+        
+        <div class="content-wrapper">
+            <div id="chat-view" class="view-container">
+                <div class="app-layout">
+                    <aside class="sidebar">
+                        <header class="sidebar-header">
+                            <h2>Conversas</h2>
+                            <button id="btn-adicionar-novo" class="btn-icon" title="Adicionar Novo Pedido">+</button>
+                        </header>
+                        <div id="status-whatsapp" class="status-indicator disconnected">
+                            <div class="status-light"><span class="status-dot"></span></div>
+                            <div class="status-text"><strong id="status-text-label">Desconectado</strong><span id="status-bot-info"></span></div>
+                            <div id="bot-avatar-container" class="hidden"><img id="bot-avatar-img" src="" alt="Avatar do Bot"></div>
+                        </div>
+                        <div class="list-controls">
+                            <div class="search-container">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <input type="text" id="barra-busca" placeholder="Buscar por nome ou telefone...">
+                            </div>
+                            <div class="filter-container" id="filter-container">
+                                <button class="filter-btn active" data-filtro="todos">Todos</button>
+                                <button class="filter-btn" data-filtro="caminho">A Caminho</button>
+                                <button class="filter-btn" data-filtro="entregue">Entregue</button>
+                            </div>
+                        </div>
+                        <div class="contact-list" id="lista-contactos"></div>
+                    </aside>
+                    <main class="main-content" id="main-content-area">
+                        <div id="chat-window">
+                            <div class="placeholder">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                <h3>Selecione uma conversa</h3>
+                                <p>Escolha alguém na lista ao lado para começar a conversar.</p>
+                            </div>
+                        </div>
+                        <footer class="chat-footer" id="chat-footer">
+                            <form id="form-enviar-mensagem">
+                                <input type="text" id="input-mensagem" placeholder="Digite a sua mensagem..." autocomplete="off" disabled>
+                                <button type="submit" aria-label="Enviar" disabled><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+                            </form>
+                        </footer>
+                    </main>
+                </div>
+            </div>
+
+            <div id="contacts-view" class="view-container hidden">
+                <div class="page-container">
+                    <header class="page-header">
+                        <div><h1>Contatos <span id="total-contacts-count"></span></h1><p>Aqui você pode gerenciar as informações dos seus contatos</p></div>
+                        <button class="btn-primary" id="btn-novo-contato-page">Novo contato</button>
+                    </header>
+                    <div class="page-controls">
+                        <div class="search-container-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input type="text" id="barra-busca-contatos" placeholder="Pesquisar por nome ou telefone">
+                        </div>
+                        <button class="btn-filter">Etiquetas</button><button class="btn-filter">Ordenar por: Nome</button>
+                    </div>
+                    <div class="contact-list-full" id="lista-contactos-completa"></div>
+                </div>
+            </div>
+
+            <div id="automations-view" class="view-container">
+    <div class="page-container">
+        <header class="page-header">
+            <div>
+                <h1>Automações de Mensagens</h1>
+                <p>Ative e personalize as mensagens que serão enviadas automaticamente.</p>
+            </div>
+            <button class="btn-primary" id="btn-salvar-automacoes">Salvar Alterações</button>
+        </header>
+
+        <div class="automations-layout">
+
+            <aside class="variables-sidebar">
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16.5 3.5 10l.9-8.6L13 1l8.6.9L18 10l-4 1 3 3-3 3-4-1z"/></svg>
+                    Variáveis Disponíveis
+                </h3>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span>Cliente</span>
+                        <svg class="accordion-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="accordion-content">
+                        <strong class="variable-highlight" data-value="{{primeiro_nome}}"><span>{{primeiro_nome}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{nome_cliente}}"><span>{{nome_cliente}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{telefone}}"><span>{{telefone}}</span></strong>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span>Pedido</span>
+                        <svg class="accordion-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="accordion-content">
+                        <strong class="variable-highlight" data-value="{{produto_nome}}"><span>{{produto_nome}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{codigo_rastreio}}"><span>{{codigo_rastreio}}</span></strong>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span>Rastreio</span>
+                        <svg class="accordion-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="accordion-content">
+                        <strong class="variable-highlight" data-value="{{status_interno}}"><span>{{status_interno}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{ultima_localizacao}}"><span>{{ultima_localizacao}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{data_postagem}}"><span>{{data_postagem}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{ultima_atualizacao}}"><span>{{ultima_atualizacao}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{mensagem_ultimo_status}}"><span>{{mensagem_ultimo_status}}</span></strong>
+                    </div>
+                </div>
+
+                <div class="variables-footer">
+                    <p>Clique num grupo para ver as variáveis e depois clique na variável para copiar.</p>
+                </div>
+            </aside>
+            
+            <div class="automations-list">
+                <div class="automation-card" data-automation-id="boas_vindas">
+                    <div class="automation-header"><h3>Mensagem de Boas-Vindas</h3><p>Enviada quando um novo contato é adicionado.</p></div>
+                    <div class="automation-body">
+                        <div class="toggle-container"><label class="switch"><input type="checkbox" class="automation-toggle"><span class="slider round"></span></label><span class="toggle-label">Desativado/Ativado</span></div>
+                        <div class="editor-wrapper"><textarea class="automation-message" placeholder="Escreva a sua mensagem aqui..."></textarea></div>
+                    </div>
+                </div>
+                <div class="automation-card" data-automation-id="envio_rastreio">
+                    <div class="automation-header"><h3>Envio do Código de Rastreio</h3><p>Enviada quando um código de rastreio é adicionado.</p></div>
+                    <div class="automation-body">
+                        <div class="toggle-container"><label class="switch"><input type="checkbox" class="automation-toggle"><span class="slider round"></span></label><span class="toggle-label">Desativado/Ativado</span></div>
+                        <div class="editor-wrapper"><textarea class="automation-message" placeholder="Escreva a sua mensagem aqui..."></textarea></div>
+                    </div>
+                </div>
+                <div class="automation-card" data-automation-id="pedido_a_caminho">
+                    <div class="automation-header"><h3>Pedido a Caminho</h3><p>Enviada quando o status do pedido muda para "A caminho".</p></div>
+                    <div class="automation-body">
+                        <div class="toggle-container"><label class="switch"><input type="checkbox" class="automation-toggle"><span class="slider round"></span></label><span class="toggle-label">Desativado/Ativado</span></div>
+                        <div class="editor-wrapper"><textarea class="automation-message" placeholder="Escreva a sua mensagem aqui..."></textarea></div>
+                    </div>
+                </div>
+                <div class="automation-card" data-automation-id="pedido_atrasado">
+                    <div class="automation-header"><h3>Alerta de Pedido em Atraso</h3><p>Enviada quando o sistema detecta um possível atraso na entrega.</p></div>
+                    <div class="automation-body">
+                        <div class="toggle-container"><label class="switch"><input type="checkbox" class="automation-toggle"><span class="slider round"></span></label><span class="toggle-label">Desativado/Ativado</span></div>
+                        <div class="editor-wrapper"><textarea class="automation-message" placeholder="Escreva a sua mensagem aqui..."></textarea></div>
+                    </div>
+                </div>
+                <div class="automation-card" data-automation-id="pedido_a_espera">
+                    <div class="automation-header"><h3>Alerta de Pedido em Espera</h3><p>Enviada quando o pedido fica em espera ou aguardando retirada.</p></div>
+                    <div class="automation-body">
+                        <div class="toggle-container"><label class="switch"><input type="checkbox" class="automation-toggle"><span class="slider round"></span></label><span class="toggle-label">Desativado/Ativado</span></div>
+                        <div class="editor-wrapper"><textarea class="automation-message" placeholder="Escreva a sua mensagem aqui..."></textarea></div>
+                    </div>
+                </div>
+                <div class="automation-card" data-automation-id="pedido_devolvido">
+                    <div class="automation-header"><h3>Alerta de Pedido Devolvido</h3><p>Enviada quando o rastreio indica que o objeto foi devolvido.</p></div>
+                    <div class="automation-body">
+                        <div class="toggle-container"><label class="switch"><input type="checkbox" class="automation-toggle"><span class="slider round"></span></label><span class="toggle-label">Desativado/Ativado</span></div>
+                        <div class="editor-wrapper"><textarea class="automation-message" placeholder="Escreva a sua mensagem aqui..."></textarea></div>
+                    </div>
+                </div>
+                <div class="automation-card" data-automation-id="pedido_cancelado">
+                    <div class="automation-header"><h3>Notificação de Pedido Cancelado</h3><p>Enviada quando um pedido é cancelado.</p></div>
+                    <div class="automation-body">
+                        <div class="toggle-container"><label class="switch"><input type="checkbox" class="automation-toggle"><span class="slider round"></span></label><span class="toggle-label">Desativado/Ativado</span></div>
+                        <div class="editor-wrapper"><textarea class="automation-message" placeholder="Escreva a sua mensagem aqui..."></textarea></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+            <div id="integrations-view" class="view-container hidden">
+                <div class="page-container">
+                    <header class="page-header">
+                        <div><h1>Integrações via Postback/Webhook</h1><p>Use o link abaixo para integrar com plataformas externas e criar contatos automaticamente.</p></div>
+                    </header>
+                    <div class="integration-card">
+                        <h3>Seu Link de Postback</h3>
+                        <p>Copie este link e cole-o na área de postback da sua plataforma de vendas (Braip, Payt, etc. ).</p>
+                        <div class="webhook-url-container">
+                            <div id="webhook-url-display" class="webhook-url-display">A carregar...</div>
+                            <button class="btn-secondary" id="btn-copy-webhook">Copiar</button>
+                        </div>
+                        <button class="btn-tertiary" id="btn-regenerate-webhook">Regenerar Link</button>
+                    </div>
+                    <div class="integration-card">
+                        <h3>Histórico de Integrações</h3>
+                        <div class="table-wrapper">
+                            <table id="integration-history-table">
+                                <thead><tr><th>Data</th><th>Nome do Cliente</th><th>Produto</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    <tr><td>18/06/2025 21:30</td><td>Maria Silva</td><td>Produto Exemplo A</td><td><span class="status-badge success">Recebido</span></td></tr>
+                                    <tr><td>18/06/2025 19:45</td><td>João Pereira</td><td>Produto Exemplo B</td><td><span class="status-badge success">Recebido</span></td></tr>
+                                    <tr><td>17/06/2025 15:10</td><td>Ana Costa</td><td>-</td><td><span class="status-badge error">Falhou</span></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="settings-view" class="view-container hidden">
+                <div class="settings-content-wrapper">
+                    <h1>Configurações do WhatsApp</h1>
+                    <div id="settings-status-container">
+                        <div id="settings-profile-info" class="hidden">
+                            <img id="settings-bot-avatar" src="https://i.imgur.com/z28n3Nz.png" alt="Avatar do Bot Conectado">
+                            <h3 id="settings-bot-name"></h3>
+                            <p id="settings-bot-number"></p>
+                        </div>
+                        <div id="settings-connection-status">
+                            <p>Status atual: <strong id="settings-status-text">Desconhecido</strong></p>
+                        </div>
+                        <div id="qr-code-container"></div>
+                        <div class="settings-actions">
+                            <button id="btn-conectar" class="btn-settings-action connect"><span>Conectar WhatsApp</span></button>
+                            <button id="btn-desconectar" class="btn-settings-action disconnect"><span>Desconectar</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="reports-view" class="view-container hidden">
+                <div class="page-container">
+                    <header class="page-header">
+                        <div>
+                            <h1>Relatórios</h1>
+                            <p>Veja um resumo da performance e das atividades da sua operação.</p>
+                        </div>
+                    </header>
+                    <div class="report-cards-grid">
+                        <div class="report-card">
+                            <h4>Total de Contatos</h4>
+                            <p id="total-contacts-card">0</p>
+                        </div>
+                        <div class="report-card">
+                            <h4>Mensagens Enviadas</h4>
+                            <p id="messages-sent-card">0</p>
+                        </div>
+                        <div class="report-card">
+                            <h4>Pedidos Entregues</h4>
+                            <p id="orders-delivered-card">0</p>
+                        </div>
+                    </div>
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3>Novos Contatos (Últimos 7 dias )</h3>
+                            <canvas id="new-contacts-chart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h3>Distribuição de Status</h3>
+                            <canvas id="status-pie-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-pedido" class="modal-overlay"><div class="modal-content"><h3 id="modal-titulo">Adicionar Novo Pedido</h3><form id="form-pedido"><input type="hidden" id="pedido-id" name="id"><input type="text" id="nome" name="nome" placeholder="Nome do Cliente" required><input type="text" id="telefone" name="telefone" placeholder="Telefone (com DDD)" required><input type="text" id="produto" name="produto" placeholder="Nome do Produto"><input type="text" id="codigoRastreio" name="codigoRastreio" placeholder="Código de Rastreio (Opcional)"><div class="modal-acoes"><button type="button" id="btn-modal-cancelar" class="btn-cancelar">Cancelar</button><button type="submit" id="btn-modal-salvar" class="btn-salvar">Salvar</button></div></form></div></div>
+    <div id="notificacao" class="toast"><span id="notificacao-icon"></span><p id="notificacao-texto"></p><button id="notificacao-close-btn" aria-label="Fechar">&times;</button></div>
+    <div id="modal-confirmacao" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modal-confirmacao-titulo">Confirmar Ação</h3>
+            <p id="modal-confirmacao-texto">Tem a certeza que deseja continuar?</p>
+            <div class="modal-acoes">
+                <button type="button" id="btn-confirmacao-cancelar" class="btn-cancelar">Cancelar</button>
+                <button type="button" id="btn-confirmacao-confirmar" class="btn-salvar">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
