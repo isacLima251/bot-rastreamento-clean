@@ -65,6 +65,22 @@ const initDb = () => {
                     }
                     console.log("✔️ Tabela 'automacoes' pronta.");
 
+                    // Tabela de Usuários
+                    db.run(`
+                        CREATE TABLE IF NOT EXISTS users (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            email TEXT NOT NULL UNIQUE,
+                            password TEXT NOT NULL,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        )
+                    `, (err) => {
+                        if (err) {
+                            console.error("❌ Erro ao criar tabela 'users':", err.message);
+                            return reject(err);
+                        }
+                        console.log("✔️ Tabela 'users' pronta.");
+                    });
+
                     // Insere os dados padrão para garantir que a tabela tenha conteúdo inicial
                     const stmt = db.prepare("INSERT OR IGNORE INTO automacoes (gatilho, ativo, mensagem) VALUES (?, ?, ?)");
                     const automationsData = [

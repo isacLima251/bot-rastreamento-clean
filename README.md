@@ -91,6 +91,24 @@ meu-bot-rastreamento/
 
 ---
 
+## 🔐 Autenticação
+
+O backend agora suporta múltiplos usuários. Registre-se usando:
+
+```bash
+POST /api/register { email, password }
+```
+
+Realize login para receber um token JWT:
+
+```bash
+POST /api/login { email, password }
+```
+
+Envie o token nas próximas requisições em `Authorization: Bearer <token>`.
+
+---
+
 ## ⚖️ Licença
 
 MIT — Livre para usar e modificar.
