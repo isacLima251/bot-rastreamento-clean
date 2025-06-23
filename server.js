@@ -16,6 +16,8 @@ const integrationsController = require('./src/controllers/integrationsController
 const whatsappService = require('./src/services/whatsappService');
 const pedidoService = require('./src/services/pedidoService');
 const webhookRastreioController = require('./src/controllers/webhookRastreioController');
+const authController = require('./src/controllers/authController');
+const authMiddleware = require('./src/middleware/auth');
 
 
 // --- GERENCIAMENTO DE ESTADO ---
@@ -167,13 +169,20 @@ const startApp = async () => {
 
         app.use(express.json());
         app.use(express.static('public'));
-        
-        app.use((req, res, next) => { 
+
+        app.use((req, res, next) => {
             req.db = db;
             req.venomClient = venomClient;
             req.broadcast = broadcast;
-            next(); 
+            next();
         });
+
+        // Rotas públicas de autenticação
+        app.post('/api/register', authController.register);
+        app.post('/api/login', authController.login);
+
+        // Middleware de autenticação para rotas abaixo
+        app.use(authMiddleware);
 
         console.log("✔️ Registrando rotas da API...");
         
