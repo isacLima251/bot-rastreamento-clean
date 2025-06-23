@@ -107,6 +107,10 @@ POST /api/login { email, password }
 
 Envie o token nas próximas requisições em `Authorization: Bearer <token>`.
 
+Cada usuário também possui uma **API Key** única, necessária para acessar a rota
+`POST /api/postback`. Consulte a sua chave em `/api/integrations/info` e, caso
+precise, gere uma nova em `/api/integrations/regenerate`.
+
 ---
 
 ## ⚖️ Licença

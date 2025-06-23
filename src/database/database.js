@@ -75,6 +75,7 @@ const initDb = () => {
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         email TEXT NOT NULL UNIQUE,
                         password TEXT NOT NULL,
+                        api_key TEXT UNIQUE,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 `, (err) => {
@@ -165,6 +166,20 @@ const initDb = () => {
                     db.run("ALTER TABLE automacoes ADD COLUMN cliente_id INTEGER", [], (e) => {
                         if (e && !e.message.includes('duplicate')) console.error(e);
                         db.run("UPDATE automacoes SET cliente_id = 1 WHERE cliente_id IS NULL");
+                    });
+
+                    // API Key por usuário
+                    db.run("ALTER TABLE users ADD COLUMN api_key TEXT", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) console.error(e);
+                        db.all('SELECT id FROM users WHERE api_key IS NULL', [], (err, rows) => {
+                            if (err) return console.error(err);
+                            const stmt = db.prepare('UPDATE users SET api_key = ? WHERE id = ?');
+                            for (const row of rows) {
+                                const key = require('crypto').randomBytes(20).toString('hex');
+                                stmt.run(key, row.id);
+                            }
+                            stmt.finalize();
+                        });
                     });
 
                 });
