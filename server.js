@@ -19,6 +19,7 @@ const paymentController = require('./src/controllers/paymentController');
 const webhookRastreioController = require('./src/controllers/webhookRastreioController');
 const authController = require('./src/controllers/authController');
 const authMiddleware = require('./src/middleware/auth');
+const apiKeyMiddleware = require('./src/middleware/apiKey');
 const planCheck = require('./src/middleware/planCheck');
 
 
@@ -183,6 +184,9 @@ const startApp = async () => {
         app.post('/api/register', authController.register);
         app.post('/api/login', authController.login);
 
+        // Postback - validação por API Key
+        app.post('/api/postback', apiKeyMiddleware, integrationsController.receberPostback);
+
         // Middleware de autenticação para rotas abaixo
         app.use(authMiddleware);
 
@@ -227,7 +231,6 @@ const startApp = async () => {
         app.get('/api/reports/summary', reportsController.getReportSummary);
 
         // Rotas de Integrações (UNIFICADAS)
-        app.post('/api/postback', integrationsController.receberPostback);
         app.get('/api/integrations/info', integrationsController.getIntegrationInfo);
         app.post('/api/integrations/regenerate', integrationsController.regenerateApiKey);
 

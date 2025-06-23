@@ -1,9 +1,8 @@
 // src/controllers/integrationsController.js (VERSÃO CORRETA E UNIFICADA)
-const crypto = require('crypto');
 const pedidoService = require('../services/pedidoService');
+const userService = require('../services/userService');
 
 // Num sistema SaaS, esta chave viria do banco de dados de um utilizador específico.
-let apiKey = "exemplo-chave-secreta-12345";
 
 // Num sistema SaaS, esta chave também estaria associada à conta do utilizador.
 const CHAVE_SECRETA_DA_PLATAFORMA = "COLE_A_SUA_CHAVE_UNICA_DA_BRAIP_AQUI";
@@ -53,23 +52,25 @@ exports.receberPostback = async (req, res) => {
 /**
  * Função 2: Envia as informações necessárias para a página de integração.
  */
-exports.getIntegrationInfo = (req, res) => {
-    res.status(200).json({
-        apiKey: apiKey 
-    });
+exports.getIntegrationInfo = async (req, res) => {
+    try {
+        const user = await userService.findUserById(req.db, req.user.id);
+        if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+        res.status(200).json({ apiKey: user.api_key });
+    } catch (err) {
+        res.status(500).json({ error: 'Falha ao obter chave' });
+    }
 };
 
 /**
  * Função 3: Regenera a chave de API para o link de postback.
  */
-exports.regenerateApiKey = (req, res) => {
-    const novaChave = crypto.randomBytes(20).toString('hex');
-    apiKey = novaChave;
-    
-    console.log(`[Integração] Nova chave de API gerada: ${novaChave}`);
-    
-    res.status(200).json({ 
-        message: "Nova chave de API gerada com sucesso!",
-        newApiKey: novaChave 
-    });
+exports.regenerateApiKey = async (req, res) => {
+    try {
+        const novaChave = await userService.regenerateApiKey(req.db, req.user.id);
+        console.log(`[Integração] Nova chave de API gerada: ${novaChave}`);
+        res.status(200).json({ message: 'Nova chave de API gerada com sucesso!', newApiKey: novaChave });
+    } catch (err) {
+        res.status(500).json({ error: 'Falha ao gerar chave' });
+    }
 };
