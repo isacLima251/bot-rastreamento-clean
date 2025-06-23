@@ -240,6 +240,10 @@ input:checked ~ .toggle-label { color: var(--success-color); font-weight: 600; }
 #integration-history-table th, #integration-history-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
 #integration-history-table thead th { background-color: var(--hover-bg); font-weight: 600; color: var(--text-secondary); }
 #integration-history-table tbody tr:last-child td { border-bottom: none; }
+#logs-table { width: 100%; border-collapse: collapse; }
+#logs-table th, #logs-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+#logs-table thead th { background-color: var(--hover-bg); font-weight: 600; color: var(--text-secondary); }
+#logs-table tbody tr:last-child td { border-bottom: none; }
 .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
 .status-badge.success { background-color: #dcfce7; color: #166534; }
 .status-badge.error { background-color: #fee2e2; color: #991b1b; }

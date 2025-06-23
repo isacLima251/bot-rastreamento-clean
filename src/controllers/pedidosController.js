@@ -1,6 +1,7 @@
 // src/controllers/pedidosController.js
 const pedidoService = require('../services/pedidoService');
 const whatsappService = require('../services/whatsappService');
+const logService = require('../services/logService');
 
 // LÊ todos os pedidos
 exports.listarPedidos = (req, res) => {
@@ -77,9 +78,11 @@ exports.criarPedido = async (req, res) => {
         }
         
         const pedidoCriado = await pedidoService.criarPedido(db, { ...req.body, telefone: telefoneNormalizado }, client, clienteId);
-        
+
         // Notifica o frontend
         req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });
+
+        await logService.addLog(db, clienteId, 'pedido_criado', JSON.stringify({ pedidoId: pedidoCriado.id }));
 
         res.status(201).json({
             message: "Pedido criado com sucesso!",
@@ -165,6 +168,8 @@ exports.enviarMensagemManual = async (req, res) => {
 
         await whatsappService.enviarMensagem(pedido.telefone, mensagem);
         await pedidoService.addMensagemHistorico(db, id, mensagem, 'manual', 'bot', clienteId);
+
+        await logService.addLog(db, clienteId, 'mensagem_manual', JSON.stringify({ pedidoId: id }));
         
         // MUDANÇA: Notifica todos os painéis abertos sobre a nova mensagem
         broadcast({ type: 'nova_mensagem', pedidoId: parseInt(id) });

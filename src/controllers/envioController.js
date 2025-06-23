@@ -2,6 +2,7 @@
 const pedidoService = require('../services/pedidoService');
 const whatsappService = require('../services/whatsappService');
 const automationService = require('../services/automationService');
+const logService = require('../services/logService');
 
 // As mensagens padrão do sistema
 const MENSAGENS_PADRAO = {
@@ -96,6 +97,8 @@ async function enviarMensagensComRegras(db) {
                 await pedidoService.addMensagemHistorico(db, id, mensagemParaEnviar, novoStatusDaMensagem, 'bot');
                 await pedidoService.updateCamposPedido(db, id, { mensagemUltimoStatus: novoStatusDaMensagem });
                 console.log(`✅ Mensagem automática de '${novoStatusDaMensagem}' enviada para ${nome}.`);
+
+                await logService.addLog(db, pedido.cliente_id || 1, 'mensagem_automatica', JSON.stringify({ pedidoId: id, tipo: novoStatusDaMensagem }));
             }
         }
     } catch (err) {
