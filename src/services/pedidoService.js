@@ -43,9 +43,16 @@ function normalizeTelefone(telefoneRaw) {
 /**
  * Busca todos os pedidos do banco de dados.
  */
-const getAllPedidos = (db) => {
+const getAllPedidos = (db, clienteId = null) => {
     return new Promise((resolve, reject) => {
-        db.all("SELECT * FROM pedidos ORDER BY id DESC", [], (err, rows) => {
+        let sql = "SELECT * FROM pedidos";
+        const params = [];
+        if (clienteId !== null) {
+            sql += " WHERE cliente_id = ?";
+            params.push(clienteId);
+        }
+        sql += " ORDER BY id DESC";
+        db.all(sql, params, (err, rows) => {
             if (err) {
                 console.error("Erro ao buscar todos os pedidos", err);
                 return reject(err);
@@ -58,9 +65,15 @@ const getAllPedidos = (db) => {
 /**
  * Busca um único pedido pelo seu ID.
  */
-const getPedidoById = (db, id) => {
+const getPedidoById = (db, id, clienteId = null) => {
     return new Promise((resolve, reject) => {
-        db.get("SELECT * FROM pedidos WHERE id = ?", [id], (err, row) => {
+        let sql = "SELECT * FROM pedidos WHERE id = ?";
+        const params = [id];
+        if (clienteId !== null) {
+            sql += " AND cliente_id = ?";
+            params.push(clienteId);
+        }
+        db.get(sql, params, (err, row) => {
             if (err) {
                 console.error(`Erro ao buscar pedido por ID ${id}`, err);
                 return reject(err);
@@ -73,7 +86,7 @@ const getPedidoById = (db, id) => {
 /**
  * Busca um pedido pelo número de telefone.
  */
-const findPedidoByTelefone = (db, telefone) => {
+const findPedidoByTelefone = (db, telefone, clienteId = null) => {
     return new Promise((resolve, reject) => {
         // A partir de agora, a busca é simples, pois o número sempre será normalizado da mesma forma
         const telefoneNormalizado = normalizeTelefone(telefone);
@@ -83,9 +96,14 @@ const findPedidoByTelefone = (db, telefone) => {
             return resolve(null);
         }
         
-        const sql = "SELECT * FROM pedidos WHERE telefone = ?";
-        
-        db.get(sql, [telefoneNormalizado], (err, row) => {
+        let sql = "SELECT * FROM pedidos WHERE telefone = ?";
+        const params = [telefoneNormalizado];
+        if (clienteId !== null) {
+            sql += " AND cliente_id = ?";
+            params.push(clienteId);
+        }
+
+        db.get(sql, params, (err, row) => {
             if (err) {
                 console.error(`Erro ao buscar pedido por telefone (normalizado) ${telefoneNormalizado}`, err);
                 return reject(err);
@@ -97,13 +115,17 @@ const findPedidoByTelefone = (db, telefone) => {
 /**
  * Atualiza um ou mais campos de um pedido específico.
  */
-const updateCamposPedido = (db, pedidoId, campos) => {
+const updateCamposPedido = (db, pedidoId, campos, clienteId = null) => {
     if (!campos || Object.keys(campos).length === 0) {
         return Promise.resolve({ changes: 0 });
     }
     const fields = Object.keys(campos).map(k => `${k} = ?`).join(', ');
     const values = [...Object.values(campos), pedidoId];
-    const sql = `UPDATE pedidos SET ${fields} WHERE id = ?`;
+    let sql = `UPDATE pedidos SET ${fields} WHERE id = ?`;
+    if (clienteId !== null) {
+        sql += ' AND cliente_id = ?';
+        values.push(clienteId);
+    }
 
     return new Promise((resolve, reject) => {
         db.run(sql, values, function(err) {
@@ -119,11 +141,12 @@ const updateCamposPedido = (db, pedidoId, campos) => {
 /**
  * Adiciona uma nova entrada ao histórico de mensagens.
  */
-const addMensagemHistorico = (db, pedidoId, mensagem, tipoMensagem, origem) => {
+const addMensagemHistorico = (db, pedidoId, mensagem, tipoMensagem, origem, clienteId = null) => {
     return new Promise((resolve, reject) => {
-        const sqlInsert = `INSERT INTO historico_mensagens (pedido_id, mensagem, tipo_mensagem, origem) VALUES (?, ?, ?, ?)`;
-        
-        db.run(sqlInsert, [pedidoId, mensagem, tipoMensagem, origem], function(err) {
+        const sqlInsert = `INSERT INTO historico_mensagens (pedido_id, cliente_id, mensagem, tipo_mensagem, origem) VALUES (?, ?, ?, ?, ?)`;
+        const params = [pedidoId, clienteId, mensagem, tipoMensagem, origem];
+
+        db.run(sqlInsert, params, function(err) {
             if (err) {
                 console.error(`Erro ao adicionar ao histórico do pedido ${pedidoId}`, err);
                 return reject(err);
@@ -131,9 +154,14 @@ const addMensagemHistorico = (db, pedidoId, mensagem, tipoMensagem, origem) => {
 
             // --- NOVO: Atualiza a tabela de pedidos com a última mensagem ---
             const dataAgora = new Date().toISOString();
-            const sqlUpdate = `UPDATE pedidos SET ultimaMensagem = ?, dataUltimaMensagem = ? WHERE id = ?`;
-            
-            db.run(sqlUpdate, [mensagem, dataAgora, pedidoId], (updateErr) => {
+            let sqlUpdate = `UPDATE pedidos SET ultimaMensagem = ?, dataUltimaMensagem = ? WHERE id = ?`;
+            const valuesUpdate = [mensagem, dataAgora, pedidoId];
+            if (clienteId !== null) {
+                sqlUpdate += ' AND cliente_id = ?';
+                valuesUpdate.push(clienteId);
+            }
+
+            db.run(sqlUpdate, valuesUpdate, (updateErr) => {
                 if (updateErr) {
                     // Mesmo se esta atualização falhar, não quebra a operação principal
                     console.error(`Erro ao atualizar ultimaMensagem para o pedido ${pedidoId}`, updateErr);
@@ -146,10 +174,16 @@ const addMensagemHistorico = (db, pedidoId, mensagem, tipoMensagem, origem) => {
 /**
  * Busca o histórico de mensagens de um pedido específico.
  */
-const getHistoricoPorPedidoId = (db, pedidoId) => {
-    const sql = `SELECT * FROM historico_mensagens WHERE pedido_id = ? ORDER BY data_envio ASC`;
+const getHistoricoPorPedidoId = (db, pedidoId, clienteId = null) => {
+    let sql = `SELECT * FROM historico_mensagens WHERE pedido_id = ?`;
+    const params = [pedidoId];
+    if (clienteId !== null) {
+        sql += ' AND cliente_id = ?';
+        params.push(clienteId);
+    }
+    sql += ' ORDER BY data_envio ASC';
     return new Promise((resolve, reject) => {
-        db.all(sql, [pedidoId], (err, rows) => {
+        db.all(sql, params, (err, rows) => {
             if (err) {
                 console.error(`Erro ao buscar histórico do pedido ${pedidoId}`, err);
                 return reject(err);
@@ -162,10 +196,15 @@ const getHistoricoPorPedidoId = (db, pedidoId) => {
 /**
  * Incrementa o contador de mensagens não lidas para um pedido.
  */
-const incrementarNaoLidas = (db, pedidoId) => {
+const incrementarNaoLidas = (db, pedidoId, clienteId = null) => {
     return new Promise((resolve, reject) => {
-        const sql = 'UPDATE pedidos SET mensagensNaoLidas = mensagensNaoLidas + 1 WHERE id = ?';
-        db.run(sql, [pedidoId], function (err) {
+        let sql = 'UPDATE pedidos SET mensagensNaoLidas = mensagensNaoLidas + 1 WHERE id = ?';
+        const params = [pedidoId];
+        if (clienteId !== null) {
+            sql += ' AND cliente_id = ?';
+            params.push(clienteId);
+        }
+        db.run(sql, params, function (err) {
             if (err) {
                 console.error("Erro ao incrementar mensagens não lidas:", err.message);
                 return reject(err);
@@ -178,10 +217,15 @@ const incrementarNaoLidas = (db, pedidoId) => {
 /**
  * Zera o contador de mensagens não lidas para um pedido.
  */
-const marcarComoLido = (db, pedidoId) => {
+const marcarComoLido = (db, pedidoId, clienteId = null) => {
     return new Promise((resolve, reject) => {
-        const sql = 'UPDATE pedidos SET mensagensNaoLidas = 0 WHERE id = ?';
-        db.run(sql, [pedidoId], function (err) {
+        let sql = 'UPDATE pedidos SET mensagensNaoLidas = 0 WHERE id = ?';
+        const params = [pedidoId];
+        if (clienteId !== null) {
+            sql += ' AND cliente_id = ?';
+            params.push(clienteId);
+        }
+        db.run(sql, params, function (err) {
             if (err) {
                 console.error("Erro ao marcar mensagens como lidas:", err.message);
                 return reject(err);
@@ -194,7 +238,7 @@ const marcarComoLido = (db, pedidoId) => {
 /**
  * Cria um novo pedido no banco de dados.
  */
-const criarPedido = (db, dadosPedido, client) => {
+const criarPedido = (db, dadosPedido, client, clienteId = null) => {
     return new Promise(async (resolve, reject) => {
         const { nome, telefone, produto, codigoRastreio } = dadosPedido;
         const telefoneValidado = normalizeTelefone(telefone);
@@ -216,8 +260,8 @@ const criarPedido = (db, dadosPedido, client) => {
             }
         }
         
-        const sql = 'INSERT INTO pedidos (nome, telefone, produto, codigoRastreio, fotoPerfilUrl) VALUES (?, ?, ?, ?, ?)';
-        const params = [nome, telefoneValidado, produto || null, codigoRastreio || null, fotoUrl];
+        const sql = 'INSERT INTO pedidos (cliente_id, nome, telefone, produto, codigoRastreio, fotoPerfilUrl) VALUES (?, ?, ?, ?, ?, ?)';
+        const params = [clienteId, nome, telefoneValidado, produto || null, codigoRastreio || null, fotoUrl];
         
         db.run(sql, params, function (err) {
             if (err) return reject(err);

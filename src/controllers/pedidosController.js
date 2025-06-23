@@ -5,10 +5,11 @@ const whatsappService = require('../services/whatsappService');
 // LÊ todos os pedidos
 exports.listarPedidos = (req, res) => {
     const db = req.db;
+    const clienteId = req.user.id;
     const { busca, filtroStatus } = req.query;
-    
-    let params = [];
-    let conditions = [];
+
+    let params = [clienteId];
+    let conditions = ["cliente_id = ?"];
 
     if (busca) {
         conditions.push("(nome LIKE ? OR telefone LIKE ?)");
@@ -61,6 +62,7 @@ function normalizeTelefone(telefoneRaw) {
 exports.criarPedido = async (req, res) => {
     const db = req.db;
     const client = req.venomClient;
+    const clienteId = req.user.id;
     const { nome, telefone, produto, codigoRastreio } = req.body;
     const telefoneNormalizado = normalizeTelefone(telefone);
 
@@ -69,12 +71,12 @@ exports.criarPedido = async (req, res) => {
     }
     
     try {
-        const pedidoExistente = await pedidoService.findPedidoByTelefone(db, telefoneNormalizado);
+        const pedidoExistente = await pedidoService.findPedidoByTelefone(db, telefoneNormalizado, clienteId);
         if (pedidoExistente) {
             return res.status(409).json({ error: `Este número (${telefoneNormalizado}) já está cadastrado.` });
         }
         
-        const pedidoCriado = await pedidoService.criarPedido(db, { ...req.body, telefone: telefoneNormalizado }, client);
+        const pedidoCriado = await pedidoService.criarPedido(db, { ...req.body, telefone: telefoneNormalizado }, client, clienteId);
         
         // Notifica o frontend
         req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });
@@ -92,6 +94,7 @@ exports.criarPedido = async (req, res) => {
 // ATUALIZA um pedido
 exports.atualizarPedido = async (req, res) => {
     const db = req.db;
+    const clienteId = req.user.id;
     const { id } = req.params;
     const dados = req.body;
 
@@ -103,7 +106,7 @@ exports.atualizarPedido = async (req, res) => {
     }
 
     try {
-        const result = await pedidoService.updateCamposPedido(db, id, dados);
+        const result = await pedidoService.updateCamposPedido(db, id, dados, clienteId);
         if (result.changes === 0) return res.status(404).json({ error: `Pedido com ID ${id} não encontrado.` });
         
         // Notifica o frontend
@@ -118,8 +121,9 @@ exports.atualizarPedido = async (req, res) => {
 // APAGA um pedido
 exports.deletarPedido = (req, res) => {
     const db = req.db;
+    const clienteId = req.user.id;
     const { id } = req.params;
-    db.run('DELETE FROM pedidos WHERE id = ?', id, function (err) {
+    db.run('DELETE FROM pedidos WHERE id = ? AND cliente_id = ?', [id, clienteId], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: `Pedido com ID ${id} não encontrado.` });
         
@@ -133,9 +137,10 @@ exports.deletarPedido = (req, res) => {
 // BUSCA O HISTÓRICO de mensagens
 exports.getHistoricoDoPedido = async (req, res) => {
     const db = req.db;
+    const clienteId = req.user.id;
     const { id } = req.params;
     try {
-        const historico = await pedidoService.getHistoricoPorPedidoId(db, id);
+        const historico = await pedidoService.getHistoricoPorPedidoId(db, id, clienteId);
         res.json({ data: historico });
     } catch (error) {
         res.status(500).json({ error: "Falha ao buscar o histórico do pedido." });
@@ -145,6 +150,7 @@ exports.getHistoricoDoPedido = async (req, res) => {
 // ENVIA uma mensagem manualmente
 exports.enviarMensagemManual = async (req, res) => {
     const db = req.db;
+    const clienteId = req.user.id;
     const { id } = req.params;
     const { mensagem } = req.body;
     const broadcast = req.broadcast; // Pega a função de broadcast
@@ -154,11 +160,11 @@ exports.enviarMensagemManual = async (req, res) => {
     }
 
     try {
-        const pedido = await pedidoService.getPedidoById(db, id);
+        const pedido = await pedidoService.getPedidoById(db, id, clienteId);
         if (!pedido) return res.status(404).json({ error: "Pedido não encontrado." });
 
         await whatsappService.enviarMensagem(pedido.telefone, mensagem);
-        await pedidoService.addMensagemHistorico(db, id, mensagem, 'manual', 'bot');
+        await pedidoService.addMensagemHistorico(db, id, mensagem, 'manual', 'bot', clienteId);
         
         // MUDANÇA: Notifica todos os painéis abertos sobre a nova mensagem
         broadcast({ type: 'nova_mensagem', pedidoId: parseInt(id) });
@@ -174,6 +180,7 @@ exports.enviarMensagemManual = async (req, res) => {
 // ATUALIZA a foto de perfil
 exports.atualizarFotoDoPedido = async (req, res) => {
     const db = req.db;
+    const clienteId = req.user.id;
     const { id } = req.params;
     const client = req.venomClient;
 
@@ -182,7 +189,7 @@ exports.atualizarFotoDoPedido = async (req, res) => {
     }
 
     try {
-        const pedido = await pedidoService.getPedidoById(db, id);
+        const pedido = await pedidoService.getPedidoById(db, id, clienteId);
         if (!pedido) {
             return res.status(404).json({ error: "Pedido não encontrado." });
         }
@@ -190,7 +197,7 @@ exports.atualizarFotoDoPedido = async (req, res) => {
         const fotoUrl = await whatsappService.getProfilePicUrl(pedido.telefone);
         
         if (fotoUrl) {
-            await pedidoService.updateCamposPedido(db, id, { fotoPerfilUrl: fotoUrl });
+            await pedidoService.updateCamposPedido(db, id, { fotoPerfilUrl: fotoUrl }, clienteId);
             req.broadcast({ type: 'pedido_atualizado', pedidoId: id });
             res.status(200).json({ message: "Foto de perfil atualizada com sucesso!", data: { fotoUrl } });
         } else {
@@ -206,9 +213,10 @@ exports.atualizarFotoDoPedido = async (req, res) => {
 // MARCA mensagens como lidas
 exports.marcarComoLido = async (req, res) => {
     const db = req.db;
+    const clienteId = req.user.id;
     const { id } = req.params;
     try {
-        await pedidoService.marcarComoLido(db, id);
+        await pedidoService.marcarComoLido(db, id, clienteId);
         req.broadcast({ type: 'pedido_atualizado', pedidoId: id });
         res.status(200).json({ message: "Mensagens marcadas como lidas." });
     } catch (error) {
