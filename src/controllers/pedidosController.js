@@ -77,10 +77,6 @@ exports.criarPedido = async (req, res) => {
         }
         
         const pedidoCriado = await pedidoService.criarPedido(db, { ...req.body, telefone: telefoneNormalizado }, client, clienteId);
-        if (req.subscription) {
-            const subscriptionService = require('../services/subscriptionService');
-            await subscriptionService.incrementUsage(db, req.subscription.id);
-        }
         
         // Notifica o frontend
         req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });

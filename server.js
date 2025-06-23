@@ -184,8 +184,8 @@ const startApp = async () => {
         app.post('/api/register', authController.register);
         app.post('/api/login', authController.login);
 
-        // Postback - validação por API Key
-        app.post('/api/postback', apiKeyMiddleware, integrationsController.receberPostback);
+        // Postback - validação por API Key + controle de plano
+        app.post('/api/postback', apiKeyMiddleware, planCheck, integrationsController.receberPostback);
 
         // Middleware de autenticação para rotas abaixo
         app.use(authMiddleware);
@@ -224,23 +224,23 @@ const startApp = async () => {
         // Rotas de SITE RASTREIO
         app.post('/api/webhook-site-rastreio', webhookRastreioController.receberWebhook);
         // Rotas de Automações
-        app.get('/api/automations', automationsController.listarAutomacoes);
-        app.post('/api/automations', automationsController.salvarAutomacoes);
+        app.get('/api/automations', planCheck, automationsController.listarAutomacoes);
+        app.post('/api/automations', planCheck, automationsController.salvarAutomacoes);
 
         // Rotas de Relatórios
-        app.get('/api/reports/summary', reportsController.getReportSummary);
+        app.get('/api/reports/summary', planCheck, reportsController.getReportSummary);
 
         // Rotas de Integrações (UNIFICADAS)
-        app.get('/api/integrations/info', integrationsController.getIntegrationInfo);
-        app.post('/api/integrations/regenerate', integrationsController.regenerateApiKey);
+        app.get('/api/integrations/info', planCheck, integrationsController.getIntegrationInfo);
+        app.post('/api/integrations/regenerate', planCheck, integrationsController.regenerateApiKey);
 
         // Rotas do WhatsApp
         app.get('/api/whatsapp/status', (req, res) => res.json({ status: whatsappStatus, qrCode: qrCodeData, botInfo: botInfo }));
-        app.post('/api/whatsapp/connect', (req, res) => {
+        app.post('/api/whatsapp/connect', planCheck, (req, res) => {
             connectToWhatsApp();
             res.status(202).json({ message: "Processo de conexão iniciado." });
         });
-        app.post('/api/whatsapp/disconnect', async (req, res) => {
+        app.post('/api/whatsapp/disconnect', planCheck, async (req, res) => {
             await disconnectFromWhatsApp();
             res.status(200).json({ message: "Desconectado com sucesso." });
         });
