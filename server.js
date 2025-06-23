@@ -15,9 +15,11 @@ const automationsController = require('./src/controllers/automationsController')
 const integrationsController = require('./src/controllers/integrationsController'); // Apenas um import para integrações
 const whatsappService = require('./src/services/whatsappService');
 const pedidoService = require('./src/services/pedidoService');
+const paymentController = require('./src/controllers/paymentController');
 const webhookRastreioController = require('./src/controllers/webhookRastreioController');
 const authController = require('./src/controllers/authController');
 const authMiddleware = require('./src/middleware/auth');
+const planCheck = require('./src/middleware/planCheck');
 
 
 // --- GERENCIAMENTO DE ESTADO ---
@@ -184,17 +186,36 @@ const startApp = async () => {
         // Middleware de autenticação para rotas abaixo
         app.use(authMiddleware);
 
+        // Rotas de planos (seleção e gestão)
+        app.get('/api/plans', (req, res) => {
+            req.db.all('SELECT * FROM plans ORDER BY price', [], (err, rows) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ data: rows });
+            });
+        });
+        app.post('/api/subscribe/:planId', (req, res) => {
+            const userId = req.user.id;
+            const planId = parseInt(req.params.planId);
+            const stmt = req.db.prepare('INSERT OR REPLACE INTO subscriptions (id, user_id, plan_id, status) VALUES ((SELECT id FROM subscriptions WHERE user_id = ?), ?, ?, "active")');
+            stmt.run(userId, userId, planId, (err) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ message: 'Plano contratado com sucesso' });
+            });
+        });
+        app.post('/api/payment/checkout', paymentController.createCheckout);
+
+
         console.log("✔️ Registrando rotas da API...");
         
         // Rotas de Pedidos
-        app.get('/api/pedidos', pedidosController.listarPedidos);
-        app.post('/api/pedidos', pedidosController.criarPedido);
-        app.put('/api/pedidos/:id', pedidosController.atualizarPedido);
-        app.delete('/api/pedidos/:id', pedidosController.deletarPedido);
-        app.get('/api/pedidos/:id/historico', pedidosController.getHistoricoDoPedido);
-        app.post('/api/pedidos/:id/enviar-mensagem', pedidosController.enviarMensagemManual);
-        app.post('/api/pedidos/:id/atualizar-foto', pedidosController.atualizarFotoDoPedido);
-        app.put('/api/pedidos/:id/marcar-como-lido', pedidosController.marcarComoLido);
+        app.get('/api/pedidos', planCheck, pedidosController.listarPedidos);
+        app.post('/api/pedidos', planCheck, pedidosController.criarPedido);
+        app.put('/api/pedidos/:id', planCheck, pedidosController.atualizarPedido);
+        app.delete('/api/pedidos/:id', planCheck, pedidosController.deletarPedido);
+        app.get('/api/pedidos/:id/historico', planCheck, pedidosController.getHistoricoDoPedido);
+        app.post('/api/pedidos/:id/enviar-mensagem', planCheck, pedidosController.enviarMensagemManual);
+        app.post('/api/pedidos/:id/atualizar-foto', planCheck, pedidosController.atualizarFotoDoPedido);
+        app.put('/api/pedidos/:id/marcar-como-lido', planCheck, pedidosController.marcarComoLido);
         
         // Rotas de SITE RASTREIO
         app.post('/api/webhook-site-rastreio', webhookRastreioController.receberWebhook);

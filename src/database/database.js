@@ -70,19 +70,65 @@ const initDb = () => {
                     console.log("✔️ Tabela 'automacoes' pronta.");
 
                     // Tabela de Usuários
+                db.run(`
+                    CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        email TEXT NOT NULL UNIQUE,
+                        password TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                `, (err) => {
+                    if (err) {
+                        console.error("❌ Erro ao criar tabela 'users':", err.message);
+                        return reject(err);
+                    }
+                    console.log("✔️ Tabela 'users' pronta.");
+                });
+
+                    // Tabela de Planos
                     db.run(`
-                        CREATE TABLE IF NOT EXISTS users (
+                        CREATE TABLE IF NOT EXISTS plans (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            email TEXT NOT NULL UNIQUE,
-                            password TEXT NOT NULL,
-                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                            name TEXT NOT NULL,
+                            price REAL NOT NULL,
+                            monthly_limit INTEGER NOT NULL
                         )
                     `, (err) => {
                         if (err) {
-                            console.error("❌ Erro ao criar tabela 'users':", err.message);
+                            console.error("❌ Erro ao criar tabela 'plans':", err.message);
                             return reject(err);
                         }
-                        console.log("✔️ Tabela 'users' pronta.");
+                        console.log("✔️ Tabela 'plans' pronta.");
+
+                        // Planos padrão
+                        const planStmt = db.prepare("INSERT OR IGNORE INTO plans (id, name, price, monthly_limit) VALUES (?, ?, ?, ?)");
+                        const plansData = [
+                            [1, 'Básico', 0, 50],
+                            [2, 'Profissional', 49.9, 500],
+                            [3, 'Ilimitado', 99.9, -1]
+                        ];
+                        for (const data of plansData) planStmt.run(data);
+                        planStmt.finalize();
+                    });
+
+                    // Tabela de Assinaturas
+                    db.run(`
+                        CREATE TABLE IF NOT EXISTS subscriptions (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER NOT NULL,
+                            plan_id INTEGER NOT NULL,
+                            status TEXT NOT NULL DEFAULT 'active',
+                            usage INTEGER NOT NULL DEFAULT 0,
+                            renewal_date TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES users(id),
+                            FOREIGN KEY (plan_id) REFERENCES plans(id)
+                        )
+                    `, (err) => {
+                        if (err) {
+                            console.error("❌ Erro ao criar tabela 'subscriptions':", err.message);
+                            return reject(err);
+                        }
+                        console.log("✔️ Tabela 'subscriptions' pronta.");
                     });
 
                     // Insere os dados padrão para garantir que a tabela tenha conteúdo inicial
