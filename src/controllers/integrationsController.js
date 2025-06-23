@@ -13,6 +13,7 @@ const CHAVE_SECRETA_DA_PLATAFORMA = "COLE_A_SUA_CHAVE_UNICA_DA_BRAIP_AQUI";
  */
 exports.receberPostback = async (req, res) => {
     const db = req.db;
+    const clienteId = req.user.id;
     
     const { 
         basic_authentication,
@@ -35,7 +36,7 @@ exports.receberPostback = async (req, res) => {
 
     try {
         const novoPedido = { nome: client_name, telefone: client_cell, produto: product_name };
-        const pedidoCriado = await pedidoService.criarPedido(db, novoPedido, req.venomClient);
+        const pedidoCriado = await pedidoService.criarPedido(db, novoPedido, req.venomClient, clienteId);
         
         req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });
         res.status(201).json({ message: "Pedido recebido e criado com sucesso!", data: pedidoCriado });

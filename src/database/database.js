@@ -13,10 +13,11 @@ const initDb = () => {
             console.log('✅ Conectado ao banco de dados SQLite.');
 
             db.serialize(() => {
-                // Tabela de Pedidos (sem alterações)
+                // Tabela de Pedidos com suporte a multitenancy
                 db.run(`
                     CREATE TABLE IF NOT EXISTS pedidos (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        cliente_id INTEGER,
                         nome TEXT,
                         telefone TEXT NOT NULL UNIQUE,
                         produto TEXT,
@@ -36,11 +37,12 @@ const initDb = () => {
                     if (err) return reject(err);
                 });
 
-                // Tabela de Histórico (sem alterações)
+                // Tabela de Histórico
                 db.run(`
                     CREATE TABLE IF NOT EXISTS historico_mensagens (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         pedido_id INTEGER NOT NULL,
+                        cliente_id INTEGER,
                         mensagem TEXT NOT NULL,
                         tipo_mensagem TEXT,
                         origem TEXT NOT NULL,
@@ -51,12 +53,14 @@ const initDb = () => {
                     if (err) return reject(err);
                 });
 
-                // Tabela de Automações
+                // Tabela de Automações com chave composta (cliente + gatilho)
                 db.run(`
                     CREATE TABLE IF NOT EXISTS automacoes (
-                        gatilho TEXT PRIMARY KEY,
+                        gatilho TEXT,
+                        cliente_id INTEGER,
                         ativo INTEGER NOT NULL DEFAULT 0,
-                        mensagem TEXT
+                        mensagem TEXT,
+                        PRIMARY KEY (gatilho, cliente_id)
                     )
                 `, (err) => {
                     if (err) {
@@ -82,18 +86,18 @@ const initDb = () => {
                     });
 
                     // Insere os dados padrão para garantir que a tabela tenha conteúdo inicial
-                    const stmt = db.prepare("INSERT OR IGNORE INTO automacoes (gatilho, ativo, mensagem) VALUES (?, ?, ?)");
+                    const stmt = db.prepare("INSERT OR IGNORE INTO automacoes (gatilho, cliente_id, ativo, mensagem) VALUES (?, ?, ?, ?)");
                     const automationsData = [
-                        ['boas_vindas', 1, 'Olá {{primeiro_nome}}! Bem-vindo(a). Agradecemos o seu contato!'],
-                        ['envio_rastreio', 0, 'Olá {{primeiro_nome}}, o seu pedido foi enviado! O seu código de rastreio é: {{codigo_rastreio}}'],
-                        ['pedido_a_caminho', 1, 'Boas notícias, {{primeiro_nome}}! O seu pedido está a caminho. Pode acompanhar com o código: {{codigo_rastreio}}'],
-                        ['pedido_atrasado', 1, 'Olá {{primeiro_nome}}, notamos um possível atraso na entrega do seu pedido. Já estamos a verificar o que aconteceu. Código: {{codigo_rastreio}}'],
-                        ['pedido_devolvido', 1, 'Atenção {{primeiro_nome}}, o seu pedido foi devolvido ao remetente. Por favor, entre em contato connosco para resolvermos a situação. Código: {{codigo_rastreio}}'],
+                        ['boas_vindas', 1, 1, 'Olá {{primeiro_nome}}! Bem-vindo(a). Agradecemos o seu contato!'],
+                        ['envio_rastreio', 1, 0, 'Olá {{primeiro_nome}}, o seu pedido foi enviado! O seu código de rastreio é: {{codigo_rastreio}}'],
+                        ['pedido_a_caminho', 1, 1, 'Boas notícias, {{primeiro_nome}}! O seu pedido está a caminho. Pode acompanhar com o código: {{codigo_rastreio}}'],
+                        ['pedido_atrasado', 1, 1, 'Olá {{primeiro_nome}}, notamos um possível atraso na entrega do seu pedido. Já estamos a verificar o que aconteceu. Código: {{codigo_rastreio}}'],
+                        ['pedido_devolvido', 1, 1, 'Atenção {{primeiro_nome}}, o seu pedido foi devolvido ao remetente. Por favor, entre em contato connosco para resolvermos a situação. Código: {{codigo_rastreio}}'],
                         // --- NOVAS LINHAS AQUI ---
-                        ['pedido_a_espera', 1, 'Olá {{primeiro_nome}}! O seu pedido está a espera. Agradecemos o seu contato!'],
-                        ['pedido_cancelado', 1, 'Olá {{primeiro_nome}}! seu pedido foi cancelado. Agradecemos o seu contato!']
+                        ['pedido_a_espera', 1, 1, 'Olá {{primeiro_nome}}! O seu pedido está a espera. Agradecemos o seu contato!'],
+                        ['pedido_cancelado', 1, 1, 'Olá {{primeiro_nome}}! seu pedido foi cancelado. Agradecemos o seu contato!']
                     ];
-                    
+
                     for (const data of automationsData) {
                         stmt.run(data);
                     }
@@ -102,6 +106,21 @@ const initDb = () => {
                             console.log("✔️ Dados padrão de automação garantidos.");
                         }
                     });
+
+                    // Garante que as colunas de multitenancy existam em bancos antigos
+                    db.run("ALTER TABLE pedidos ADD COLUMN cliente_id INTEGER", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) console.error(e);
+                        db.run("UPDATE pedidos SET cliente_id = 1 WHERE cliente_id IS NULL");
+                    });
+                    db.run("ALTER TABLE historico_mensagens ADD COLUMN cliente_id INTEGER", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) console.error(e);
+                        db.run("UPDATE historico_mensagens SET cliente_id = 1 WHERE cliente_id IS NULL");
+                    });
+                    db.run("ALTER TABLE automacoes ADD COLUMN cliente_id INTEGER", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) console.error(e);
+                        db.run("UPDATE automacoes SET cliente_id = 1 WHERE cliente_id IS NULL");
+                    });
+
                 });
 
                 resolve(db);

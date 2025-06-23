@@ -43,7 +43,7 @@ exports.saveAutomations = (db, configs) => {
 
 exports.listarAutomacoes = async (req, res) => {
     try {
-        const automacoes = await automationService.getAutomations(req.db);
+        const automacoes = await automationService.getAutomations(req.db, req.user.id);
         res.status(200).json(automacoes);
     } catch (error) {
         // ADICIONE ESTA LINHA PARA VER O ERRO NO TERMINAL
@@ -55,7 +55,7 @@ exports.listarAutomacoes = async (req, res) => {
 exports.salvarAutomacoes = async (req, res) => {
     const configs = req.body;
     try {
-        const result = await automationService.saveAutomations(req.db, configs);
+        const result = await automationService.saveAutomations(req.db, configs, req.user.id);
         res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ error: "Falha ao salvar configurações de automação." });
