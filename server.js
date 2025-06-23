@@ -19,9 +19,11 @@ const pedidoService = require('./src/services/pedidoService');
 const paymentController = require('./src/controllers/paymentController');
 const webhookRastreioController = require('./src/controllers/webhookRastreioController');
 const authController = require('./src/controllers/authController');
+const adminController = require('./src/controllers/adminController');
 const authMiddleware = require('./src/middleware/auth');
 const apiKeyMiddleware = require('./src/middleware/apiKey');
 const planCheck = require('./src/middleware/planCheck');
+const adminCheck = require('./src/middleware/adminCheck');
 
 
 // --- GERENCIAMENTO DE ESTADO ---
@@ -190,6 +192,12 @@ const startApp = async () => {
 
         // Middleware de autenticação para rotas abaixo
         app.use(authMiddleware);
+
+        // Rotas administrativas
+        app.get('/api/admin/clients', adminCheck, adminController.listClients);
+        app.post('/api/admin/clients', adminCheck, adminController.createClient);
+        app.put('/api/admin/clients/:id', adminCheck, adminController.updateClient);
+        app.put('/api/admin/clients/:id/active', adminCheck, adminController.toggleActive);
 
         // Rotas de planos (seleção e gestão)
         app.get('/api/plans', (req, res) => {

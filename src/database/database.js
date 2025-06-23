@@ -89,6 +89,8 @@ const initDb = () => {
                         email TEXT NOT NULL UNIQUE,
                         password TEXT NOT NULL,
                         api_key TEXT UNIQUE,
+                        is_admin INTEGER NOT NULL DEFAULT 0,
+                        is_active INTEGER NOT NULL DEFAULT 1,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 `, (err) => {
@@ -193,6 +195,14 @@ const initDb = () => {
                             }
                             stmt.finalize();
                         });
+                    });
+
+                    // Campos de privilégios e status
+                    db.run("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) console.error(e);
+                    });
+                    db.run("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) console.error(e);
                     });
 
                 });
