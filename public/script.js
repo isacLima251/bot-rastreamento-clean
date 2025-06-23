@@ -1,4 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
+const token = localStorage.getItem('token');
+if (!token) { window.location.href = '/login.html'; return; }
+const authFetch = (url, options = {}) => {
+    options.headers = options.headers || {};
+    options.headers['Authorization'] = `Bearer ${token}`;
+    return fetch(url, options).then(resp => {
+        if (resp.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+        }
+        return resp;
+    });
+};
     // --- 1. Seletores de Elementos ---
     const mainNavEl = document.querySelector('.main-nav');
     const viewContainers = document.querySelectorAll('.view-container');
@@ -307,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!pedido || !chatWindowEl || !chatFooterEl || !formEnviarMensagemEl) return;
         if (pedido.mensagensNaoLidas > 0) {
             try {
-                await fetch(`/api/pedidos/${pedido.id}/marcar-como-lido`, { method: 'PUT' });
+                await authFetch(`/api/pedidos/${pedido.id}/marcar-como-lido`, { method: 'PUT' });
                 pedido.mensagensNaoLidas = 0;
             } catch (error) { console.error("Falha ao marcar como lido:", error); }
         }
@@ -319,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formEnviarMensagemEl.querySelector('button').disabled = false;
         renderizarListaDeContactos();
         try {
-            const response = await fetch(`/api/pedidos/${pedido.id}/historico`);
+            const response = await authFetch(`/api/pedidos/${pedido.id}/historico`);
             const { data: historico } = await response.json();
             const chatFeedEl = document.getElementById('chat-feed');
             if(chatFeedEl) {
@@ -350,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
         url.searchParams.append('filtroStatus', filtroAtivo);
         if (termoBusca) url.searchParams.append('busca', termoBusca);
         try {
-            const response = await fetch(url);
+            const response = await authFetch(url);
             if (!response.ok) throw new Error('Falha ao buscar pedidos.');
             todosOsPedidos = (await response.json()).data || [];
             renderizarListaDeContactos();
@@ -394,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadIntegrationInfo() {
         if (!webhookUrlDisplayEl) return;
         try {
-            const response = await fetch('/api/integrations/info');
+            const response = await authFetch('/api/integrations/info');
             if (!response.ok) throw new Error('Falha ao buscar chave de API.');
             const data = await response.json();
             const baseUrl = `${window.location.protocol}//${window.location.host}`;
@@ -408,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadAutomations() {
         try {
-            const response = await fetch('/api/automations');
+            const response = await authFetch('/api/automations');
             if (!response.ok) throw new Error('Falha ao carregar automações.');
             const configuracoesAutomacao = await response.json();
             document.querySelectorAll('.automation-card').forEach(card => {
@@ -444,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
         try {
-            const response = await fetch('/api/automations', {
+            const response = await authFetch('/api/automations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(novasConfiguracoes)
@@ -511,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadReportData() {
         try {
-            const response = await fetch('/api/reports/summary');
+            const response = await authFetch('/api/reports/summary');
             if (!response.ok) throw new Error('Falha ao carregar dados do relatório.');
             const data = await response.json();
             if(totalContactsCardEl) totalContactsCardEl.textContent = data.totalContacts;
@@ -593,7 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const message = 'Tem a certeza que deseja gerar um novo link? O link antigo deixará de funcionar.';
             showConfirmationModal(message, async () => {
                 try {
-                    const response = await fetch('/api/integrations/regenerate', { method: 'POST' });
+                    const response = await authFetch('/api/integrations/regenerate', { method: 'POST' });
                     if (!response.ok) throw new Error('Falha ao regenerar o link.');
                     const resultado = await response.json();
                     showNotification(resultado.message, 'success');
@@ -613,7 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const method = id ? 'PUT' : 'POST';
         delete dados.id;
         try {
-            const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+            const response = await authFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
             const resultado = await response.json();
             if (!response.ok) throw new Error(resultado.error || 'Falha ao salvar.');
             fecharModal();
@@ -638,17 +651,17 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchErenderizarTudo();
     });
 
-    if (btnConectarEl) btnConectarEl.addEventListener('click', () => { fetch('/api/whatsapp/connect', { method: 'POST' }); });
+    if (btnConectarEl) btnConectarEl.addEventListener('click', () => { authFetch('/api/whatsapp/connect', { method: 'POST' }); });
     if (btnDesconectarEl) btnDesconectarEl.addEventListener('click', () => {
         showConfirmationModal('Tem a certeza que deseja desconectar a sessão do WhatsApp?', () => {
-            fetch('/api/whatsapp/disconnect', { method: 'POST' });
+            authFetch('/api/whatsapp/disconnect', { method: 'POST' });
         });
     });
     
     const settingsView = document.getElementById('settings-view');
     if(settingsView) settingsView.addEventListener('click', (e) => {
         if (e.target.id === 'btn-regenerate-qr') {
-            fetch('/api/whatsapp/connect', { method: 'POST' });
+            authFetch('/api/whatsapp/connect', { method: 'POST' });
         }
     });
     
@@ -664,7 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnAtualizar.disabled = true;
             try {
                 const pedidoId = btnAtualizar.dataset.id;
-                const response = await fetch(`/api/pedidos/${pedidoId}/atualizar-foto`, { method: 'POST' });
+                const response = await authFetch(`/api/pedidos/${pedidoId}/atualizar-foto`, { method: 'POST' });
                 const resultado = await response.json();
                 if (!response.ok) throw new Error(resultado.error || 'Falha ao buscar foto.');
                 showNotification(resultado.message, 'success');
@@ -688,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const mensagem = inputMensagem.value.trim();
         if (!mensagem || !pedidoAtivoId) return;
         try {
-            const response = await fetch(`/api/pedidos/${pedidoAtivoId}/enviar-mensagem`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mensagem }) });
+            const response = await authFetch(`/api/pedidos/${pedidoAtivoId}/enviar-mensagem`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mensagem }) });
             if (!response.ok) throw new Error('Falha ao enviar mensagem.');
             inputMensagem.value = '';
             const pedidoAtivo = todosOsPedidos.find(p => p.id === pedidoAtivoId);
