@@ -40,4 +40,23 @@ function resetUsageIfNeeded(db, subscriptionId) {
     });
 }
 
-module.exports = { getUserSubscription, incrementUsage, resetUsageIfNeeded };
+function createSubscription(db, userId, planId) {
+    return new Promise((resolve, reject) => {
+        const sql = 'INSERT INTO subscriptions (user_id, plan_id, status, usage) VALUES (?, ?, "active", 0)';
+        db.run(sql, [userId, planId], function(err) {
+            if (err) return reject(err);
+            resolve({ id: this.lastID });
+        });
+    });
+}
+
+function updateUserPlan(db, userId, planId) {
+    return new Promise((resolve, reject) => {
+        db.run('UPDATE subscriptions SET plan_id = ? WHERE user_id = ?', [planId, userId], function(err) {
+            if (err) return reject(err);
+            resolve({ changes: this.changes });
+        });
+    });
+}
+
+module.exports = { getUserSubscription, incrementUsage, resetUsageIfNeeded, createSubscription, updateUserPlan };
