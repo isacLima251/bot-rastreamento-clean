@@ -13,6 +13,7 @@ const envioController = require('./src/controllers/envioController');
 const rastreamentoController = require('./src/controllers/rastreamentoController');
 const automationsController = require('./src/controllers/automationsController');
 const integrationsController = require('./src/controllers/integrationsController'); // Apenas um import para integrações
+const logsController = require('./src/controllers/logsController');
 const whatsappService = require('./src/services/whatsappService');
 const pedidoService = require('./src/services/pedidoService');
 const paymentController = require('./src/controllers/paymentController');
@@ -229,6 +230,9 @@ const startApp = async () => {
 
         // Rotas de Relatórios
         app.get('/api/reports/summary', planCheck, reportsController.getReportSummary);
+
+        // Rotas de Logs
+        app.get('/api/logs', planCheck, logsController.listarLogs);
 
         // Rotas de Integrações (UNIFICADAS)
         app.get('/api/integrations/info', planCheck, integrationsController.getIntegrationInfo);

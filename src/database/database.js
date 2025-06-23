@@ -53,6 +53,19 @@ const initDb = () => {
                     if (err) return reject(err);
                 });
 
+                // Tabela de Logs de Uso
+                db.run(`
+                    CREATE TABLE IF NOT EXISTS logs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        cliente_id INTEGER,
+                        acao TEXT NOT NULL,
+                        detalhe TEXT,
+                        data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                `, (err) => {
+                    if (err) return reject(err);
+                });
+
                 // Tabela de Automações com chave composta (cliente + gatilho)
                 db.run(`
                     CREATE TABLE IF NOT EXISTS automacoes (

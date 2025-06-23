@@ -1,6 +1,7 @@
 // src/controllers/rastreamentoController.js
 const pedidoService = require('../services/pedidoService');
 const rastreamentoService = require('../services/rastreamentoService');
+const logService = require('../services/logService');
 
 /**
  * Procura por todos os pedidos que podem ser rastreados, consulta o seu status
@@ -38,6 +39,8 @@ async function verificarRastreios(db) {
                 
                 await pedidoService.updateCamposPedido(db, pedido.id, dadosParaAtualizar);
                 console.log(`🔄 Pedido #${pedido.id} (${pedido.nome}) atualizado para: ${novoStatus}`);
+
+                await logService.addLog(db, pedido.cliente_id || 1, 'rastreamento', JSON.stringify({ pedidoId: pedido.id, status: novoStatus }));
             }
         }
     } catch (err) {
