@@ -115,6 +115,16 @@ precise, gere uma nova em `/api/integrations/regenerate`.
 
 ---
 
+## 💳 Pagamentos
+
+1. Defina as variáveis `STRIPE_SECRET`, `PAY_SUCCESS_URL`, `PAY_CANCEL_URL`, `PAY_WEBHOOK_URL` e `PAY_WEBHOOK_SECRET` no `.env`.
+2. No painel do Stripe acesse **Developers > Webhooks** e crie um endpoint apontando para o valor de `PAY_WEBHOOK_URL`.
+3. Adicione o evento `checkout.session.completed` e copie a chave secreta fornecida para `PAY_WEBHOOK_SECRET`.
+
+Com isso, quando o pagamento for confirmado, o servidor atualizará o status da sua assinatura automaticamente.
+
+---
+
 ## ⚖️ Licença
 
 MIT — Livre para usar e modificar.

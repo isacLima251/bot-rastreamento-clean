@@ -173,6 +173,9 @@ const startApp = async () => {
         app.set('db', db);
         console.log("Banco de dados pronto.");
 
+        // Webhook precisa do corpo raw para validação
+        app.post('/api/payment/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
+
         app.use(express.json());
         app.use(express.static('public'));
 
