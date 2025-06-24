@@ -41,26 +41,30 @@ cd bot-rastreamento
 # Instalar dependências
 npm install
 
-# Criar o arquivo .env
-cp .env.example .env
+# Criar o arquivo `.env`
+# (preencha com as variáveis necessárias, como `SITERASTREIO_API_KEY` e `JWT_SECRET`)
+touch .env
 ```
 
-Edite o `.env` com sua API Key e configurações.
+Edite o `.env` com suas chaves e URLs de callback.
 
 ---
 
 ## 🔹 Como Usar
 
-### 1. Iniciar o bot do WhatsApp
+### 1. Iniciar o servidor
+
+```bash
+npm start
+```
+
+Esse comando executa o `server.js`, responsável pela API, WebSocket e tarefas de rastreamento.
+O acompanhamento dos pedidos é feito de forma automática enquanto o WhatsApp estiver conectado.
+
+### 2. Opcional: iniciar apenas o bot do WhatsApp
 
 ```bash
 node index.js
-```
-
-### 2. Rodar o rastreamento manualmente
-
-```bash
-node rastrearPedidos.js
 ```
 
 ---
@@ -69,16 +73,14 @@ node rastrearPedidos.js
 
 ```
 meu-bot-rastreamento/
-├── index.js                    # Envia mensagens de boas-vindas ou postagens
-├── rastrearPedidos.js           # Verifica status e envia atualizações automáticas
-├── src/
-│   ├── services/
-│   │   ├── googleSheetService.js
-│   │   ├── whatsappService.js
-│   │   └── rastreamentoService.js
-│   └── utils/
-│       └── messages.json
-└── .env
+├── server.js               # Servidor Express com API e WebSocket
+├── index.js                # Script opcional para iniciar apenas o bot
+├── public/                 # Páginas HTML e scripts de painel
+└── src/
+    ├── controllers/        # Lógica das rotas da API
+    ├── services/           # Integrações (WhatsApp, rastreamento, etc.)
+    ├── database/           # Inicialização do SQLite
+    └── middleware/         # Autenticação e checagem de planos
 ```
 
 ---
