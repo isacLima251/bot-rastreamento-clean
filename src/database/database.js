@@ -119,9 +119,11 @@ const initDb = () => {
                         // Planos padrão
                         const planStmt = db.prepare("INSERT OR IGNORE INTO plans (id, name, price, monthly_limit) VALUES (?, ?, ?, ?)");
                         const plansData = [
-                            [1, 'Básico', 0, 50],
-                            [2, 'Profissional', 49.9, 500],
-                            [3, 'Ilimitado', 99.9, -1]
+                            [1, 'Free', 0, 10],
+                            [2, 'Start', 9.9, 50],
+                            [3, 'Basic', 19.9, 100],
+                            [4, 'Pro', 49.9, 250],
+                            [5, 'Pro Plus', 99.9, 600]
                         ];
                         for (const data of plansData) planStmt.run(data);
                         planStmt.finalize();
