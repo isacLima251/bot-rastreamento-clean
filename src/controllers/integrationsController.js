@@ -1,10 +1,7 @@
 // src/controllers/integrationsController.js (VERSÃO CORRETA E UNIFICADA)
 const pedidoService = require('../services/pedidoService');
 const userService = require('../services/userService');
-
-// Num sistema SaaS, esta chave viria do banco de dados de um utilizador específico.
-// Aqui é lida de uma variável de ambiente para facilitar a configuração
-const CHAVE_SECRETA_DA_PLATAFORMA = process.env.BRAIP_SECRET || '';
+const integrationService = require('../services/integrationConfigService');
 
 /**
  * Função 1: Recebe o postback de uma plataforma externa.
@@ -12,15 +9,17 @@ const CHAVE_SECRETA_DA_PLATAFORMA = process.env.BRAIP_SECRET || '';
 exports.receberPostback = async (req, res) => {
     const db = req.db;
     const clienteId = req.user.id;
-    
-    const { 
+
+    const {
         basic_authentication,
         client_name,
         client_cell,
         product_name
     } = req.body;
+    const config = await integrationService.getConfig(db, clienteId);
+    const secret = (config && config.postback_secret) || process.env.BRAIP_SECRET || '';
 
-    if (basic_authentication !== CHAVE_SECRETA_DA_PLATAFORMA) {
+    if (basic_authentication !== secret) {
         console.warn(`[Integração] Recebida requisição com chave de autenticação inválida.`);
         return res.status(401).json({ error: "Chave de autenticação inválida." });
     }
@@ -55,7 +54,8 @@ exports.getIntegrationInfo = async (req, res) => {
     try {
         const user = await userService.findUserById(req.db, req.user.id);
         if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
-        res.status(200).json({ apiKey: user.api_key });
+        const settings = await integrationService.getConfig(req.db, req.user.id);
+        res.status(200).json({ apiKey: user.api_key, settings });
     } catch (err) {
         res.status(500).json({ error: 'Falha ao obter chave' });
     }
@@ -71,5 +71,16 @@ exports.regenerateApiKey = async (req, res) => {
         res.status(200).json({ message: 'Nova chave de API gerada com sucesso!', newApiKey: novaChave });
     } catch (err) {
         res.status(500).json({ error: 'Falha ao gerar chave' });
+    }
+};
+
+exports.updateIntegrationSettings = async (req, res) => {
+    try {
+        await integrationService.updateConfig(req.db, req.user.id, req.body);
+        const settings = await integrationService.getConfig(req.db, req.user.id);
+        res.status(200).json({ message: 'Configurações atualizadas', settings });
+    } catch (err) {
+        console.error('Erro ao atualizar configurações', err);
+        res.status(500).json({ error: 'Falha ao atualizar configurações' });
     }
 };

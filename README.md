@@ -118,6 +118,8 @@ Cada usuário também possui uma **API Key** única, necessária para acessar a 
 `POST /api/postback`. Consulte a sua chave em `/api/integrations/info` e, caso
 precise, gere uma nova em `/api/integrations/regenerate`.
 
+As configurações de integração (como a chave de postback e a API do Site Rastreio) são armazenadas por usuário. Use `GET /api/integrations/info` para consultar e `PUT /api/integrations/settings` para atualizar seus dados.
+
 ---
 
 ## 💳 Pagamentos

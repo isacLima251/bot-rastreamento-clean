@@ -130,23 +130,40 @@ const initDb = () => {
                     });
 
                     // Tabela de Assinaturas
+                db.run(`
+                    CREATE TABLE IF NOT EXISTS subscriptions (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL,
+                        plan_id INTEGER NOT NULL,
+                        status TEXT NOT NULL DEFAULT 'active',
+                        usage INTEGER NOT NULL DEFAULT 0,
+                        renewal_date TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users(id),
+                        FOREIGN KEY (plan_id) REFERENCES plans(id)
+                    )
+                `, (err) => {
+                    if (err) {
+                        console.error("❌ Erro ao criar tabela 'subscriptions':", err.message);
+                        return reject(err);
+                    }
+                    console.log("✔️ Tabela 'subscriptions' pronta.");
+                });
+
+                    // Tabela de Configurações de Integração
                     db.run(`
-                        CREATE TABLE IF NOT EXISTS subscriptions (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            user_id INTEGER NOT NULL,
-                            plan_id INTEGER NOT NULL,
-                            status TEXT NOT NULL DEFAULT 'active',
-                            usage INTEGER NOT NULL DEFAULT 0,
-                            renewal_date TIMESTAMP,
-                            FOREIGN KEY (user_id) REFERENCES users(id),
-                            FOREIGN KEY (plan_id) REFERENCES plans(id)
+                        CREATE TABLE IF NOT EXISTS integration_settings (
+                            user_id INTEGER PRIMARY KEY,
+                            postback_secret TEXT,
+                            rastreio_api_key TEXT,
+                            webhook_url TEXT,
+                            FOREIGN KEY (user_id) REFERENCES users(id)
                         )
                     `, (err) => {
                         if (err) {
-                            console.error("❌ Erro ao criar tabela 'subscriptions':", err.message);
+                            console.error("❌ Erro ao criar tabela 'integration_settings':", err.message);
                             return reject(err);
                         }
-                        console.log("✔️ Tabela 'subscriptions' pronta.");
+                        console.log("✔️ Tabela 'integration_settings' pronta.");
                     });
 
                     // Insere os dados padrão para garantir que a tabela tenha conteúdo inicial
@@ -205,6 +222,16 @@ const initDb = () => {
                     });
                     db.run("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1", [], (e) => {
                         if (e && !e.message.includes('duplicate')) console.error(e);
+                    });
+
+                    // Garante registro padrão na tabela de integrações
+                    db.all('SELECT id FROM users', [], (err, rows) => {
+                        if (err) return console.error(err);
+                        const stmt = db.prepare('INSERT OR IGNORE INTO integration_settings (user_id) VALUES (?)');
+                        for (const row of rows) {
+                            stmt.run(row.id);
+                        }
+                        stmt.finalize();
                     });
 
                 });
