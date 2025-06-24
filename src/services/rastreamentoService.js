@@ -7,8 +7,8 @@ require('dotenv').config();
  * @param {string} codigo O código de rastreio.
  * @returns {Promise<object>} Um objeto com os dados do rastreio.
  */
-async function rastrearCodigo(codigo) {
-    const API_KEY = process.env.SITERASTREIO_API_KEY;
+async function rastrearCodigo(codigo, apiKey = null) {
+    const API_KEY = apiKey || process.env.SITERASTREIO_API_KEY;
     if (!API_KEY) {
         console.error('❌ API Key do Site Rastreio não encontrada no arquivo .env');
         return { statusInterno: 'erro_config' };

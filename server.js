@@ -248,6 +248,7 @@ const startApp = async () => {
         // Rotas de Integrações (UNIFICADAS)
         app.get('/api/integrations/info', planCheck, integrationsController.getIntegrationInfo);
         app.post('/api/integrations/regenerate', planCheck, integrationsController.regenerateApiKey);
+        app.put('/api/integrations/settings', planCheck, integrationsController.updateIntegrationSettings);
 
         // Rotas do WhatsApp
         app.get('/api/whatsapp/status', (req, res) => res.json({ status: whatsappStatus, qrCode: qrCodeData, botInfo: botInfo }));

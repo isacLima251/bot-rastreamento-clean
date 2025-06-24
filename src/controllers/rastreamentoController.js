@@ -2,6 +2,7 @@
 const pedidoService = require('../services/pedidoService');
 const rastreamentoService = require('../services/rastreamentoService');
 const logService = require('../services/logService');
+const integrationService = require('../services/integrationConfigService');
 
 /**
  * Procura por todos os pedidos que podem ser rastreados, consulta o seu status
@@ -24,7 +25,9 @@ async function verificarRastreios(db) {
         console.log(`🚚 Rastreando ${pedidosParaRastrear.length} pedido(s)...`);
 
         for (const pedido of pedidosParaRastrear) {
-            const dadosRastreio = await rastreamentoService.rastrearCodigo(pedido.codigoRastreio);
+            const config = await integrationService.getConfig(db, pedido.cliente_id || 1);
+            const apiKey = config && config.rastreio_api_key;
+            const dadosRastreio = await rastreamentoService.rastrearCodigo(pedido.codigoRastreio, apiKey);
 
             const novoStatus = (dadosRastreio.statusInterno || '').toLowerCase();
 

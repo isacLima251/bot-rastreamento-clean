@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const integrationConfigService = require('./integrationConfigService');
 
 function generateApiKey() {
     return crypto.randomBytes(20).toString('hex');
@@ -12,7 +13,12 @@ function createUser(db, email, password, isAdmin = 0, isActive = 1) {
         const stmt = db.prepare('INSERT INTO users (email, password, api_key, is_admin, is_active) VALUES (?, ?, ?, ?, ?)');
         stmt.run(email, hashed, apiKey, isAdmin, isActive, function(err) {
             if (err) return reject(err);
-            resolve({ id: this.lastID, email, api_key: apiKey, is_admin: isAdmin, is_active: isActive });
+            const userId = this.lastID;
+            integrationConfigService.createDefault(db, userId)
+                .then(() => {
+                    resolve({ id: userId, email, api_key: apiKey, is_admin: isAdmin, is_active: isActive });
+                })
+                .catch(reject);
         });
         stmt.finalize();
     });
