@@ -41,11 +41,11 @@ cd bot-rastreamento
 # Instalar dependências
 npm install
 
-# Criar o arquivo .env
+# Criar o arquivo de configuração
 cp .env.example .env
 ```
 
-Edite o `.env` com sua API Key e configurações.
+Abra o arquivo `.env` e preencha as variáveis `JWT_SECRET`, `SITERASTREIO_API_KEY`, `STRIPE_SECRET`, `PAY_SUCCESS_URL` e `PAY_CANCEL_URL`.
 
 ---
 
@@ -78,7 +78,7 @@ meu-bot-rastreamento/
 │   │   └── rastreamentoService.js
 │   └── utils/
 │       └── messages.json
-└── .env
+└── .env.example
 ```
 
 ---
