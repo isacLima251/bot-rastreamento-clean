@@ -59,4 +59,13 @@ function updateUserPlan(db, userId, planId) {
     });
 }
 
-module.exports = { getUserSubscription, incrementUsage, resetUsageIfNeeded, createSubscription, updateUserPlan };
+function updateSubscriptionStatus(db, userId, status) {
+    return new Promise((resolve, reject) => {
+        db.run('UPDATE subscriptions SET status = ? WHERE user_id = ?', [status, userId], function(err) {
+            if (err) return reject(err);
+            resolve({ changes: this.changes });
+        });
+    });
+}
+
+module.exports = { getUserSubscription, incrementUsage, resetUsageIfNeeded, createSubscription, updateUserPlan, updateSubscriptionStatus };
