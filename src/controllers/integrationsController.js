@@ -3,9 +3,8 @@ const pedidoService = require('../services/pedidoService');
 const userService = require('../services/userService');
 
 // Num sistema SaaS, esta chave viria do banco de dados de um utilizador específico.
-
-// Num sistema SaaS, esta chave também estaria associada à conta do utilizador.
-const CHAVE_SECRETA_DA_PLATAFORMA = "COLE_A_SUA_CHAVE_UNICA_DA_BRAIP_AQUI";
+// Aqui é lida de uma variável de ambiente para facilitar a configuração
+const CHAVE_SECRETA_DA_PLATAFORMA = process.env.BRAIP_SECRET || '';
 
 /**
  * Função 1: Recebe o postback de uma plataforma externa.

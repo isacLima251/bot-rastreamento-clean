@@ -41,12 +41,17 @@ cd bot-rastreamento
 # Instalar dependências
 npm install
 
-# Criar o arquivo `.env`
-# (preencha com as variáveis necessárias, como `SITERASTREIO_API_KEY` e `JWT_SECRET`)
-touch .env
+# Copiar o arquivo de exemplo de variáveis de ambiente
+cp .env.example .env
 ```
 
-Edite o `.env` com suas chaves e URLs de callback.
+Edite o `.env` com suas chaves e URLs de callback. As principais variáveis são:
+- `JWT_SECRET` – chave usada para assinar os tokens JWT
+- `SITERASTREIO_API_KEY` – chave da API do Site Rastreio
+- `BRAIP_SECRET` – autenticação para postbacks da Braip
+- `STRIPE_SECRET` – chave secreta do Stripe
+- `PAY_SUCCESS_URL` e `PAY_CANCEL_URL` – páginas de retorno do checkout
+- `PAY_WEBHOOK_URL` e `PAY_WEBHOOK_SECRET` – endpoint e segredo do webhook de pagamento
 
 ---
 
