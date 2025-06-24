@@ -51,6 +51,7 @@ const authFetch = (url, options = {}) => {
     const webhookUrlDisplayEl = document.getElementById('webhook-url-display');
     const btnCopyWebhookEl = document.getElementById('btn-copy-webhook');
     const btnRegenerateWebhookEl = document.getElementById('btn-regenerate-webhook');
+    const logoutBtnEl = document.getElementById('logout-btn');
     const modalConfirmacaoEl = document.getElementById('modal-confirmacao');
     const modalConfirmacaoTextoEl = document.getElementById('modal-confirmacao-texto');
     const btnConfirmacaoCancelarEl = document.getElementById('btn-confirmacao-cancelar');
@@ -739,6 +740,13 @@ const authFetch = (url, options = {}) => {
         notificacaoCloseBtnEl.addEventListener('click', () => {
             clearTimeout(notificacaoTimer);
             if(notificacaoEl) notificacaoEl.classList.remove('show');
+        });
+    }
+
+    if (logoutBtnEl) {
+        logoutBtnEl.addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
         });
     }
 
