@@ -51,6 +51,8 @@ const authFetch = (url, options = {}) => {
     const webhookUrlDisplayEl = document.getElementById('webhook-url-display');
     const btnCopyWebhookEl = document.getElementById('btn-copy-webhook');
     const btnRegenerateWebhookEl = document.getElementById('btn-regenerate-webhook');
+    const inputPostbackSecretEl = document.getElementById('input-postback-secret');
+    const btnSavePostbackSecretEl = document.getElementById('btn-save-postback-secret');
     const logoutBtnEl = document.getElementById('logout-btn');
     const modalConfirmacaoEl = document.getElementById('modal-confirmacao');
     const modalConfirmacaoTextoEl = document.getElementById('modal-confirmacao-texto');
@@ -419,6 +421,7 @@ const authFetch = (url, options = {}) => {
             const baseUrl = `${window.location.protocol}//${window.location.host}`;
             const webhookUrl = `${baseUrl}/api/postback?key=${data.apiKey}`;
             webhookUrlDisplayEl.textContent = webhookUrl;
+            if (inputPostbackSecretEl) inputPostbackSecretEl.value = data.settings && data.settings.postback_secret ? data.settings.postback_secret : '';
         } catch (error) {
             webhookUrlDisplayEl.textContent = "Erro ao carregar o link.";
             showNotification(error.message, 'error');
@@ -656,6 +659,24 @@ const authFetch = (url, options = {}) => {
                     showNotification(error.message, 'error');
                 }
             });
+        });
+    }
+
+    if (btnSavePostbackSecretEl) {
+        btnSavePostbackSecretEl.addEventListener('click', async () => {
+            const secretValue = inputPostbackSecretEl ? inputPostbackSecretEl.value.trim() : '';
+            try {
+                const resp = await authFetch('/api/integrations/settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ postback_secret: secretValue })
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error || 'Falha ao salvar.');
+                showNotification(data.message || 'Configurações atualizadas', 'success');
+            } catch (err) {
+                showNotification(err.message, 'error');
+            }
         });
     }
 
