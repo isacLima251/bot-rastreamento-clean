@@ -99,6 +99,46 @@ const initDb = () => {
                         return reject(err);
                     }
                     console.log("✔️ Tabela 'users' pronta.");
+
+                    // Garantir colunas obrigatórias
+                    db.run("ALTER TABLE users ADD COLUMN api_key TEXT", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) return reject(e);
+                        db.all('SELECT id FROM users WHERE api_key IS NULL', [], (err, rows) => {
+                            if (err) return reject(err);
+                            const stmt = db.prepare('UPDATE users SET api_key = ? WHERE id = ?');
+                            for (const row of rows) {
+                                const key = require('crypto').randomBytes(20).toString('hex');
+                                stmt.run(key, row.id);
+                            }
+                            stmt.finalize((err) => {
+                                if (err) return reject(err);
+                            });
+                        });
+                    });
+                    db.run("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) return reject(e);
+                    });
+                    db.run("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) return reject(e);
+                    });
+
+                    // Garante registros padrão nas tabelas de configurações
+                    db.all('SELECT id FROM users', [], (err, rows) => {
+                        if (err) return reject(err);
+                        const stmtIntegration = db.prepare('INSERT OR IGNORE INTO integration_settings (user_id) VALUES (?)');
+                        const stmtUserSettings = db.prepare('INSERT OR IGNORE INTO user_settings (user_id) VALUES (?)');
+                        for (const row of rows) {
+                            stmtIntegration.run(row.id);
+                            stmtUserSettings.run(row.id);
+                        }
+                        stmtIntegration.finalize((err) => {
+                            if (err) return reject(err);
+                            stmtUserSettings.finalize((err2) => {
+                                if (err2) return reject(err2);
+                                resolve(db);
+                            });
+                        });
+                    });
                 });
 
                     // Tabela de Planos
@@ -216,47 +256,7 @@ const initDb = () => {
                         db.run("UPDATE automacoes SET cliente_id = 1 WHERE cliente_id IS NULL");
                     });
 
-                    // API Key por usuário
-                    db.run("ALTER TABLE users ADD COLUMN api_key TEXT", [], (e) => {
-                        if (e && !e.message.includes('duplicate')) return reject(e);
-                        db.all('SELECT id FROM users WHERE api_key IS NULL', [], (err, rows) => {
-                            if (err) return reject(err);
-                            const stmt = db.prepare('UPDATE users SET api_key = ? WHERE id = ?');
-                            for (const row of rows) {
-                                const key = require('crypto').randomBytes(20).toString('hex');
-                                stmt.run(key, row.id);
-                            }
-                            stmt.finalize((err) => {
-                                if (err) return reject(err);
-                            });
-                        });
-                    });
-
-                    // Campos de privilégios e status
-                    db.run("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0", [], (e) => {
-                        if (e && !e.message.includes('duplicate')) return reject(e);
-                    });
-                    db.run("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1", [], (e) => {
-                        if (e && !e.message.includes('duplicate')) return reject(e);
-                    });
-
-                    // Garante registros padrão nas tabelas de configurações
-                    db.all('SELECT id FROM users', [], (err, rows) => {
-                        if (err) return reject(err);
-                        const stmtIntegration = db.prepare('INSERT OR IGNORE INTO integration_settings (user_id) VALUES (?)');
-                        const stmtUserSettings = db.prepare('INSERT OR IGNORE INTO user_settings (user_id) VALUES (?)');
-                        for (const row of rows) {
-                            stmtIntegration.run(row.id);
-                            stmtUserSettings.run(row.id);
-                        }
-                        stmtIntegration.finalize((err) => {
-                            if (err) return reject(err);
-                            stmtUserSettings.finalize((err2) => {
-                                if (err2) return reject(err2);
-                                resolve(db);
-                            });
-                        });
-                    });
+                    // Bloco movido para dentro da criação da tabela 'users'
 
                 });
             });
