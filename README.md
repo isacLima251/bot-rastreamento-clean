@@ -53,6 +53,7 @@ Edite o `.env` com suas chaves e URLs de callback. As principais variáveis são
 - `STRIPE_SECRET` – chave secreta do Stripe
 - `PAY_SUCCESS_URL` e `PAY_CANCEL_URL` – páginas de retorno do checkout
 - `PAY_WEBHOOK_URL` e `PAY_WEBHOOK_SECRET` – endpoint e segredo do webhook de pagamento
+- `DB_PATH` – caminho para o arquivo SQLite (opcional)
 
 ---
 
