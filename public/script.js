@@ -1,16 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
 const token = localStorage.getItem('token');
 if (!token) { window.location.href = '/login.html'; return; }
-const authFetch = (url, options = {}) => {
+const showUpgradeModal = () => { if(modalUpgradeEl) modalUpgradeEl.classList.add('active'); };
+const authFetch = async (url, options = {}) => {
     options.headers = options.headers || {};
     options.headers['Authorization'] = `Bearer ${token}`;
-    return fetch(url, options).then(resp => {
-        if (resp.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/login.html';
-        }
-        return resp;
-    });
+    const resp = await fetch(url, options);
+    if (resp.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login.html';
+    }
+    if (resp.status === 403) {
+        try {
+            const data = await resp.clone().json();
+            if (data.error && data.error.includes('Limite do plano excedido')) {
+                showUpgradeModal();
+            }
+        } catch (e) { /* ignore */ }
+    }
+    return resp;
 };
     // --- 1. Seletores de Elementos ---
     const mainNavEl = document.querySelector('.main-nav');
@@ -66,6 +74,9 @@ const authFetch = (url, options = {}) => {
     const logsTableBodyEl = document.getElementById('logs-table-body');
     const toggleCreateContactEl = document.getElementById('toggle-create-contact');
     const toggleCreateContactLabelEl = document.getElementById('toggle-create-contact-label');
+    const plansListEl = document.getElementById('plans-list');
+    const modalUpgradeEl = document.getElementById('modal-upgrade');
+    const btnUpgradePlansEl = document.getElementById('btn-upgrade-plans');
 
     // --- 2. Estado da Aplicação ---
     let todosOsPedidos = [];
@@ -154,6 +165,7 @@ const authFetch = (url, options = {}) => {
         if (viewId === 'settings-view') loadUserSettings();
         if (viewId === 'reports-view') loadReportData();
         if (viewId === 'logs-view') loadLogs();
+        if (viewId === 'plans-view') loadPlans();
     }
 
     const showConfirmationModal = (message, onConfirm) => {
@@ -582,6 +594,25 @@ const authFetch = (url, options = {}) => {
         }
     }
 
+    async function loadPlans() {
+        if (!plansListEl) return;
+        plansListEl.innerHTML = '<p class="info-mensagem">A carregar...</p>';
+        try {
+            const resp = await authFetch('/api/plans');
+            const { data } = await resp.json();
+            plansListEl.innerHTML = '';
+            data.filter(p => p.price > 0).forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'plan-card';
+                const limite = p.monthly_limit === -1 ? 'Ilimitado' : `${p.monthly_limit} pedidos/mês`;
+                card.innerHTML = `<h3>${p.name}</h3><p>${limite}</p><p>R$ ${p.price}</p><button class="btn-primary" data-plan="${p.id}">Assinar Agora</button>`;
+                plansListEl.appendChild(card);
+            });
+        } catch (err) {
+            plansListEl.innerHTML = '<p class="info-mensagem">Erro ao carregar planos.</p>';
+        }
+    }
+
     // --- 6. Event Listeners ---
     if(mainNavEl) mainNavEl.addEventListener('click', (e) => {
         const navBtn = e.target.closest('.nav-btn');
@@ -737,6 +768,30 @@ const authFetch = (url, options = {}) => {
             authFetch('/api/whatsapp/disconnect', { method: 'POST' });
         });
     });
+
+    if (plansListEl) plansListEl.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-plan]');
+        if (!btn) return;
+        const planId = btn.dataset.plan;
+        try {
+            const resp = await authFetch('/api/payment/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ planId })
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data.error || 'Falha ao iniciar pagamento.');
+            window.location.href = data.url;
+        } catch (err) {
+            showNotification(err.message, 'error');
+        }
+    });
+
+    if (btnUpgradePlansEl) btnUpgradePlansEl.addEventListener('click', () => {
+        if(modalUpgradeEl) modalUpgradeEl.classList.remove('active');
+        showView('plans-view');
+    });
+    if(modalUpgradeEl) modalUpgradeEl.addEventListener('click', (e) => { if(e.target === modalUpgradeEl) modalUpgradeEl.classList.remove('active'); });
     
     const settingsView = document.getElementById('settings-view');
     if(settingsView) settingsView.addEventListener('click', (e) => {
