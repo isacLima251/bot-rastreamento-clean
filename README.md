@@ -49,6 +49,7 @@ Edite o `.env` com suas chaves e URLs de callback. As principais variáveis são
 - `JWT_SECRET` – chave usada para assinar os tokens JWT
 - `SITERASTREIO_API_KEY` – chave da API do Site Rastreio
 - `BRAIP_SECRET` – autenticação para postbacks da Braip
+- `PORT` – porta em que o servidor irá rodar (padrão 3000)
 - `STRIPE_SECRET` – chave secreta do Stripe
 - `PAY_SUCCESS_URL` e `PAY_CANCEL_URL` – páginas de retorno do checkout
 - `PAY_WEBHOOK_URL` e `PAY_WEBHOOK_SECRET` – endpoint e segredo do webhook de pagamento
