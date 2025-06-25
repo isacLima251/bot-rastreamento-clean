@@ -62,6 +62,8 @@ const authFetch = (url, options = {}) => {
     const newContactsChartCanvas = document.getElementById('new-contacts-chart');
     const statusPieChartCanvas = document.getElementById('status-pie-chart');
     const logsTableBodyEl = document.getElementById('logs-table-body');
+    const toggleCreateContactEl = document.getElementById('toggle-create-contact');
+    const toggleCreateContactLabelEl = document.getElementById('toggle-create-contact-label');
 
     // --- 2. Estado da Aplicação ---
     let todosOsPedidos = [];
@@ -147,6 +149,7 @@ const authFetch = (url, options = {}) => {
         if (viewId === 'contacts-view') renderizarContatosPaginaCompleta();
         if (viewId === 'automations-view') loadAutomations();
         if (viewId === 'integrations-view') loadIntegrationInfo();
+        if (viewId === 'settings-view') loadUserSettings();
         if (viewId === 'reports-view') loadReportData();
         if (viewId === 'logs-view') loadLogs();
     }
@@ -422,6 +425,19 @@ const authFetch = (url, options = {}) => {
         }
     }
 
+    async function loadUserSettings() {
+        if (!toggleCreateContactEl) return;
+        try {
+            const response = await authFetch('/api/settings/contact-creation');
+            if (!response.ok) throw new Error('Falha ao carregar configuração.');
+            const data = await response.json();
+            toggleCreateContactEl.checked = data.create_contact_on_message;
+            if (toggleCreateContactLabelEl) toggleCreateContactLabelEl.textContent = data.create_contact_on_message ? 'Ativado' : 'Desativado';
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    }
+
     async function loadAutomations() {
         try {
             const response = await authFetch('/api/automations');
@@ -640,6 +656,24 @@ const authFetch = (url, options = {}) => {
                     showNotification(error.message, 'error');
                 }
             });
+        });
+    }
+
+    if (toggleCreateContactEl) {
+        toggleCreateContactEl.addEventListener('change', async () => {
+            try {
+                const resp = await authFetch('/api/settings/contact-creation', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: toggleCreateContactEl.checked })
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error || 'Falha ao salvar.');
+                if (toggleCreateContactLabelEl) toggleCreateContactLabelEl.textContent = toggleCreateContactEl.checked ? 'Ativado' : 'Desativado';
+                showNotification(data.message, 'success');
+            } catch (err) {
+                showNotification(err.message, 'error');
+            }
         });
     }
 
