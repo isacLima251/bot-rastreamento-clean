@@ -157,13 +157,13 @@ const initDb = () => {
                         console.log("✔️ Tabela 'plans' pronta.");
 
                         // Planos padrão
-                        const planStmt = db.prepare("INSERT OR IGNORE INTO plans (id, name, price, monthly_limit) VALUES (?, ?, ?, ?)");
+                        const planStmt = db.prepare("INSERT OR REPLACE INTO plans (id, name, price, monthly_limit) VALUES (?, ?, ?, ?)");
                         const plansData = [
-                            [1, 'Free', 0, 10],
-                            [2, 'Start', 9.9, 50],
-                            [3, 'Basic', 19.9, 100],
-                            [4, 'Pro', 49.9, 250],
-                            [5, 'Pro Plus', 99.9, 600]
+                            [1, 'Gr\u00e1tis', 0, 10],
+                            [2, 'Start', 39, 50],
+                            [3, 'Basic', 59, 100],
+                            [4, 'Pro', 99, 250],
+                            [5, 'Pro Plus', 0, 600]
                         ];
                         for (const data of plansData) planStmt.run(data);
                         planStmt.finalize();
