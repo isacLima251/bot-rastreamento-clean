@@ -187,6 +187,7 @@ const initDb = () => {
                         return reject(err);
                     }
                     console.log("✔️ Tabela 'subscriptions' pronta.");
+                    db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id)`);
                 });
 
                     // Tabela de Configurações de Integração
