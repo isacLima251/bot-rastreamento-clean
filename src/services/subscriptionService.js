@@ -2,7 +2,8 @@ const moment = require('moment');
 
 function getUserSubscription(db, userId) {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT s.*, p.monthly_limit FROM subscriptions s
+        const sql = `SELECT s.*, p.monthly_limit, p.name AS plan_name, p.price
+                     FROM subscriptions s
                      JOIN plans p ON p.id = s.plan_id
                      WHERE s.user_id = ?`;
         db.get(sql, [userId], (err, row) => {

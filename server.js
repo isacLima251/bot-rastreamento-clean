@@ -22,6 +22,7 @@ const webhookRastreioController = require('./src/controllers/webhookRastreioCont
 const authController = require('./src/controllers/authController');
 const adminController = require('./src/controllers/adminController');
 const settingsController = require('./src/controllers/settingsController');
+const subscriptionService = require('./src/services/subscriptionService');
 const authMiddleware = require('./src/middleware/auth');
 const apiKeyMiddleware = require('./src/middleware/apiKey');
 const planCheck = require('./src/middleware/planCheck');
@@ -203,18 +204,32 @@ const startApp = async () => {
         // Postback - validação por API Key + controle de plano
         app.post('/api/postback', apiKeyMiddleware, planCheck, integrationsController.receberPostback);
 
-        // Middleware de autenticação para rotas abaixo
-        app.use(authMiddleware);
-
-        // Rotas administrativas
+        // Rota da página de administração (verificação feita no frontend)
         app.get('/admin', (req, res) => {
             res.sendFile(path.join(__dirname, 'public', 'admin.html'));
         });
+
+        // Middleware de autenticação para rotas abaixo
+        app.use(authMiddleware);
+
+        // Rotas administrativas protegidas
         app.get('/api/admin/clients', adminCheck, adminController.listClients);
         app.post('/api/admin/clients', adminCheck, adminController.createClient);
         app.put('/api/admin/clients/:id', adminCheck, adminController.updateClient);
         app.put('/api/admin/clients/:id/active', adminCheck, adminController.toggleActive);
         app.get('/api/admin/stats', adminCheck, adminController.getStats);
+
+        // Detalhes da assinatura do usuário logado
+        app.get('/api/subscription', async (req, res) => {
+            try {
+                const sub = await subscriptionService.getUserSubscription(req.db, req.user.id);
+                if (!sub) return res.status(404).json({ error: 'Nenhum plano encontrado' });
+                res.json({ subscription: sub });
+            } catch (err) {
+                console.error('Erro ao obter assinatura:', err);
+                res.status(500).json({ error: 'Falha ao consultar assinatura' });
+            }
+        });
 
         // Rotas de planos (seleção e gestão)
         app.get('/api/plans', (req, res) => {

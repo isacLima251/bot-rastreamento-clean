@@ -77,6 +77,7 @@ const authFetch = async (url, options = {}) => {
     const plansListEl = document.getElementById('plans-list');
     const modalUpgradeEl = document.getElementById('modal-upgrade');
     const btnUpgradePlansEl = document.getElementById('btn-upgrade-plans');
+    const planStatusEl = document.getElementById('plan-status');
 
     // --- 2. Estado da Aplicação ---
     let todosOsPedidos = [];
@@ -594,6 +595,20 @@ const authFetch = async (url, options = {}) => {
         }
     }
 
+    async function loadSubscriptionStatus() {
+        if (!planStatusEl) return;
+        planStatusEl.textContent = 'Carregando...';
+        try {
+            const resp = await authFetch('/api/subscription');
+            if (!resp.ok) throw new Error('Falha ao carregar assinatura');
+            const { subscription } = await resp.json();
+            const limite = subscription.monthly_limit === -1 ? 'Ilimitado' : subscription.monthly_limit;
+            planStatusEl.textContent = `Plano Atual: ${subscription.plan_name} \u2014 Uso este mês: ${subscription.usage} / ${limite} pedidos`;
+        } catch (err) {
+            planStatusEl.textContent = 'Erro ao carregar plano';
+        }
+    }
+
     async function loadPlans() {
         if (!plansListEl) return;
         plansListEl.innerHTML = '<p class="info-mensagem">A carregar...</p>';
@@ -601,13 +616,17 @@ const authFetch = async (url, options = {}) => {
             const resp = await authFetch('/api/plans');
             const { data } = await resp.json();
             plansListEl.innerHTML = '';
-            data.filter(p => p.price > 0).forEach(p => {
+            data.filter(p => p.name !== 'Pro Plus').forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'plan-card';
                 const limite = p.monthly_limit === -1 ? 'Ilimitado' : `${p.monthly_limit} pedidos/mês`;
                 card.innerHTML = `<h3>${p.name}</h3><p>${limite}</p><p>R$ ${p.price}</p><button class="btn-primary" data-plan="${p.id}">Assinar Agora</button>`;
                 plansListEl.appendChild(card);
             });
+            const contactCard = document.createElement('div');
+            contactCard.className = 'plan-card';
+            contactCard.innerHTML = `<h3>Mais de 250 pedidos?</h3><p>Entre em contato com o suporte.</p>`;
+            plansListEl.appendChild(contactCard);
         } catch (err) {
             plansListEl.innerHTML = '<p class="info-mensagem">Erro ao carregar planos.</p>';
         }
@@ -862,6 +881,7 @@ const authFetch = async (url, options = {}) => {
 
     // --- 7. Inicialização ---
     fetchErenderizarTudo();
+    loadSubscriptionStatus();
     connectWebSocket();
     showView('chat-view');
 });
