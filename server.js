@@ -207,7 +207,7 @@ const startApp = async () => {
         app.use(authMiddleware);
 
         // Rotas administrativas
-        app.get('/admin', adminCheck, (req, res) => {
+        app.get('/admin', (req, res) => {
             res.sendFile(path.join(__dirname, 'public', 'admin.html'));
         });
         app.get('/api/admin/clients', adminCheck, adminController.listClients);
@@ -226,8 +226,10 @@ const startApp = async () => {
         app.post('/api/subscribe/:planId', (req, res) => {
             const userId = req.user.id;
             const planId = parseInt(req.params.planId);
-            const stmt = req.db.prepare('INSERT OR REPLACE INTO subscriptions (id, user_id, plan_id, status) VALUES ((SELECT id FROM subscriptions WHERE user_id = ?), ?, ?, "active")');
-            stmt.run(userId, userId, planId, (err) => {
+            const sql = `INSERT INTO subscriptions (user_id, plan_id, status)
+                         VALUES (?, ?, 'active')
+                         ON CONFLICT(user_id) DO UPDATE SET plan_id = excluded.plan_id, status='active'`;
+            req.db.run(sql, [userId, planId], function(err) {
                 if (err) return res.status(500).json({ error: err.message });
                 res.json({ message: 'Plano contratado com sucesso' });
             });
