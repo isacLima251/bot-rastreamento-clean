@@ -19,3 +19,4 @@ const getLogsByCliente = (db, clienteId, limit = 100) => {
 };
 
 module.exports = { addLog, getLogsByCliente };
+

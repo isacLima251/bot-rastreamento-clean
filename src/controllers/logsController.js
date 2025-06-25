@@ -11,3 +11,4 @@ exports.listarLogs = async (req, res) => {
         res.status(500).json({ error: 'Falha ao buscar logs.' });
     }
 };
+

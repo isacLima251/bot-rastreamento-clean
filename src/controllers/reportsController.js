@@ -44,3 +44,4 @@ exports.getReportSummary = async (req, res) => {
         res.status(500).json({ error: "Falha ao gerar o resumo do relatório." });
     }
 };
+

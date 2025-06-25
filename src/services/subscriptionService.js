@@ -69,3 +69,4 @@ function updateSubscriptionStatus(db, userId, status) {
 }
 
 module.exports = { getUserSubscription, incrementUsage, resetUsageIfNeeded, createSubscription, updateUserPlan, updateSubscriptionStatus };
+

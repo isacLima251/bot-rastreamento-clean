@@ -43,3 +43,4 @@ function createDefault(db, userId) {
 }
 
 module.exports = { getConfig, updateConfig, createDefault };
+

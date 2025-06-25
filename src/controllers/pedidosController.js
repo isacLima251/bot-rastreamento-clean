@@ -228,3 +228,4 @@ exports.marcarComoLido = async (req, res) => {
         res.status(500).json({ error: "Falha ao marcar como lido." });
     }
 };
+
