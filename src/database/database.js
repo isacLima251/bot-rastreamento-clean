@@ -183,60 +183,62 @@ const initDb = () => {
                         stmt.run(data);
                     }
                     stmt.finalize((err) => {
-                        if (!err) {
-                            console.log("✔️ Dados padrão de automação garantidos.");
-                        }
+                        if (err) return reject(err);
+                        console.log("✔️ Dados padrão de automação garantidos.");
                     });
 
                     // Garante que as colunas de multitenancy existam em bancos antigos
                     db.run("ALTER TABLE pedidos ADD COLUMN cliente_id INTEGER", [], (e) => {
-                        if (e && !e.message.includes('duplicate')) console.error(e);
+                        if (e && !e.message.includes('duplicate')) return reject(e);
                         db.run("UPDATE pedidos SET cliente_id = 1 WHERE cliente_id IS NULL");
                     });
                     db.run("ALTER TABLE historico_mensagens ADD COLUMN cliente_id INTEGER", [], (e) => {
-                        if (e && !e.message.includes('duplicate')) console.error(e);
+                        if (e && !e.message.includes('duplicate')) return reject(e);
                         db.run("UPDATE historico_mensagens SET cliente_id = 1 WHERE cliente_id IS NULL");
                     });
                     db.run("ALTER TABLE automacoes ADD COLUMN cliente_id INTEGER", [], (e) => {
-                        if (e && !e.message.includes('duplicate')) console.error(e);
+                        if (e && !e.message.includes('duplicate')) return reject(e);
                         db.run("UPDATE automacoes SET cliente_id = 1 WHERE cliente_id IS NULL");
                     });
 
                     // API Key por usuário
                     db.run("ALTER TABLE users ADD COLUMN api_key TEXT", [], (e) => {
-                        if (e && !e.message.includes('duplicate')) console.error(e);
+                        if (e && !e.message.includes('duplicate')) return reject(e);
                         db.all('SELECT id FROM users WHERE api_key IS NULL', [], (err, rows) => {
-                            if (err) return console.error(err);
+                            if (err) return reject(err);
                             const stmt = db.prepare('UPDATE users SET api_key = ? WHERE id = ?');
                             for (const row of rows) {
                                 const key = require('crypto').randomBytes(20).toString('hex');
                                 stmt.run(key, row.id);
                             }
-                            stmt.finalize();
+                            stmt.finalize((err) => {
+                                if (err) return reject(err);
+                            });
                         });
                     });
 
                     // Campos de privilégios e status
                     db.run("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0", [], (e) => {
-                        if (e && !e.message.includes('duplicate')) console.error(e);
+                        if (e && !e.message.includes('duplicate')) return reject(e);
                     });
                     db.run("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1", [], (e) => {
-                        if (e && !e.message.includes('duplicate')) console.error(e);
+                        if (e && !e.message.includes('duplicate')) return reject(e);
                     });
 
                     // Garante registro padrão na tabela de integrações
                     db.all('SELECT id FROM users', [], (err, rows) => {
-                        if (err) return console.error(err);
+                        if (err) return reject(err);
                         const stmt = db.prepare('INSERT OR IGNORE INTO integration_settings (user_id) VALUES (?)');
                         for (const row of rows) {
                             stmt.run(row.id);
                         }
-                        stmt.finalize();
+                        stmt.finalize((err) => {
+                            if (err) return reject(err);
+                            resolve(db);
+                        });
                     });
 
                 });
-
-                resolve(db);
             });
         });
     });
