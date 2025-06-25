@@ -237,6 +237,7 @@ input:checked ~ .toggle-label { color: var(--success-color); font-weight: 600; }
 .btn-secondary:hover { background-color: var(--hover-bg); }
 .btn-tertiary { background: none; border: none; color: var(--primary-color); font-weight: 600; cursor: pointer; }
 .btn-tertiary:hover { text-decoration: underline; }
+.integration-card input[type="text"] { flex-grow: 1; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; }
 .table-wrapper { width: 100%; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
 #integration-history-table { width: 100%; border-collapse: collapse; }
 #integration-history-table th, #integration-history-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
