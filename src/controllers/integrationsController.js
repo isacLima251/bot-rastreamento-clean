@@ -17,7 +17,7 @@ exports.receberPostback = async (req, res) => {
         product_name
     } = req.body;
     const config = await integrationService.getConfig(db, clienteId);
-    const secret = (config && config.postback_secret) || process.env.BRAIP_SECRET || '';
+    const secret = (config && config.postback_secret) || process.env.POSTBACK_SECRET || '';
 
     if (basic_authentication !== secret) {
         console.warn(`[Integração] Recebida requisição com chave de autenticação inválida.`);
