@@ -26,6 +26,7 @@ const authMiddleware = require('./src/middleware/auth');
 const apiKeyMiddleware = require('./src/middleware/apiKey');
 const planCheck = require('./src/middleware/planCheck');
 const adminCheck = require('./src/middleware/adminCheck');
+const path = require('path');
 
 
 // --- GERENCIAMENTO DE ESTADO ---
@@ -206,10 +207,14 @@ const startApp = async () => {
         app.use(authMiddleware);
 
         // Rotas administrativas
+        app.get('/admin', adminCheck, (req, res) => {
+            res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+        });
         app.get('/api/admin/clients', adminCheck, adminController.listClients);
         app.post('/api/admin/clients', adminCheck, adminController.createClient);
         app.put('/api/admin/clients/:id', adminCheck, adminController.updateClient);
         app.put('/api/admin/clients/:id/active', adminCheck, adminController.toggleActive);
+        app.get('/api/admin/stats', adminCheck, adminController.getStats);
 
         // Rotas de planos (seleção e gestão)
         app.get('/api/plans', (req, res) => {
