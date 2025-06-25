@@ -16,10 +16,12 @@ const integrationsController = require('./src/controllers/integrationsController
 const logsController = require('./src/controllers/logsController');
 const whatsappService = require('./src/services/whatsappService');
 const pedidoService = require('./src/services/pedidoService');
+const settingsService = require('./src/services/settingsService');
 const paymentController = require('./src/controllers/paymentController');
 const webhookRastreioController = require('./src/controllers/webhookRastreioController');
 const authController = require('./src/controllers/authController');
 const adminController = require('./src/controllers/adminController');
+const settingsController = require('./src/controllers/settingsController');
 const authMiddleware = require('./src/middleware/auth');
 const apiKeyMiddleware = require('./src/middleware/apiKey');
 const planCheck = require('./src/middleware/planCheck');
@@ -31,6 +33,7 @@ let whatsappStatus = 'DISCONNECTED';
 let qrCodeData = null;
 let venomClient = null;
 let botInfo = null;
+const BOT_OWNER_ID = 1;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -143,20 +146,26 @@ function start(client) {
         if (message.isGroupMsg || !message.body || message.from === 'status@broadcast') return;
         const telefoneCliente = message.from.replace('@c.us', '');
         console.log(`[onMessage] Mensagem de ${telefoneCliente}: "${message.body}"`);
-        
+
         try {
             const db = app.get('db');
-            let pedido = await pedidoService.findPedidoByTelefone(db, telefoneCliente);
-            
+            let pedido = await pedidoService.findPedidoByTelefone(db, telefoneCliente, BOT_OWNER_ID);
+
             if (!pedido) {
-                const nomeContato = message.notifyName || message.pushName || telefoneCliente;
-                const novoPedidoData = { nome: nomeContato, telefone: telefoneCliente };
-                pedido = await pedidoService.criarPedido(db, novoPedidoData, client);
-                broadcast({ type: 'novo_contato', pedido });
+                const setting = await settingsService.getSetting(db, BOT_OWNER_ID);
+                if (setting) {
+                    const nomeContato = message.notifyName || message.pushName || telefoneCliente;
+                    const novoPedidoData = { nome: nomeContato, telefone: telefoneCliente };
+                    pedido = await pedidoService.criarPedido(db, novoPedidoData, client, BOT_OWNER_ID);
+                    broadcast({ type: 'novo_contato', pedido });
+                } else {
+                    console.log('Criação automática de contato desativada - ignorando mensagem.');
+                    return;
+                }
             } else {
-                await pedidoService.incrementarNaoLidas(db, pedido.id);
+                await pedidoService.incrementarNaoLidas(db, pedido.id, BOT_OWNER_ID);
             }
-            await pedidoService.addMensagemHistorico(db, pedido.id, message.body, 'recebida', 'cliente');
+            await pedidoService.addMensagemHistorico(db, pedido.id, message.body, 'recebida', 'cliente', BOT_OWNER_ID);
             broadcast({ type: 'nova_mensagem', pedidoId: pedido.id });
         } catch (error) {
             console.error("[onMessage] Erro CRÍTICO ao processar mensagem:", error);
@@ -249,6 +258,10 @@ const startApp = async () => {
         app.get('/api/integrations/info', planCheck, integrationsController.getIntegrationInfo);
         app.post('/api/integrations/regenerate', planCheck, integrationsController.regenerateApiKey);
         app.put('/api/integrations/settings', planCheck, integrationsController.updateIntegrationSettings);
+
+        // Rotas de Configurações de Usuário
+        app.get('/api/settings/contact-creation', planCheck, settingsController.getContactCreationSetting);
+        app.put('/api/settings/contact-creation', planCheck, settingsController.updateContactCreationSetting);
 
         // Rotas do WhatsApp
         app.get('/api/whatsapp/status', (req, res) => res.json({ status: whatsappStatus, qrCode: qrCodeData, botInfo: botInfo }));

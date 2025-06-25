@@ -163,6 +163,8 @@ body {
 .btn-settings-action.disconnect { background-color: var(--error-color); }
 .qr-expired { padding: 20px; border: 1px dashed var(--border-color); border-radius: 8px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
 .qr-expired p { font-weight: 600; color: var(--error-color); }
+# Estilo para card de configurações
+.settings-card { background-color: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-top: 25px; width: 100%; max-width: 400px; }
 #settings-profile-info { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-bottom: 25px; }
 #settings-bot-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 4px solid var(--sidebar-bg); box-shadow: 0 0 0 2px var(--border-color); margin-bottom: 10px; }
 #settings-bot-name { font-size: 1.25rem; font-weight: 600; color: var(--text-color); margin: 0; }

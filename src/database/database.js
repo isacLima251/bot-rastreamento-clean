@@ -166,6 +166,21 @@ const initDb = () => {
                         console.log("✔️ Tabela 'integration_settings' pronta.");
                     });
 
+                    // Tabela de Configurações de Usuário
+                    db.run(`
+                        CREATE TABLE IF NOT EXISTS user_settings (
+                            user_id INTEGER PRIMARY KEY,
+                            create_contact_on_message INTEGER DEFAULT 1,
+                            FOREIGN KEY (user_id) REFERENCES users(id)
+                        )
+                    `, (err) => {
+                        if (err) {
+                            console.error("❌ Erro ao criar tabela 'user_settings':", err.message);
+                            return reject(err);
+                        }
+                        console.log("✔️ Tabela 'user_settings' pronta.");
+                    });
+
                     // Insere os dados padrão para garantir que a tabela tenha conteúdo inicial
                     const stmt = db.prepare("INSERT OR IGNORE INTO automacoes (gatilho, cliente_id, ativo, mensagem) VALUES (?, ?, ?, ?)");
                     const automationsData = [
@@ -225,16 +240,21 @@ const initDb = () => {
                         if (e && !e.message.includes('duplicate')) return reject(e);
                     });
 
-                    // Garante registro padrão na tabela de integrações
+                    // Garante registros padrão nas tabelas de configurações
                     db.all('SELECT id FROM users', [], (err, rows) => {
                         if (err) return reject(err);
-                        const stmt = db.prepare('INSERT OR IGNORE INTO integration_settings (user_id) VALUES (?)');
+                        const stmtIntegration = db.prepare('INSERT OR IGNORE INTO integration_settings (user_id) VALUES (?)');
+                        const stmtUserSettings = db.prepare('INSERT OR IGNORE INTO user_settings (user_id) VALUES (?)');
                         for (const row of rows) {
-                            stmt.run(row.id);
+                            stmtIntegration.run(row.id);
+                            stmtUserSettings.run(row.id);
                         }
-                        stmt.finalize((err) => {
+                        stmtIntegration.finalize((err) => {
                             if (err) return reject(err);
-                            resolve(db);
+                            stmtUserSettings.finalize((err2) => {
+                                if (err2) return reject(err2);
+                                resolve(db);
+                            });
                         });
                     });
 
