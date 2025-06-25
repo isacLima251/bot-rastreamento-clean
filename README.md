@@ -74,6 +74,16 @@ O acompanhamento dos pedidos é feito de forma automática enquanto o WhatsApp e
 node index.js
 ```
 
+### 3. Criar ou promover administradores
+
+Para gerenciar contas de administrador via terminal execute o script `criar-admin.js`:
+
+```bash
+node criar-admin.js
+```
+
+Ele irá perguntar o e-mail e, se o usuário não existir, será criado como administrador. Caso já exista, você poderá promovê-lo.
+
 ---
 
 ## 📚 Estrutura do Projeto
