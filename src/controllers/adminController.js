@@ -12,7 +12,8 @@ exports.listClients = async (req, res) => {
                 id: u.id,
                 email: u.email,
                 is_active: !!u.is_active,
-                requests: sub ? sub.usage : 0
+                requests: sub ? sub.usage : 0,
+                plan_id: sub ? sub.plan_id : null
             });
         }
         res.json({ count: clients.length, clients });
@@ -59,6 +60,35 @@ exports.toggleActive = async (req, res) => {
     } catch (err) {
         console.error('Erro ao atualizar status:', err);
         res.status(500).json({ error: 'Falha ao atualizar status' });
+    }
+};
+
+// Estatísticas agregadas para o painel de admin
+exports.getStats = async (req, res) => {
+    const db = req.db;
+    const runQuery = (sql, params = []) => {
+        return new Promise((resolve, reject) => {
+            db.all(sql, params, (err, rows) => {
+                if (err) return reject(err);
+                resolve(rows);
+            });
+        });
+    };
+    try {
+        const [totalUsersRow, activeByPlanRows, mrrRow] = await Promise.all([
+            runQuery('SELECT COUNT(id) as count FROM users WHERE is_admin = 0'),
+            runQuery(`SELECT p.name, COUNT(s.id) as count FROM subscriptions s JOIN plans p ON p.id = s.plan_id WHERE s.status = 'active' GROUP BY s.plan_id`),
+            runQuery(`SELECT SUM(p.price) as mrr FROM subscriptions s JOIN plans p ON p.id = s.plan_id WHERE s.status = 'active'`)
+        ]);
+
+        res.json({
+            totalUsers: totalUsersRow[0]?.count || 0,
+            activeByPlan: activeByPlanRows,
+            mrr: mrrRow[0]?.mrr || 0
+        });
+    } catch (err) {
+        console.error('Erro ao coletar métricas:', err);
+        res.status(500).json({ error: 'Falha ao coletar métricas' });
     }
 };
 
