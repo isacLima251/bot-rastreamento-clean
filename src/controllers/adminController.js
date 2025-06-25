@@ -61,3 +61,4 @@ exports.toggleActive = async (req, res) => {
         res.status(500).json({ error: 'Falha ao atualizar status' });
     }
 };
+

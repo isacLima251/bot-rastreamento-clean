@@ -52,3 +52,4 @@ async function verificarRastreios(db) {
 }
 
 module.exports = { verificarRastreios };
+

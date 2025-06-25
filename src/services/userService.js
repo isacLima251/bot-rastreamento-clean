@@ -115,3 +115,4 @@ module.exports = {
     updateUser,
     setUserActive
 };
+

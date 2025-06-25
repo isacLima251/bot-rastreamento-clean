@@ -31,3 +31,4 @@ exports.login = async (req, res) => {
         res.status(500).json({ error: 'Falha ao realizar login.' });
     }
 };
+

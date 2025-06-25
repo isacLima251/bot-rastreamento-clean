@@ -107,3 +107,4 @@ async function enviarMensagensComRegras(db) {
 }
 
 module.exports = { enviarMensagensComRegras };
+
