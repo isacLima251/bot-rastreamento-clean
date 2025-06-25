@@ -18,6 +18,7 @@
                 <li><button class="nav-btn" data-view="integrations-view" title="Integrações"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path></svg></button></li>
                 <li><button class="nav-btn" data-view="reports-view" title="Relatórios"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18.7 8a6 6 0 0 0-6-6H3.3"></path><path d="M7 12h5"></path><path d="M7 16h9"></path></svg></button></li>
                 <li><button class="nav-btn" data-view="logs-view" title="Histórico"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"></path><path d="M8 6h8"></path><path d="M8 10h8"></path><path d="M8 14h8"></path></svg></button></li>
+                <li><button class="nav-btn" data-view="plans-view" title="Planos"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></button></li>
             </ul>
             <ul>
                 <li><button class="nav-btn" data-view="settings-view" title="Configurações"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button></li>
@@ -318,6 +319,17 @@
                     </div>
                 </div>
             </div>
+            <div id="plans-view" class="view-container hidden">
+                <div class="page-container">
+                    <header class="page-header">
+                        <div>
+                            <h1>Planos e Assinatura</h1>
+                            <p>Escolha um plano que atenda suas necessidades.</p>
+                        </div>
+                    </header>
+                    <div id="plans-list" class="plans-list"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -330,6 +342,15 @@
             <div class="modal-acoes">
                 <button type="button" id="btn-confirmacao-cancelar" class="btn-cancelar">Cancelar</button>
                 <button type="button" id="btn-confirmacao-confirmar" class="btn-salvar">Confirmar</button>
+            </div>
+        </div>
+    </div>
+    <div id="modal-upgrade" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Limite Atingido</h3>
+            <p>Você atingiu o limite do seu plano gratuito. Para continuar, por favor, faça o upgrade.</p>
+            <div class="modal-acoes">
+                <button type="button" id="btn-upgrade-plans" class="btn-salvar">Ver Planos</button>
             </div>
         </div>
     </div>
