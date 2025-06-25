@@ -33,7 +33,7 @@ let venomClient = null;
 let botInfo = null;
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 const clients = new Set();
