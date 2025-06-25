@@ -238,16 +238,15 @@ const startApp = async () => {
                 res.json({ data: rows });
             });
         });
-        app.post('/api/subscribe/:planId', (req, res) => {
+        app.post('/api/subscribe/:planId', async (req, res) => {
             const userId = req.user.id;
             const planId = parseInt(req.params.planId);
-            const sql = `INSERT INTO subscriptions (user_id, plan_id, status)
-                         VALUES (?, ?, 'active')
-                         ON CONFLICT(user_id) DO UPDATE SET plan_id = excluded.plan_id, status='active'`;
-            req.db.run(sql, [userId, planId], function(err) {
-                if (err) return res.status(500).json({ error: err.message });
+            try {
+                await subscriptionService.updateUserPlan(req.db, userId, planId);
                 res.json({ message: 'Plano contratado com sucesso' });
-            });
+            } catch (err) {
+                res.status(500).json({ error: err.message });
+            }
         });
         app.post('/api/payment/checkout', paymentController.createCheckout);
 

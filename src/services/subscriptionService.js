@@ -53,9 +53,12 @@ function createSubscription(db, userId, planId) {
 
 function updateUserPlan(db, userId, planId) {
     return new Promise((resolve, reject) => {
-        db.run('UPDATE subscriptions SET plan_id = ? WHERE user_id = ?', [planId, userId], function(err) {
+        const sql = `INSERT INTO subscriptions (user_id, plan_id, status, usage)
+                     VALUES (?, ?, 'active', 0)
+                     ON CONFLICT(user_id) DO UPDATE SET plan_id = excluded.plan_id, status='active', usage=0, renewal_date=NULL`;
+        db.run(sql, [userId, planId], function(err) {
             if (err) return reject(err);
-            resolve({ changes: this.changes });
+            resolve({ id: this.lastID, changes: this.changes });
         });
     });
 }

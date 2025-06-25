@@ -11,9 +11,6 @@ module.exports = async (req, res, next) => {
         if (sub.monthly_limit !== -1 && sub.usage >= sub.monthly_limit) {
             return res.status(403).json({ error: 'Limite do plano excedido' });
         }
-        await subscriptionService.incrementUsage(req.db, sub.id);
-        // Atualiza o uso local para evitar novo fetch em handlers
-        sub.usage += 1;
         req.subscription = sub;
         next();
     } catch (e) {

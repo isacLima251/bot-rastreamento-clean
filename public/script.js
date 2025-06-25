@@ -762,6 +762,7 @@ const authFetch = async (url, options = {}) => {
             fecharModal();
             showNotification(resultado.message, 'success');
             await fetchErenderizarTudo();
+            loadSubscriptionStatus();
         } catch (error) { 
             showNotification(error.message, 'error');
         }
@@ -860,6 +861,7 @@ const authFetch = async (url, options = {}) => {
             inputMensagem.value = '';
             const pedidoAtivo = todosOsPedidos.find(p => p.id === pedidoAtivoId);
             await selecionarPedidoErenderizarDetalhes(pedidoAtivo);
+            loadSubscriptionStatus();
         } catch (error) { 
             showNotification(error.message, 'error');
         }

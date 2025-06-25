@@ -2,6 +2,7 @@
 const pedidoService = require('../services/pedidoService');
 const userService = require('../services/userService');
 const integrationService = require('../services/integrationConfigService');
+const subscriptionService = require('../services/subscriptionService');
 
 /**
  * Função 1: Recebe o postback de uma plataforma externa.
@@ -34,8 +35,11 @@ exports.receberPostback = async (req, res) => {
     try {
         const novoPedido = { nome: client_name, telefone: client_cell, produto: product_name };
         const pedidoCriado = await pedidoService.criarPedido(db, novoPedido, req.venomClient, clienteId);
-        
+
         req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });
+        if (req.subscription) {
+            await subscriptionService.incrementUsage(db, req.subscription.id);
+        }
         res.status(201).json({ message: "Pedido recebido e criado com sucesso!", data: pedidoCriado });
 
     } catch (error) {
