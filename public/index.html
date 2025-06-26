@@ -27,12 +27,11 @@
         </nav>
         
         <div class="content-wrapper">
-            <div id="plan-status" class="plan-info"></div>
             <div id="chat-view" class="view-container">
                 <div class="app-layout">
                     <aside class="sidebar">
                         <header class="sidebar-header">
-                            <h2>Conversas</h2>
+                            <div id="plan-status" class="plan-info"></div>
                             <button id="btn-adicionar-novo" class="btn-icon" title="Adicionar Novo Pedido">+</button>
                         </header>
                         <div id="status-whatsapp" class="status-indicator disconnected">
@@ -308,14 +307,14 @@
                 <div class="page-container">
                     <header class="page-header">
                         <div>
-                            <h1>Histórico de Uso</h1>
-                            <p>Registros das ações realizadas.</p>
+                            <h1>Histórico de Faturamento</h1>
+                            <p>Pedidos contabilizados neste ciclo.</p>
                         </div>
                     </header>
                     <div class="table-wrapper">
-                        <table id="logs-table">
-                            <thead><tr><th>Data</th><th>Ação</th><th>Detalhe</th></tr></thead>
-                            <tbody id="logs-table-body"></tbody>
+                        <table id="billing-table">
+                            <thead><tr><th>Data</th><th>Cliente</th><th>Código</th></tr></thead>
+                            <tbody id="billing-table-body"></tbody>
                         </table>
                     </div>
                 </div>

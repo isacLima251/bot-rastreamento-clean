@@ -71,7 +71,7 @@ const authFetch = async (url, options = {}) => {
     const ordersDeliveredCardEl = document.getElementById('orders-delivered-card');
     const newContactsChartCanvas = document.getElementById('new-contacts-chart');
     const statusPieChartCanvas = document.getElementById('status-pie-chart');
-    const logsTableBodyEl = document.getElementById('logs-table-body');
+    const billingTableBodyEl = document.getElementById('billing-table-body');
     const toggleCreateContactEl = document.getElementById('toggle-create-contact');
     const toggleCreateContactLabelEl = document.getElementById('toggle-create-contact-label');
     const plansListEl = document.getElementById('plans-list');
@@ -165,7 +165,7 @@ const authFetch = async (url, options = {}) => {
         if (viewId === 'integrations-view') loadIntegrationInfo();
         if (viewId === 'settings-view') loadUserSettings();
         if (viewId === 'reports-view') loadReportData();
-        if (viewId === 'logs-view') loadLogs();
+        if (viewId === 'logs-view') loadBillingHistory();
         if (viewId === 'plans-view') loadPlans();
     }
 
@@ -573,25 +573,25 @@ const authFetch = async (url, options = {}) => {
         }
     }
 
-    async function loadLogs() {
-        if (!logsTableBodyEl) return;
-        logsTableBodyEl.innerHTML = '<tr><td colspan="3">A carregar...</td></tr>';
+    async function loadBillingHistory() {
+        if (!billingTableBodyEl) return;
+        billingTableBodyEl.innerHTML = '<tr><td colspan="3">A carregar...</td></tr>';
         try {
-            const resp = await authFetch('/api/logs');
-            if (!resp.ok) throw new Error('Falha ao carregar logs.');
-            const { data } = await resp.json();
-            logsTableBodyEl.innerHTML = '';
-            if (!data || data.length === 0) {
-                logsTableBodyEl.innerHTML = '<tr><td colspan="3">Sem registros.</td></tr>';
+            const resp = await authFetch('/api/billing/history');
+            if (!resp.ok) throw new Error('Falha ao carregar histórico.');
+            const { pedidos } = await resp.json();
+            billingTableBodyEl.innerHTML = '';
+            if (!pedidos || pedidos.length === 0) {
+                billingTableBodyEl.innerHTML = '<tr><td colspan="3">Nenhum pedido contabilizado.</td></tr>';
                 return;
             }
-            data.forEach(log => {
+            pedidos.forEach(p => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${new Date(log.data_criacao).toLocaleString()}</td><td>${log.acao}</td><td>${log.detalhe || ''}</td>`;
-                logsTableBodyEl.appendChild(tr);
+                tr.innerHTML = `<td>${new Date(p.dataCriacao).toLocaleDateString()}</td><td>${p.nome}</td><td>${p.codigoRastreio}</td>`;
+                billingTableBodyEl.appendChild(tr);
             });
         } catch (err) {
-            console.error('Erro ao carregar logs:', err);
+            console.error('Erro ao carregar histórico de faturamento:', err);
         }
     }
 

@@ -174,20 +174,32 @@ const addMensagemHistorico = (db, pedidoId, mensagem, tipoMensagem, origem, clie
 /**
  * Busca o histórico de mensagens de um pedido específico.
  */
-const getHistoricoPorPedidoId = (db, pedidoId, clienteId = null) => {
-    let sql = `SELECT * FROM historico_mensagens WHERE pedido_id = ?`;
-    const params = [pedidoId];
-    if (clienteId !== null) {
-        sql += ' AND cliente_id = ?';
-        params.push(clienteId);
-    }
-    sql += ' ORDER BY data_envio ASC';
+const getHistoricoPorPedidoId = (db, pedidoId, clienteId) => {
+    const sql = `SELECT * FROM historico_mensagens
+                 WHERE pedido_id = ? AND (cliente_id = ? OR cliente_id IS NULL)
+                 ORDER BY data_envio ASC`;
     return new Promise((resolve, reject) => {
-        db.all(sql, params, (err, rows) => {
+        db.all(sql, [pedidoId, clienteId], (err, rows) => {
             if (err) {
                 console.error(`Erro ao buscar histórico do pedido ${pedidoId}`, err);
                 return reject(err);
             }
+            resolve(rows);
+        });
+    });
+};
+
+const getPedidosComCodigoAtivo = (db, clienteId, inicioCiclo, fimCiclo) => {
+    const sql = `SELECT id, nome, codigoRastreio, dataCriacao
+                 FROM pedidos
+                 WHERE cliente_id = ?
+                   AND codigoRastreio IS NOT NULL
+                   AND codigoRastreio != ''
+                   AND statusInterno != 'entregue'
+                   AND dataCriacao >= ? AND dataCriacao < ?`;
+    return new Promise((resolve, reject) => {
+        db.all(sql, [clienteId, inicioCiclo, fimCiclo], (err, rows) => {
+            if (err) return reject(err);
             resolve(rows);
         });
     });
@@ -283,4 +295,5 @@ module.exports = {
     incrementarNaoLidas,
     marcarComoLido,
     criarPedido,
+    getPedidosComCodigoAtivo,
 };

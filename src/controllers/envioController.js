@@ -94,7 +94,7 @@ async function enviarMensagensComRegras(db) {
 
             if (mensagemParaEnviar && novoStatusDaMensagem) {
                 await whatsappService.enviarMensagem(telefone, mensagemParaEnviar);
-                await pedidoService.addMensagemHistorico(db, id, mensagemParaEnviar, novoStatusDaMensagem, 'bot');
+                await pedidoService.addMensagemHistorico(db, id, mensagemParaEnviar, novoStatusDaMensagem, 'bot', pedido.cliente_id);
                 await pedidoService.updateCamposPedido(db, id, { mensagemUltimoStatus: novoStatusDaMensagem });
                 console.log(`✅ Mensagem automática de '${novoStatusDaMensagem}' enviada para ${nome}.`);
 

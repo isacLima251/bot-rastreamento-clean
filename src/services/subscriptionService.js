@@ -1,4 +1,5 @@
 const moment = require('moment');
+const pedidoService = require('./pedidoService');
 
 function getUserSubscription(db, userId) {
     return new Promise((resolve, reject) => {
@@ -72,5 +73,26 @@ function updateSubscriptionStatus(db, userId, status) {
     });
 }
 
-module.exports = { getUserSubscription, incrementUsage, resetUsageIfNeeded, createSubscription, updateUserPlan, updateSubscriptionStatus };
+async function calculateUsage(db, sub) {
+    if (!sub.renewal_date) return 0;
+    const end = moment(sub.renewal_date);
+    const start = end.clone().subtract(1, 'month');
+    const pedidos = await pedidoService.getPedidosComCodigoAtivo(
+        db,
+        sub.user_id,
+        start.format('YYYY-MM-DD'),
+        end.format('YYYY-MM-DD')
+    );
+    return pedidos.length;
+}
+
+module.exports = {
+    getUserSubscription,
+    incrementUsage,
+    resetUsageIfNeeded,
+    createSubscription,
+    updateUserPlan,
+    updateSubscriptionStatus,
+    calculateUsage,
+};
 
