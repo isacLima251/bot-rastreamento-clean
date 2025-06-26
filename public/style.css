@@ -83,12 +83,15 @@ body {
 .detalhes-header h3 { margin: 0; font-size: 1.2rem; font-weight: 600; }
 .detalhes-body { background-color: var(--sidebar-bg); padding: 20px; line-height: 1.6; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
 .detalhes-body p { margin: 0 0 10px 0; }
+.detalhes-body svg { margin-right: 6px; vertical-align: middle; color: var(--text-secondary); }
 .chat-feed { padding: 20px; display: flex; flex-direction: column; gap: 4px; flex-grow: 1; overflow-y: auto; }
 .chat-message { padding: 10px 15px; border-radius: 18px; max-width: 70%; line-height: 1.4; position: relative; word-wrap: break-word; }
 .chat-message p { margin: 0; padding-right: 50px; }
 .chat-message.enviado { background-color: var(--message-sent-bg); align-self: flex-end; border-radius: 18px 18px 4px 18px; }
 .chat-message.recebido { background-color: var(--message-received-bg); align-self: flex-start; border: 1px solid var(--border-color); border-radius: 18px 18px 18px 4px; }
 .chat-message .timestamp { position: absolute; bottom: 8px; right: 15px; font-size: 0.75rem; color: var(--text-secondary); }
+.chat-message.automatic { opacity: 0.9; }
+.auto-indicator { margin-left: 4px; }
 .chat-footer { padding: 10px 20px; background-color: #f9fafb; border-top: 1px solid var(--border-color); flex-shrink: 0; }
 #form-enviar-mensagem { display: flex; gap: 10px; align-items: center; }
 #input-mensagem { flex: 1; padding: 12px 18px; border: 1px solid var(--border-color); border-radius: 22px; font-size: 1rem; background-color: var(--sidebar-bg); }
@@ -115,8 +118,8 @@ body {
 #btn-adicionar-novo:hover { background-color: #2563eb; }
 .btn-editar-main, .btn-atualizar-foto { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-left: 10px; display: flex; align-items: center; gap: 6px; }
 .btn-editar-main:hover, .btn-atualizar-foto:hover { background-color: var(--hover-bg); border-color: #d1d5db; color: var(--text-color); }
-.btn-excluir-main { background-color: transparent; border: 1px solid var(--error-color); color: var(--error-color); padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-left: 10px; display: flex; align-items: center; gap: 6px; }
-.btn-excluir-main:hover { background-color: var(--error-color); color: #fff; }
+.btn-excluir-main { background-color: var(--error-color); border: none; color: #fff; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center; }
+.btn-excluir-main:hover { background-color: #b91c1c; }
 #notificacao { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); min-width: 300px; max-width: 500px; padding: 15px 20px; border-radius: 8px; color: white; font-weight: 500; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); z-index: 2000; display: flex; align-items: center; gap: 15px; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease, bottom 0.3s ease; }
 #notificacao.show { opacity: 1; visibility: visible; bottom: 40px; }
 #notificacao.error { background-color: var(--error-color); }
@@ -407,3 +410,5 @@ input:checked ~ .toggle-label { color: var(--success-color); font-weight: 600; }
 .plan-card button { margin-top: auto; }
 .plan-info { background: #fff; border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin: 20px; text-align: center; }
 .sidebar-header .plan-info { margin: 0; flex: 1; }
+.plan-progress { margin-top: 6px; height: 6px; background-color: var(--hover-bg); border-radius: 4px; overflow: hidden; }
+.plan-progress-bar { height: 100%; background-color: var(--primary-color); width: 0%; }
