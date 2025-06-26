@@ -66,9 +66,10 @@ const authFetch = async (url, options = {}) => {
     const modalConfirmacaoTextoEl = document.getElementById('modal-confirmacao-texto');
     const btnConfirmacaoCancelarEl = document.getElementById('btn-confirmacao-cancelar');
     const btnConfirmacaoConfirmarEl = document.getElementById('btn-confirmacao-confirmar');
-    const totalContactsCardEl = document.getElementById('total-contacts-card');
-    const messagesSentCardEl = document.getElementById('messages-sent-card');
-    const ordersDeliveredCardEl = document.getElementById('orders-delivered-card');
+    const ordersInTransitCardEl = document.getElementById('orders-in-transit-card');
+    const averageDeliveryTimeCardEl = document.getElementById('average-delivery-time-card');
+    const alertOrdersCardEl = document.getElementById('alert-orders-card');
+    const deliveryRateCardEl = document.getElementById('delivery-rate-card');
     const newContactsChartCanvas = document.getElementById('new-contacts-chart');
     const statusPieChartCanvas = document.getElementById('status-pie-chart');
     const billingTableBodyEl = document.getElementById('billing-table-body');
@@ -580,35 +581,46 @@ const planStatusEl = document.getElementById('plan-status');
         });
     }
 
+
     function createStatusChart(data) {
         if (!statusPieChartCanvas || typeof Chart === 'undefined') return;
         if (statusChart) statusChart.destroy();
         const labels = data.map(item => item.statusInterno ? (item.statusInterno.charAt(0).toUpperCase() + item.statusInterno.slice(1)) : 'Não definido');
         const counts = data.map(item => item.count);
+        const colorMap = {
+            entregue: 'rgba(34,197,94,0.7)',
+            pedido_atrasado: 'rgba(234,179,8,0.7)',
+            pedido_devolvido: 'rgba(239,68,68,0.7)'
+        };
+        const backgroundColors = data.map(item => colorMap[item.statusInterno] || 'rgba(59,130,246,0.7)');
         statusChart = new Chart(statusPieChartCanvas, {
-            type: 'doughnut',
+            type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
                     label: 'Status dos Pedidos',
                     data: counts,
-                    backgroundColor: ['rgba(249, 115, 22, 0.7)', 'rgba(22, 163, 74, 0.7)', 'rgba(239, 68, 68, 0.7)', 'rgba(107, 114, 128, 0.7)', 'rgba(245, 158, 11, 0.7)'],
-                    borderColor: '#fff',
-                    borderWidth: 2
+                    backgroundColor: backgroundColors,
+                    borderWidth: 1
                 }]
             },
-            options: { responsive: true, plugins: { legend: { position: 'top' } } }
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true } }
+            }
         });
     }
-
     async function loadReportData() {
         try {
             const response = await authFetch('/api/reports/summary');
             if (!response.ok) throw new Error('Falha ao carregar dados do relatório.');
             const data = await response.json();
-            if(totalContactsCardEl) totalContactsCardEl.textContent = data.totalContacts;
-            if(messagesSentCardEl) messagesSentCardEl.textContent = data.messagesSent;
-            if(ordersDeliveredCardEl) ordersDeliveredCardEl.textContent = data.ordersDelivered;
+            if(ordersInTransitCardEl) ordersInTransitCardEl.textContent = data.ordersInTransit;
+            if(averageDeliveryTimeCardEl) averageDeliveryTimeCardEl.textContent = data.averageDeliveryTime;
+            if(alertOrdersCardEl) alertOrdersCardEl.textContent = data.alertOrders;
+            if(deliveryRateCardEl) deliveryRateCardEl.textContent = data.deliveryRate + '%';
             createContactsChart(data.newContactsLast7Days);
             createStatusChart(data.statusDistribution);
         } catch (error) {
