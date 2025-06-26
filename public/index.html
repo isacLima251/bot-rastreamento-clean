@@ -135,13 +135,17 @@
                     </button>
                     <div class="accordion-content">
                         <strong class="variable-highlight" data-value="{{status_interno}}"><span>{{status_interno}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{status_rastreio}}" data-tooltip="Mostra o status resumido do rastreamento (Ex: 'A caminho', 'Entregue', 'Postado')."><span>{{status_rastreio}}</span></strong>
                         <strong class="variable-highlight" data-value="{{ultima_localizacao}}"><span>{{ultima_localizacao}}</span></strong>
                         <strong class="variable-highlight" data-value="{{data_postagem}}"><span>{{data_postagem}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{data_postagem_formatada}}" data-tooltip="A data em que o pedido foi postado, no formato dd/mm/aaaa."><span>{{data_postagem_formatada}}</span></strong>
                         <strong class="variable-highlight" data-value="{{ultima_atualizacao}}"><span>{{ultima_atualizacao}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{data_atualizacao_formatada}}" data-tooltip="A data e a hora da última atualização do rastreio, no formato dd/mm/aaaa HH:mm."><span>{{data_atualizacao_formatada}}</span></strong>
                         <strong class="variable-highlight" data-value="{{mensagem_ultimo_status}}"><span>{{mensagem_ultimo_status}}</span></strong>
-                        <strong class="variable-highlight" data-value="{{cidade_etapa_origem}}"><span>{{cidade_etapa_origem}}</span></strong>
-                        <strong class="variable-highlight" data-value="{{cidade_etapa_destino}}"><span>{{cidade_etapa_destino}}</span></strong>
-                        <strong class="variable-highlight" data-value="{{status_detalhado_correios}}"><span>{{status_detalhado_correios}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{cidade_etapa_origem}}" data-tooltip="Mostra a cidade de ONDE o pacote saiu na última movimentação registrada pelos Correios."><span>{{cidade_etapa_origem}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{cidade_etapa_destino}}" data-tooltip="Mostra a cidade para ONDE o pacote está indo na última movimentação registrada."><span>{{cidade_etapa_destino}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{status_detalhado_correios}}" data-tooltip="Insere o texto completo e original do último status informado pelos Correios. (Ex: 'Objeto em trânsito - de Unidade de Tratamento em SAO PAULO para Unidade de Distribuição em RECIFE')."><span>{{status_detalhado_correios}}</span></strong>
+                        <strong class="variable-highlight" data-value="{{link_rastreio}}" data-tooltip="Insere o link completo e clicável para a página de rastreamento dos Correios."><span>{{link_rastreio}}</span></strong>
                     </div>
                 </div>
 

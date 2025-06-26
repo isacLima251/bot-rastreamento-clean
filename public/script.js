@@ -77,7 +77,17 @@ const authFetch = async (url, options = {}) => {
     const plansListEl = document.getElementById('plans-list');
     const modalUpgradeEl = document.getElementById('modal-upgrade');
     const btnUpgradePlansEl = document.getElementById('btn-upgrade-plans');
-    const planStatusEl = document.getElementById('plan-status');
+const planStatusEl = document.getElementById('plan-status');
+
+    const variableTooltips = {
+        '{{link_rastreio}}': 'Insere o link completo e clicável para a página de rastreamento dos Correios.',
+        '{{status_rastreio}}': "Mostra o status resumido do rastreamento (Ex: 'A caminho', 'Entregue', 'Postado').",
+        '{{cidade_etapa_origem}}': 'Mostra a cidade de ONDE o pacote saiu na última movimentação registrada pelos Correios.',
+        '{{cidade_etapa_destino}}': 'Mostra a cidade para ONDE o pacote está indo na última movimentação registrada.',
+        '{{status_detalhado_correios}}': 'Insere o texto completo e original do último status informado pelos Correios. (Ex: \"Objeto em trânsito - de Unidade de Tratamento em SAO PAULO para Unidade de Distribuição em RECIFE\").',
+        '{{data_postagem_formatada}}': 'A data em que o pedido foi postado, no formato dd/mm/aaaa.',
+        '{{data_atualizacao_formatada}}': 'A data e a hora da última atualização do rastreio, no formato dd/mm/aaaa HH:mm.'
+    };
 
     // --- 2. Estado da Aplicação ---
     let todosOsPedidos = [];
@@ -200,7 +210,12 @@ const authFetch = async (url, options = {}) => {
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
-            .replace(/{{(.*?)}}/g, '<span class="variable-highlight">{{$1}}</span>');
+            .replace(/{{(.*?)}}/g, (match, p1) => {
+                const key = `{{${p1}}}`;
+                const tooltip = variableTooltips[key];
+                const tooltipAttr = tooltip ? ` data-tooltip="${tooltip.replace(/"/g, '&quot;')}"` : '';
+                return `<span class="variable-highlight"${tooltipAttr}>{{${p1}}}</span>`;
+            });
         
         backdrop.innerHTML = highlightedText; 
         backdrop.scrollTop = textarea.scrollTop;
