@@ -244,21 +244,29 @@ input:checked ~ .toggle-label { color: var(--success-color); font-weight: 600; }
     content: attr(data-tooltip);
     position: absolute;
     left: 50%;
-    bottom: calc(100% + 6px);
+    bottom: calc(100% + 8px); /* Aumentei um pouco a distância */
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 6px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    line-height: 1.3;
+    
+    /* Cores Corrigidas */
+    background: #ebebeb; /* Um fundo escuro, mas não totalmente preto */
+    color: #ffffff; /* Cor do texto BRANCA */
+
+    padding: 8px 12px; /* Mais espaçamento interno */
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500; /* Deixei a fonte um pouco mais forte */
+    line-height: 1.4;
+    text-align: center;
+    
+    /* Outras propriedades */
     white-space: normal;
-    max-width: 240px;
+    max-width: 250px;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
     z-index: 1000;
     width: max-content;
+    transition: opacity 0.2s ease-in-out; /* Adicionei a transição suave */
 }
 
 .variable-highlight[data-tooltip]:hover::after {
