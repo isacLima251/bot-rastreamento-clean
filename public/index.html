@@ -22,7 +22,6 @@
             </ul>
             <ul>
                 <li><button class="nav-btn" data-view="settings-view" title="Configurações"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button></li>
-                <li><button id="logout-btn" class="nav-btn" title="Logout"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></li>
             </ul>
         </nav>
         
@@ -240,33 +239,44 @@
 
             <div id="settings-view" class="view-container hidden">
                 <div class="settings-content-wrapper">
-                    <h1>Configurações do WhatsApp</h1>
-                    <div id="settings-status-container">
-                        <div id="settings-profile-info" class="hidden">
-                            <img id="settings-bot-avatar" src="https://i.imgur.com/z28n3Nz.png" alt="Avatar do Bot Conectado">
-                            <h3 id="settings-bot-name"></h3>
-                            <p id="settings-bot-number"></p>
-                        </div>
-                        <div id="settings-connection-status">
-                            <p>Status atual: <strong id="settings-status-text">Desconhecido</strong></p>
-                        </div>
-                    <div id="qr-code-container"></div>
-                    <div class="settings-actions">
-                        <button id="btn-conectar" class="btn-settings-action connect"><span>Conectar WhatsApp</span></button>
-                        <button id="btn-desconectar" class="btn-settings-action disconnect"><span>Desconectar</span></button>
-                    </div>
-                    </div>
+                    <h1>Configurações Gerais</h1>
+
                     <div class="settings-card">
-                        <h3>Criar contato automaticamente ao receber nova mensagem</h3>
+                        <h3>Conexão com o WhatsApp</h3>
+                        <div id="settings-status-container">
+                            <div id="settings-profile-info" class="hidden">
+                                <img id="settings-bot-avatar" src="https://i.imgur.com/z28n3Nz.png" alt="Avatar do Bot Conectado">
+                                <h3 id="settings-bot-name"></h3>
+                                <p id="settings-bot-number"></p>
+                            </div>
+                            <div id="settings-connection-status">
+                                <p>Status atual: <strong id="settings-status-text">Desconhecido</strong></p>
+                            </div>
+                            <div id="qr-code-container"></div>
+                            <div class="settings-actions">
+                                <button id="btn-conectar" class="btn-settings-action connect"><span>Conectar WhatsApp</span></button>
+                                <button id="btn-desconectar" class="btn-settings-action disconnect"><span>Desconectar</span></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>Preferências Gerais</h3>
                         <div class="toggle-container">
                             <label class="switch"><input type="checkbox" id="toggle-create-contact"><span class="slider round"></span></label>
                             <span id="toggle-create-contact-label" class="toggle-label">Desativado</span>
                         </div>
                     </div>
+
                     <div class="settings-card">
-                        <h3>Excluir Conta</h3>
-                        <p>Apaga permanentemente todos os seus dados.</p>
-                        <button id="btn-delete-account" class="btn-settings-action disconnect">Excluir minha conta</button>
+                        <h3>Gerenciamento da Conta</h3>
+                        <div class="settings-actions">
+                            <button id="logout-btn" class="btn-settings-action disconnect" title="Sair">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                <span>Sair</span>
+                            </button>
+                            <button id="btn-delete-account" class="btn-settings-action disconnect">Excluir minha conta</button>
+                        </div>
                     </div>
                 </div>
             </div>
