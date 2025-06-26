@@ -26,6 +26,9 @@ const initDb = () => {
                         statusInterno TEXT,
                         ultimaAtualizacao TEXT,
                         ultimaLocalizacao TEXT,
+                        origemUltimaMovimentacao TEXT,
+                        destinoUltimaMovimentacao TEXT,
+                        descricaoUltimoEvento TEXT,
                         mensagemUltimoStatus TEXT,
                         fotoPerfilUrl TEXT,
                         dataCriacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -255,6 +258,17 @@ const initDb = () => {
                     db.run("ALTER TABLE automacoes ADD COLUMN cliente_id INTEGER", [], (e) => {
                         if (e && !e.message.includes('duplicate')) return reject(e);
                         db.run("UPDATE automacoes SET cliente_id = 1 WHERE cliente_id IS NULL");
+                    });
+
+                    // Novas colunas para detalhes de rastreio
+                    db.run("ALTER TABLE pedidos ADD COLUMN origemUltimaMovimentacao TEXT", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) return reject(e);
+                    });
+                    db.run("ALTER TABLE pedidos ADD COLUMN destinoUltimaMovimentacao TEXT", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) return reject(e);
+                    });
+                    db.run("ALTER TABLE pedidos ADD COLUMN descricaoUltimoEvento TEXT", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) return reject(e);
                     });
 
                     // Bloco movido para dentro da criação da tabela 'users'

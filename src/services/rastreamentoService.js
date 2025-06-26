@@ -43,11 +43,27 @@ async function rastrearCodigo(codigo, apiKey = null) {
         }
 
         const ultimoEvento = eventos[0]; // O evento mais recente
-        
+
+        const descricaoCompleta = ultimoEvento.description || ultimoEvento.descricao || ultimoEvento.descricaoFrontEnd || '';
+
+        let origem = null;
+        let destino = null;
+        if (descricaoCompleta) {
+            const regex = /de\s+(.*?)\s+para\s+(.*)/i;
+            const match = descricaoCompleta.match(regex);
+            if (match) {
+                origem = match[1].trim();
+                destino = match[2].trim();
+            }
+        }
+
         return {
             statusInterno: ultimoEvento.status || ultimoEvento.descricaoFrontEnd || 'Desconhecido',
             ultimaLocalizacao: ultimoEvento.location || ultimoEvento.unidade?.endereco?.cidade || '-',
             ultimaAtualizacao: `${ultimoEvento.date || ''} ${ultimoEvento.time || ''}`.trim() || ultimoEvento.dtHrCriado?.date || '-',
+            origemUltimaMovimentacao: origem,
+            destinoUltimaMovimentacao: destino,
+            descricaoUltimoEvento: descricaoCompleta,
             eventos: eventos
         };
 

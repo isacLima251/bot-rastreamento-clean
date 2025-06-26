@@ -38,6 +38,9 @@ async function verificarRastreios(db) {
                     statusInterno: novoStatus,
                     ultimaLocalizacao: dadosRastreio.ultimaLocalizacao,
                     ultimaAtualizacao: dadosRastreio.ultimaAtualizacao,
+                    origemUltimaMovimentacao: dadosRastreio.origemUltimaMovimentacao,
+                    destinoUltimaMovimentacao: dadosRastreio.destinoUltimaMovimentacao,
+                    descricaoUltimoEvento: dadosRastreio.descricaoUltimoEvento,
                 };
                 
                 await pedidoService.updateCamposPedido(db, pedido.id, dadosParaAtualizar);
