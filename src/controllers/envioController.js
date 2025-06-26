@@ -51,7 +51,7 @@ function personalizarMensagem(mensagem, pedido) {
         .replace(/{{link_rastreio}}/g, linkRastreio);
 }
 
-async function enviarMensagensComRegras(db) {
+async function enviarMensagensComRegras(db, broadcast) {
     console.log('🤖 Verificando mensagens automáticas para enviar...');
     try {
         const automacoes = await automationService.getAutomations(db);
@@ -99,6 +99,7 @@ async function enviarMensagensComRegras(db) {
                 console.log(`✅ Mensagem automática de '${novoStatusDaMensagem}' enviada para ${nome}.`);
 
                 await logService.addLog(db, pedido.cliente_id || 1, 'mensagem_automatica', JSON.stringify({ pedidoId: id, tipo: novoStatusDaMensagem }));
+                if (broadcast) broadcast({ type: 'nova_mensagem', pedidoId: id });
             }
         }
     } catch (err) {
@@ -106,5 +107,19 @@ async function enviarMensagensComRegras(db) {
     }
 }
 
-module.exports = { enviarMensagensComRegras };
+async function enviarMensagemBoasVindas(db, pedido, broadcast) {
+    const automacoes = await automationService.getAutomations(db, pedido.cliente_id);
+    const config = automacoes.boas_vindas;
+    if (config && config.ativo) {
+        const mensagemBase = config.mensagem || MENSAGENS_PADRAO.boas_vindas;
+        const msg = personalizarMensagem(mensagemBase, pedido);
+        await whatsappService.enviarMensagem(pedido.telefone, msg);
+        await pedidoService.addMensagemHistorico(db, pedido.id, msg, 'boas_vindas', 'bot', pedido.cliente_id);
+        await pedidoService.updateCamposPedido(db, pedido.id, { mensagemUltimoStatus: 'boas_vindas' }, pedido.cliente_id);
+        await logService.addLog(db, pedido.cliente_id || 1, 'mensagem_automatica', JSON.stringify({ pedidoId: pedido.id, tipo: 'boas_vindas' }));
+        if (broadcast) broadcast({ type: 'nova_mensagem', pedidoId: pedido.id });
+    }
+}
+
+module.exports = { enviarMensagensComRegras, enviarMensagemBoasVindas };
 

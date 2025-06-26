@@ -3,6 +3,7 @@ const pedidoService = require('../services/pedidoService');
 const whatsappService = require('../services/whatsappService');
 const logService = require('../services/logService');
 const subscriptionService = require('../services/subscriptionService');
+const envioController = require('./envioController');
 
 // LÊ todos os pedidos
 exports.listarPedidos = (req, res) => {
@@ -79,6 +80,10 @@ exports.criarPedido = async (req, res) => {
         }
         
         const pedidoCriado = await pedidoService.criarPedido(db, { ...req.body, telefone: telefoneNormalizado }, client, clienteId);
+        pedidoCriado.cliente_id = clienteId;
+
+        // Envia boas-vindas imediatamente
+        await envioController.enviarMensagemBoasVindas(db, pedidoCriado, req.broadcast);
 
         // Notifica o frontend
         req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });

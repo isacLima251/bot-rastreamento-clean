@@ -159,6 +159,7 @@ function start(client) {
                     const nomeContato = message.notifyName || message.pushName || telefoneCliente;
                     const novoPedidoData = { nome: nomeContato, telefone: telefoneCliente };
                     pedido = await pedidoService.criarPedido(db, novoPedidoData, client, BOT_OWNER_ID);
+                    await pedidoService.updateCamposPedido(db, pedido.id, { mensagemUltimoStatus: 'boas_vindas' }, BOT_OWNER_ID);
                     broadcast({ type: 'novo_contato', pedido });
                 } else {
                     console.log('Criação automática de contato desativada - ignorando mensagem.');
@@ -300,7 +301,7 @@ const startApp = async () => {
 
         // Tarefas em Background
         setInterval(() => { if (venomClient) rastreamentoController.verificarRastreios(db, broadcast) }, 300000);
-        setInterval(() => { if (venomClient) envioController.enviarMensagensComRegras(db) }, 60000);
+        setInterval(() => { if (venomClient) envioController.enviarMensagensComRegras(db, broadcast) }, 60000);
         
         server.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
 
