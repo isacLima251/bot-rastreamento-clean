@@ -82,6 +82,10 @@ exports.criarPedido = async (req, res) => {
         const pedidoCriado = await pedidoService.criarPedido(db, { ...req.body, telefone: telefoneNormalizado }, client, clienteId);
         pedidoCriado.cliente_id = clienteId;
 
+        if (codigoRastreio) {
+            await subscriptionService.incrementUsage(db, req.subscription.id);
+        }
+
         // Envia boas-vindas imediatamente
         await envioController.enviarMensagemBoasVindas(db, pedidoCriado, req.broadcast);
 
@@ -116,8 +120,14 @@ exports.atualizarPedido = async (req, res) => {
     }
 
     try {
+        const pedidoAnterior = await pedidoService.getPedidoById(db, id, clienteId);
+        if (!pedidoAnterior) return res.status(404).json({ error: `Pedido com ID ${id} não encontrado.` });
         const result = await pedidoService.updateCamposPedido(db, id, dados, clienteId);
         if (result.changes === 0) return res.status(404).json({ error: `Pedido com ID ${id} não encontrado.` });
+
+        if ((!pedidoAnterior.codigoRastreio || pedidoAnterior.codigoRastreio === '') && dados.codigoRastreio) {
+            await subscriptionService.incrementUsage(db, req.subscription.id);
+        }
         
         // Notifica o frontend
         req.broadcast({ type: 'pedido_atualizado', pedidoId: id });

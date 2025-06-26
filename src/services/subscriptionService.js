@@ -1,5 +1,4 @@
 const moment = require('moment');
-const pedidoService = require('./pedidoService');
 
 function getUserSubscription(db, userId) {
     return new Promise((resolve, reject) => {
@@ -74,16 +73,14 @@ function updateSubscriptionStatus(db, userId, status) {
 }
 
 async function calculateUsage(db, sub) {
-    if (!sub.renewal_date) return 0;
-    const end = moment(sub.renewal_date);
-    const start = end.clone().subtract(1, 'month');
-    const pedidos = await pedidoService.getPedidosComCodigoAtivo(
-        db,
-        sub.user_id,
-        start.format('YYYY-MM-DD'),
-        end.format('YYYY-MM-DD')
-    );
-    return pedidos.length;
+    // Garante que o contador foi resetado, se necessário
+    await resetUsageIfNeeded(db, sub.id);
+    return new Promise((resolve, reject) => {
+        db.get('SELECT usage FROM subscriptions WHERE id = ?', [sub.id], (err, row) => {
+            if (err) return reject(err);
+            resolve(row ? row.usage : 0);
+        });
+    });
 }
 
 module.exports = {
