@@ -284,6 +284,7 @@ const startApp = async () => {
         app.get('/api/integrations/info', planCheck, integrationsController.getIntegrationInfo);
         app.post('/api/integrations/regenerate', planCheck, integrationsController.regenerateApiKey);
         app.put('/api/integrations/settings', planCheck, integrationsController.updateIntegrationSettings);
+        app.get('/api/integrations/history', planCheck, integrationsController.listarHistorico);
 
         // Rotas de Configurações de Usuário
         app.get('/api/settings/contact-creation', planCheck, settingsController.getContactCreationSetting);
