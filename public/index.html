@@ -33,6 +33,16 @@
                             <div id="plan-status" class="plan-info"></div>
                             <button id="btn-adicionar-novo" class="btn-icon" title="Adicionar Novo Pedido">+</button>
                         </header>
+                        <div id="connection-status" class="status-indicator disconnected">
+                            <span class="status-dot"></span>
+                            <div class="status-text">
+                                <span id="connection-status-text">Desconectado</span>
+                                <span id="status-bot-info"></span>
+                            </div>
+                            <div id="bot-avatar-container" class="hidden">
+                                <img id="bot-avatar-img" src="https://i.imgur.com/z28n3Nz.png" alt="Avatar do Bot">
+                            </div>
+                        </div>
                         <div class="list-controls">
                             <div class="search-container">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -42,16 +52,6 @@
                                 <button class="filter-btn active" data-filtro="todos">Todos</button>
                                 <button class="filter-btn" data-filtro="caminho">A Caminho</button>
                                 <button class="filter-btn" data-filtro="entregue">Entregue</button>
-                            </div>
-                        </div>
-                        <div id="connection-status" class="status-indicator disconnected">
-                            <span class="status-dot"></span>
-                            <div class="status-text">
-                                <span id="connection-status-text">Desconectado</span>
-                                <span id="status-bot-info"></span>
-                            </div>
-                            <div id="bot-avatar-container" class="hidden">
-                                <img id="bot-avatar-img" src="https://i.imgur.com/z28n3Nz.png" alt="Avatar do Bot">
                             </div>
                         </div>
                         <div class="contact-list" id="lista-contactos"></div>
