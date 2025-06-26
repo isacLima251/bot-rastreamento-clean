@@ -8,9 +8,19 @@ module.exports = async (req, res, next) => {
         if (!sub) return res.status(403).json({ error: 'Nenhum plano ativo' });
         await subscriptionService.resetUsageIfNeeded(req.db, sub.id);
         if (sub.status !== 'active') return res.status(403).json({ error: 'Plano inativo' });
-        if (sub.monthly_limit !== -1 && sub.usage >= sub.monthly_limit) {
+
+        const usage = await subscriptionService.calculateUsage(req.db, sub);
+        sub.usage = usage;
+
+        const addingCode =
+            ((req.method === 'POST' && req.path === '/api/pedidos' && req.body.codigoRastreio) ||
+            (req.method === 'POST' && req.path === '/api/postback' && req.body.codigoRastreio) ||
+            (req.method === 'PUT' && /^\/api\/pedidos\/\d+$/.test(req.path) && req.body.codigoRastreio));
+
+        if (addingCode && sub.monthly_limit !== -1 && usage >= sub.monthly_limit) {
             return res.status(403).json({ error: 'Limite do plano excedido' });
         }
+
         req.subscription = sub;
         next();
     } catch (e) {

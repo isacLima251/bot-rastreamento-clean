@@ -37,9 +37,6 @@ exports.receberPostback = async (req, res) => {
         const pedidoCriado = await pedidoService.criarPedido(db, novoPedido, req.venomClient, clienteId);
 
         req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });
-        if (req.subscription) {
-            await subscriptionService.incrementUsage(db, req.subscription.id);
-        }
         res.status(201).json({ message: "Pedido recebido e criado com sucesso!", data: pedidoCriado });
 
     } catch (error) {

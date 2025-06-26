@@ -224,6 +224,8 @@ const startApp = async () => {
             try {
                 const sub = await subscriptionService.getUserSubscription(req.db, req.user.id);
                 if (!sub) return res.status(404).json({ error: 'Nenhum plano encontrado' });
+                const usage = await subscriptionService.calculateUsage(req.db, sub);
+                sub.usage = usage;
                 res.json({ subscription: sub });
             } catch (err) {
                 console.error('Erro ao obter assinatura:', err);
@@ -271,6 +273,7 @@ const startApp = async () => {
 
         // Rotas de Relatórios
         app.get('/api/reports/summary', planCheck, reportsController.getReportSummary);
+        app.get('/api/billing/history', planCheck, reportsController.getBillingHistory);
 
         // Rotas de Logs
         app.get('/api/logs', planCheck, logsController.listarLogs);

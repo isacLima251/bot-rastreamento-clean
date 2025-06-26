@@ -85,9 +85,6 @@ exports.criarPedido = async (req, res) => {
 
         await logService.addLog(db, clienteId, 'pedido_criado', JSON.stringify({ pedidoId: pedidoCriado.id }));
 
-        if (req.subscription) {
-            await subscriptionService.incrementUsage(db, req.subscription.id);
-        }
 
         res.status(201).json({
             message: "Pedido criado com sucesso!",
@@ -175,10 +172,6 @@ exports.enviarMensagemManual = async (req, res) => {
         await pedidoService.addMensagemHistorico(db, id, mensagem, 'manual', 'bot', clienteId);
 
         await logService.addLog(db, clienteId, 'mensagem_manual', JSON.stringify({ pedidoId: id }));
-
-        if (req.subscription) {
-            await subscriptionService.incrementUsage(db, req.subscription.id);
-        }
         
         // MUDANÇA: Notifica todos os painéis abertos sobre a nova mensagem
         broadcast({ type: 'nova_mensagem', pedidoId: parseInt(id) });
