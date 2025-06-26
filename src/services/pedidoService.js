@@ -190,7 +190,7 @@ const getHistoricoPorPedidoId = (db, pedidoId, clienteId) => {
 };
 
 const getPedidosComCodigoAtivo = (db, clienteId, inicioCiclo, fimCiclo) => {
-    const sql = `SELECT id, nome, codigoRastreio, dataCriacao
+    const sql = `SELECT id, nome, produto, codigoRastreio, dataCriacao
                  FROM pedidos
                  WHERE cliente_id = ?
                    AND codigoRastreio IS NOT NULL

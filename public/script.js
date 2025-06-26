@@ -73,6 +73,7 @@ const authFetch = async (url, options = {}) => {
     const newContactsChartCanvas = document.getElementById('new-contacts-chart');
     const statusPieChartCanvas = document.getElementById('status-pie-chart');
     const billingTableBodyEl = document.getElementById('billing-table-body');
+    const billingSummaryEl = document.getElementById('billing-summary');
     const integrationHistoryBodyEl = document.getElementById('integration-history-body');
     const integrationPaginationEl = document.getElementById('integration-pagination');
     const toggleCreateContactEl = document.getElementById('toggle-create-contact');
@@ -631,19 +632,24 @@ const planStatusEl = document.getElementById('plan-status');
 
     async function loadBillingHistory() {
         if (!billingTableBodyEl) return;
-        billingTableBodyEl.innerHTML = '<tr><td colspan="3">A carregar...</td></tr>';
+        billingTableBodyEl.innerHTML = '<tr><td colspan="4">A carregar...</td></tr>';
         try {
             const resp = await authFetch('/api/billing/history');
             if (!resp.ok) throw new Error('Falha ao carregar histórico.');
             const { pedidos } = await resp.json();
             billingTableBodyEl.innerHTML = '';
+            if (billingSummaryEl) {
+                const count = pedidos ? pedidos.length : 0;
+                billingSummaryEl.textContent = `Exibindo ${count} pedidos com rastreio ativo que estão contando para o seu ciclo atual.`;
+            }
             if (!pedidos || pedidos.length === 0) {
-                billingTableBodyEl.innerHTML = '<tr><td colspan="3">Nenhum pedido contabilizado.</td></tr>';
+                billingTableBodyEl.innerHTML = '<tr><td colspan="4" class="billing-empty"><div class="placeholder-view"><div style="font-size:2rem">📦</div><h1>Nenhum Rastreio Ativo</h1><p>Adicione um código de rastreio a um dos seus contatos para começar a acompanhar e ver seu consumo aqui.</p></div></td></tr>';
                 return;
             }
             pedidos.forEach(p => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${new Date(p.dataCriacao).toLocaleDateString()}</td><td>${p.nome}</td><td>${p.codigoRastreio}</td>`;
+                const link = `https://www.linkcorreios.com.br/${p.codigoRastreio}`;
+                tr.innerHTML = `<td>${new Date(p.dataCriacao).toLocaleDateString()}</td><td>${p.nome}</td><td>${p.produto || ''}</td><td><a href="${link}" target="_blank">${p.codigoRastreio}</a></td>`;
                 billingTableBodyEl.appendChild(tr);
             });
         } catch (err) {
