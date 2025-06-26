@@ -115,6 +115,8 @@ body {
 #btn-adicionar-novo:hover { background-color: #2563eb; }
 .btn-editar-main, .btn-atualizar-foto { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-left: 10px; display: flex; align-items: center; gap: 6px; }
 .btn-editar-main:hover, .btn-atualizar-foto:hover { background-color: var(--hover-bg); border-color: #d1d5db; color: var(--text-color); }
+.btn-excluir-main { background-color: transparent; border: 1px solid var(--error-color); color: var(--error-color); padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-left: 10px; display: flex; align-items: center; gap: 6px; }
+.btn-excluir-main:hover { background-color: var(--error-color); color: #fff; }
 #notificacao { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); min-width: 300px; max-width: 500px; padding: 15px 20px; border-radius: 8px; color: white; font-weight: 500; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); z-index: 2000; display: flex; align-items: center; gap: 15px; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease, bottom 0.3s ease; }
 #notificacao.show { opacity: 1; visibility: visible; bottom: 40px; }
 #notificacao.error { background-color: var(--error-color); }

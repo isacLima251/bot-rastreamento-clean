@@ -351,7 +351,8 @@ const authFetch = async (url, options = {}) => {
         }
         pedidoAtivoId = pedido.id;
         const btnAtualizarFotoHtml = `<button class="btn-atualizar-foto" data-id="${pedido.id}" title="Atualizar Foto de Perfil"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.5a.5.5 0 0 1 0-1h1.417a.5.5 0 0 1 .5.5v1.417a.5.5 0 0 1-1 0V8a5.002 5.002 0 0 0-9.19-2.734.5.5 0 0 1-.82-.57A6.002 6.002 0 0 1 8 3z"/></svg> Atualizar Foto</button>`;
-        chatWindowEl.innerHTML = `<div class="detalhes-header"><h3>${pedido.nome} (#${pedido.id})</h3><div>${btnAtualizarFotoHtml}<button class="btn-editar-main">Editar</button></div></div><div class="detalhes-body"><p><strong>Telefone:</strong> ${pedido.telefone}</p><p><strong>Produto:</strong> ${pedido.produto || 'N/A'}</p><p><strong>Rastreio:</strong> ${pedido.codigoRastreio || 'Nenhum'}</p></div><div class="chat-feed" id="chat-feed"><p class="info-mensagem">A carregar histórico...</p></div>`;
+        const btnExcluirHtml = `<button class="btn-excluir-main">Excluir</button>`;
+        chatWindowEl.innerHTML = `<div class="detalhes-header"><h3>${pedido.nome} (#${pedido.id})</h3><div>${btnAtualizarFotoHtml}<button class="btn-editar-main">Editar</button>${btnExcluirHtml}</div></div><div class="detalhes-body"><p><strong>Telefone:</strong> ${pedido.telefone}</p><p><strong>Produto:</strong> ${pedido.produto || 'N/A'}</p><p><strong>Rastreio:</strong> ${pedido.codigoRastreio || 'Nenhum'}</p></div><div class="chat-feed" id="chat-feed"><p class="info-mensagem">A carregar histórico...</p></div>`;
         chatFooterEl.classList.add('active');
         formEnviarMensagemEl.querySelector('input').disabled = false;
         formEnviarMensagemEl.querySelector('button').disabled = false;
@@ -822,6 +823,20 @@ const authFetch = async (url, options = {}) => {
         if (e.target.id === 'btn-regenerate-qr') {
             authFetch('/api/whatsapp/connect', { method: 'POST' });
         }
+        if (e.target.id === 'btn-delete-account') {
+            showConfirmationModal('Você tem certeza? Esta ação é irreversível e todos os seus dados serão apagados permanentemente.', async () => {
+                try {
+                    const resp = await authFetch('/api/users/me', { method: 'DELETE' });
+                    const data = await resp.json();
+                    if (!resp.ok) throw new Error(data.error || 'Falha ao excluir conta.');
+                    localStorage.removeItem('token');
+                    alert('Conta excluída com sucesso.');
+                    window.location.href = '/login.html';
+                } catch (err) {
+                    showNotification(err.message, 'error');
+                }
+            });
+        }
     });
     
     if(mainContentAreaEl) mainContentAreaEl.addEventListener('click', async (e) => {
@@ -829,6 +844,28 @@ const authFetch = async (url, options = {}) => {
         if (btnEditar) {
             const pedido = todosOsPedidos.find(p => p.id === pedidoAtivoId);
             if (pedido) abrirModal(pedido);
+        }
+        const btnExcluir = e.target.closest('.btn-excluir-main');
+        if (btnExcluir) {
+            const pedido = todosOsPedidos.find(p => p.id === pedidoAtivoId);
+            if (!pedido) return;
+            const executarExclusao = async () => {
+                try {
+                    const resp = await authFetch(`/api/pedidos/${pedido.id}`, { method: 'DELETE' });
+                    const resultado = await resp.json();
+                    if (!resp.ok) throw new Error(resultado.error || 'Falha ao excluir.');
+                    showNotification(resultado.message, 'success');
+                    pedidoAtivoId = null;
+                    await fetchErenderizarTudo();
+                } catch (err) {
+                    showNotification(err.message, 'error');
+                }
+            };
+            if (pedido.codigoRastreio) {
+                showConfirmationModal('Atenção: Este contato possui um código de rastreio ativo e já está consumindo um uso do seu plano este mês. Ao apagar, ele não poderá mais receber mensagens automáticas, mas o uso não será devolvido. Deseja continuar?', executarExclusao);
+            } else {
+                executarExclusao();
+            }
         }
         const btnAtualizar = e.target.closest('.btn-atualizar-foto');
         if (btnAtualizar) {

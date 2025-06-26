@@ -105,6 +105,31 @@ function setUserActive(db, id, active) {
     return updateUser(db, id, { is_active: active });
 }
 
+function deleteUserCascade(db, userId) {
+    return new Promise((resolve, reject) => {
+        db.serialize(() => {
+            db.run('BEGIN TRANSACTION');
+            db.run('DELETE FROM historico_mensagens WHERE cliente_id = ?', [userId]);
+            db.run('DELETE FROM pedidos WHERE cliente_id = ?', [userId]);
+            db.run('DELETE FROM logs WHERE cliente_id = ?', [userId]);
+            db.run('DELETE FROM automacoes WHERE cliente_id = ?', [userId]);
+            db.run('DELETE FROM subscriptions WHERE user_id = ?', [userId]);
+            db.run('DELETE FROM integration_settings WHERE user_id = ?', [userId]);
+            db.run('DELETE FROM user_settings WHERE user_id = ?', [userId]);
+            db.run('DELETE FROM users WHERE id = ?', [userId], function(err){
+                if (err) {
+                    db.run('ROLLBACK');
+                    return reject(err);
+                }
+                db.run('COMMIT', err2 => {
+                    if (err2) return reject(err2);
+                    resolve();
+                });
+            });
+        });
+    });
+}
+
 module.exports = {
     createUser,
     findUserByEmail,
@@ -113,6 +138,7 @@ module.exports = {
     regenerateApiKey,
     getAllUsers,
     updateUser,
-    setUserActive
+    setUserActive,
+    deleteUserCascade
 };
 

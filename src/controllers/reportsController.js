@@ -25,10 +25,10 @@ exports.getReportSummary = async (req, res) => {
             statusDistributionRows,
             newContactsLast7DaysRows
         ] = await Promise.all([
-            runQuery(db, `SELECT COUNT(id) as count FROM pedidos WHERE cliente_id = ?`, [clienteId]),
-            runQuery(db, `SELECT COUNT(id) as count FROM historico_mensagens WHERE origem = 'bot' AND cliente_id = ?`, [clienteId]),
-            runQuery(db, `SELECT statusInterno, COUNT(id) as count FROM pedidos WHERE statusInterno IS NOT NULL AND cliente_id = ? GROUP BY statusInterno`, [clienteId]),
-            runQuery(db, `SELECT strftime('%Y-%m-%d', dataCriacao) as dia, COUNT(id) as count FROM pedidos WHERE cliente_id = ? AND dataCriacao >= date('now', '-7 days') GROUP BY dia ORDER BY dia ASC`, [clienteId])
+            runQuery(db, 'SELECT COUNT(*) as count FROM pedidos WHERE cliente_id = ?', [clienteId]),
+            runQuery(db, "SELECT COUNT(*) as count FROM historico_mensagens WHERE origem = 'bot' AND cliente_id = ?", [clienteId]),
+            runQuery(db, 'SELECT statusInterno, COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND statusInterno IS NOT NULL GROUP BY statusInterno', [clienteId]),
+            runQuery(db, "SELECT strftime('%Y-%m-%d', dataCriacao) as dia, COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND dataCriacao >= date('now', '-7 days') GROUP BY dia ORDER BY dia ASC", [clienteId])
         ]);
 
         // Formata os resultados num único objeto JSON

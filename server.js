@@ -23,6 +23,7 @@ const authController = require('./src/controllers/authController');
 const adminController = require('./src/controllers/adminController');
 const settingsController = require('./src/controllers/settingsController');
 const subscriptionService = require('./src/services/subscriptionService');
+const userController = require('./src/controllers/userController');
 const authMiddleware = require('./src/middleware/auth');
 const apiKeyMiddleware = require('./src/middleware/apiKey');
 const planCheck = require('./src/middleware/planCheck');
@@ -287,6 +288,9 @@ const startApp = async () => {
         // Rotas de Configurações de Usuário
         app.get('/api/settings/contact-creation', planCheck, settingsController.getContactCreationSetting);
         app.put('/api/settings/contact-creation', planCheck, settingsController.updateContactCreationSetting);
+
+        // Conta do usuário
+        app.delete('/api/users/me', userController.deleteMe);
 
         // Rotas do WhatsApp
         app.get('/api/whatsapp/status', (req, res) => res.json({ status: whatsappStatus, qrCode: qrCodeData, botInfo: botInfo }));

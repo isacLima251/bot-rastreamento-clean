@@ -128,19 +128,22 @@ exports.atualizarPedido = async (req, res) => {
     }
 };
 
-// APAGA um pedido
+// APAGA um pedido e seu histórico
 exports.deletarPedido = (req, res) => {
     const db = req.db;
     const clienteId = req.user.id;
     const { id } = req.params;
-    db.run('DELETE FROM pedidos WHERE id = ? AND cliente_id = ?', [id, clienteId], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        if (this.changes === 0) return res.status(404).json({ error: `Pedido com ID ${id} não encontrado.` });
-        
-        // Notifica o frontend
-        req.broadcast({ type: 'pedido_deletado', pedidoId: id });
-        
-        res.json({ message: `Pedido com ID ${id} deletado com sucesso.` });
+    db.serialize(() => {
+        db.run('DELETE FROM historico_mensagens WHERE pedido_id = ? AND cliente_id = ?', [id, clienteId]);
+        db.run('DELETE FROM pedidos WHERE id = ? AND cliente_id = ?', [id, clienteId], function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            if (this.changes === 0) return res.status(404).json({ error: `Pedido com ID ${id} não encontrado.` });
+
+            // Notifica o frontend
+            req.broadcast({ type: 'pedido_deletado', pedidoId: id });
+
+            res.json({ message: `Pedido com ID ${id} deletado com sucesso.` });
+        });
     });
 };
 
