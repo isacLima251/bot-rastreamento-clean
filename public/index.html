@@ -30,15 +30,8 @@
                 <div class="app-layout">
                     <aside class="sidebar">
                         <header class="sidebar-header">
-                            <div class="user-status">
-                                <span id="logged-user">Usuário</span>
-                                <div id="connection-status" class="connection-status disconnected">
-                                    <span class="status-dot"></span>
-                                    <span id="connection-status-text">Desconectado</span>
-                                </div>
-                                <button id="btn-adicionar-novo" class="btn-icon" title="Adicionar Novo Pedido">+</button>
-                            </div>
                             <div id="plan-status" class="plan-info"></div>
+                            <button id="btn-adicionar-novo" class="btn-icon" title="Adicionar Novo Pedido">+</button>
                         </header>
                         <div class="list-controls">
                             <div class="search-container">
@@ -49,6 +42,16 @@
                                 <button class="filter-btn active" data-filtro="todos">Todos</button>
                                 <button class="filter-btn" data-filtro="caminho">A Caminho</button>
                                 <button class="filter-btn" data-filtro="entregue">Entregue</button>
+                            </div>
+                        </div>
+                        <div id="connection-status" class="status-indicator disconnected">
+                            <span class="status-dot"></span>
+                            <div class="status-text">
+                                <span id="connection-status-text">Desconectado</span>
+                                <span id="status-bot-info"></span>
+                            </div>
+                            <div id="bot-avatar-container" class="hidden">
+                                <img id="bot-avatar-img" src="https://i.imgur.com/z28n3Nz.png" alt="Avatar do Bot">
                             </div>
                         </div>
                         <div class="contact-list" id="lista-contactos"></div>

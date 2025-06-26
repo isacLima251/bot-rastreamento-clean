@@ -46,6 +46,9 @@ const authFetch = async (url, options = {}) => {
     const btnSalvarAutomacoesEl = document.getElementById('btn-salvar-automacoes');
     const connectionStatusEl = document.getElementById('connection-status');
     const connectionStatusTextEl = document.getElementById('connection-status-text');
+    const statusBotInfoEl = document.getElementById('status-bot-info');
+    const botAvatarImgEl = document.getElementById('bot-avatar-img');
+    const botAvatarContainerEl = document.getElementById('bot-avatar-container');
     const loggedUserEl = document.getElementById('logged-user');
     const qrCodeContainerEl = document.getElementById('qr-code-container');
     const btnConectarEl = document.getElementById('btn-conectar');
@@ -240,10 +243,18 @@ const planStatusEl = document.getElementById('plan-status');
         if (settingsConnectionStatusEl) settingsConnectionStatusEl.classList.add('hidden');
         if (qrCodeContainerEl) qrCodeContainerEl.innerHTML = '';
         if (connectionStatusEl) {
-            connectionStatusEl.className = 'connection-status';
+            connectionStatusEl.className = 'status-indicator';
             connectionStatusEl.classList.add(status.toLowerCase());
         }
         if (connectionStatusTextEl) connectionStatusTextEl.textContent = statusText;
+        if (statusBotInfoEl) statusBotInfoEl.textContent = '';
+        if (botAvatarImgEl) botAvatarImgEl.src = 'https://i.imgur.com/z28n3Nz.png';
+        if (botAvatarContainerEl) botAvatarContainerEl.classList.add('hidden');
+        if (status === 'CONNECTED' && data.botInfo) {
+            if (statusBotInfoEl) statusBotInfoEl.textContent = `${data.botInfo.nome} - ${data.botInfo.numero}`;
+            if (botAvatarImgEl && data.botInfo.fotoUrl) botAvatarImgEl.src = data.botInfo.fotoUrl;
+            if (botAvatarContainerEl) botAvatarContainerEl.classList.remove('hidden');
+        }
 
         if (status === 'QR_CODE' && data.qrCode) {
             if (settingsConnectionStatusEl) settingsConnectionStatusEl.classList.remove('hidden');
@@ -262,7 +273,6 @@ const planStatusEl = document.getElementById('plan-status');
             }
             if (settingsBotNameEl) settingsBotNameEl.textContent = data.botInfo.nome || 'Nome não encontrado';
             if (settingsBotNumberEl) settingsBotNumberEl.textContent = data.botInfo.numero;
-            if (connectionStatusTextEl) connectionStatusTextEl.textContent = 'Conectado';
         } else {
             if (settingsConnectionStatusEl) settingsConnectionStatusEl.classList.remove('hidden');
             if (settingsStatusTextEl) settingsStatusTextEl.textContent = statusText;
