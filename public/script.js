@@ -293,6 +293,15 @@ const authFetch = async (url, options = {}) => {
         }
         return dataUtc.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' });
     }
+
+    function corAvatar(nome) {
+        let hash = 0;
+        for (let i = 0; i < nome.length; i++) {
+            hash = nome.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const hue = Math.abs(hash) % 360;
+        return `hsl(${hue}, 70%, 60%)`;
+    }
     
     const renderizarListaDeContactos = () => {
         if(!listaContactosEl) return;
@@ -311,7 +320,10 @@ const authFetch = async (url, options = {}) => {
                 else item.dataset.status = 'caminho';
             }
             const primeiraLetra = pedido.nome ? pedido.nome.charAt(0).toUpperCase() : '?';
-            const fotoHtml = pedido.fotoPerfilUrl ? `<img src="${pedido.fotoPerfilUrl}" alt="Foto de ${pedido.nome}" onerror="this.parentElement.innerHTML = '<div class=\\'avatar-fallback\\'>${primeiraLetra}</div>';">` : `<div class="avatar-fallback">${primeiraLetra}</div>`;
+            const cor = corAvatar(pedido.nome || '');
+            const fotoHtml = pedido.fotoPerfilUrl
+                ? `<img src="${pedido.fotoPerfilUrl}" alt="Foto de ${pedido.nome}" onerror="this.parentElement.innerHTML = '<div class=\\'avatar-fallback\\' style=\\'background-color:${cor};\\'>${primeiraLetra}</div>';">`
+                : `<div class="avatar-fallback" style="background-color:${cor};">${primeiraLetra}</div>`;
             const contadorHtml = pedido.mensagensNaoLidas > 0 ? `<div class="unread-counter">${pedido.mensagensNaoLidas}</div>` : '';
             const timestampHtml = `<span class="contact-timestamp">${formatarDataContato(pedido.dataUltimaMensagem)}</span>`;
             const previewMensagem = pedido.ultimaMensagem ? pedido.ultimaMensagem.substring(0, 35) + (pedido.ultimaMensagem.length > 35 ? '...' : '') : 'Novo Pedido';
@@ -333,9 +345,10 @@ const authFetch = async (url, options = {}) => {
             item.className = 'contact-row contact-item-clickable';
             item.dataset.id = pedido.id;
             const primeiraLetra = pedido.nome ? pedido.nome.charAt(0).toUpperCase() : '?';
-            const fotoHtml = pedido.fotoPerfilUrl 
-                ? `<img src="${pedido.fotoPerfilUrl}" alt="Foto de ${pedido.nome}" onerror="this.parentElement.innerHTML = '<div class=\\'avatar-fallback\\'>${primeiraLetra}</div>';">` 
-                : `<div class="avatar-fallback">${primeiraLetra}</div>`;
+            const cor = corAvatar(pedido.nome || '');
+            const fotoHtml = pedido.fotoPerfilUrl
+                ? `<img src="${pedido.fotoPerfilUrl}" alt="Foto de ${pedido.nome}" onerror="this.parentElement.innerHTML = '<div class=\\'avatar-fallback\\' style=\\'background-color:${cor};\\'>${primeiraLetra}</div>';">`
+                : `<div class="avatar-fallback" style="background-color:${cor};">${primeiraLetra}</div>`;
             item.innerHTML = `<div class="avatar-container">${fotoHtml}</div><div class="info"><h4>${pedido.nome || 'Nome não disponível'}</h4><p>${pedido.telefone}</p></div><div class="contact-tag">cliente</div><div class="arrow-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></div>`;
             listaContactosCompletaEl.appendChild(item);
         });
@@ -351,8 +364,11 @@ const authFetch = async (url, options = {}) => {
         }
         pedidoAtivoId = pedido.id;
         const btnAtualizarFotoHtml = `<button class="btn-atualizar-foto" data-id="${pedido.id}" title="Atualizar Foto de Perfil"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.5a.5.5 0 0 1 0-1h1.417a.5.5 0 0 1 .5.5v1.417a.5.5 0 0 1-1 0V8a5.002 5.002 0 0 0-9.19-2.734.5.5 0 0 1-.82-.57A6.002 6.002 0 0 1 8 3z"/></svg> Atualizar Foto</button>`;
-        const btnExcluirHtml = `<button class="btn-excluir-main">Excluir</button>`;
-        chatWindowEl.innerHTML = `<div class="detalhes-header"><h3>${pedido.nome} (#${pedido.id})</h3><div>${btnAtualizarFotoHtml}<button class="btn-editar-main">Editar</button>${btnExcluirHtml}</div></div><div class="detalhes-body"><p><strong>Telefone:</strong> ${pedido.telefone}</p><p><strong>Produto:</strong> ${pedido.produto || 'N/A'}</p><p><strong>Rastreio:</strong> ${pedido.codigoRastreio || 'Nenhum'}</p></div><div class="chat-feed" id="chat-feed"><p class="info-mensagem">A carregar histórico...</p></div>`;
+        const btnExcluirHtml = `<button class="btn-excluir-main" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5h-4a.5.5 0 0 1-.5-.5v-7z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1 0-2h3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1h3a1 1 0 0 1 1 1zM5 4v9h6V4H5z"/></svg></button>`;
+        const telefoneIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M3.654 1.328a.678.678 0 0 1 .737-.203l2.522.84a.678.678 0 0 1 .449.604l.146 2.757a.678.678 0 0 1-.202.494l-1.013 1.013a11.27 11.27 0 0 0 4.664 4.664l1.013-1.013a.678.678 0 0 1 .494-.202l2.757.146a.678.678 0 0 1 .604.449l.84 2.522a.678.678 0 0 1-.203.737l-2.3 2.3a.678.678 0 0 1-.737.15c-1.204-.502-2.38-1.196-3.518-2.034a17.567 17.567 0 0 1-4.401-4.401c-.838-1.138-1.532-2.314-2.034-3.518a.678.678 0 0 1 .15-.737l2.3-2.3z"/></svg>`;
+        const produtoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8.21 1.03a1 1 0 0 0-.42 0L2 2.522V6c0 3.066 2.582 5.854 6 6.92 3.418-1.066 6-3.855 6-6.92V2.522L8.21 1.03z"/><path d="M8 3.048 13.377 4.6 8 6.152 2.623 4.6 8 3.048zM3.022 5.825l4.978 1.559v4.97l-4.978-2.03V5.825zm5.956 6.529V7.384l4.978-1.559v4.499l-4.978 2.03z"/></svg>`;
+        const rastreioIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M0 1a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v3h2.5a.5.5 0 0 1 .39.188l2.5 3a.5.5 0 0 1 .11.312V11a2 2 0 1 1-4 0h-8a2 2 0 1 1-4 0V1z"/><path d="M6 11a2 2 0 1 0 4 0H6z"/></svg>`;
+        chatWindowEl.innerHTML = `<div class="detalhes-header"><h3>${pedido.nome} (#${pedido.id})</h3><div>${btnAtualizarFotoHtml}<button class="btn-editar-main">Editar</button>${btnExcluirHtml}</div></div><div class="detalhes-body"><p>${telefoneIcon} ${pedido.telefone}</p><p>${produtoIcon} ${pedido.produto || 'N/A'}</p><p>${rastreioIcon} ${pedido.codigoRastreio || 'Nenhum'}</p></div><div class="chat-feed" id="chat-feed"><p class="info-mensagem">A carregar histórico...</p></div>`;
         chatFooterEl.classList.add('active');
         formEnviarMensagemEl.querySelector('input').disabled = false;
         formEnviarMensagemEl.querySelector('button').disabled = false;
@@ -368,10 +384,12 @@ const authFetch = async (url, options = {}) => {
                 } else {
                     historico.forEach(msg => {
                         const msgDiv = document.createElement('div');
-                        msgDiv.className = `chat-message ${msg.origem === 'cliente' ? 'recebido' : 'enviado'}`;
+                        const isAuto = msg.origem === 'bot' && msg.tipo_mensagem && msg.tipo_mensagem !== 'manual';
+                        msgDiv.className = `chat-message ${msg.origem === 'cliente' ? 'recebido' : 'enviado'}${isAuto ? ' automatic' : ''}`;
                         const dataUtc = new Date(msg.data_envio.includes('Z') ? msg.data_envio : msg.data_envio.replace(' ', 'T') + 'Z');
                         const dataFormatada = dataUtc.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
-                        msgDiv.innerHTML = `<p>${msg.mensagem.replace(/\n/g, '<br>')}</p><span class="timestamp">${dataFormatada}</span>`;
+                        const autoIcon = isAuto ? ' <span class="auto-indicator" title="Automática">🤖</span>' : '';
+                        msgDiv.innerHTML = `<p>${msg.mensagem.replace(/\n/g, '<br>')}</p><span class="timestamp">${dataFormatada}${autoIcon}</span>`;
                         chatFeedEl.appendChild(msgDiv);
                     });
                     chatFeedEl.scrollTop = chatFeedEl.scrollHeight;
@@ -608,7 +626,8 @@ const authFetch = async (url, options = {}) => {
             if (!resp.ok) throw new Error('Falha ao carregar assinatura');
             const { subscription } = await resp.json();
             const limite = subscription.monthly_limit === -1 ? 'Ilimitado' : subscription.monthly_limit;
-            planStatusEl.textContent = `Plano Atual: ${subscription.plan_name} \u2014 Uso este mês: ${subscription.usage} / ${limite} pedidos`;
+            const percent = subscription.monthly_limit === -1 ? 0 : Math.min(100, Math.round((subscription.usage / subscription.monthly_limit) * 100));
+            planStatusEl.innerHTML = `<div>Plano Atual: ${subscription.plan_name} — Uso este mês: ${subscription.usage} / ${limite} pedidos</div><div class="plan-progress"><div class="plan-progress-bar" style="width:${percent}%"></div></div>`;
         } catch (err) {
             planStatusEl.textContent = 'Erro ao carregar plano';
         }
