@@ -260,12 +260,9 @@ const criarPedido = (db, dadosPedido, client, clienteId = null) => {
         }
 
         let fotoUrl = null;
-        if (client) { // Só tenta buscar a foto se o client do venom for passado
+        if (client) {
             try {
-                const contatoId = `${telefoneValidado}@c.us`;
-                console.log(`[CRIAR PEDIDO] Buscando foto para o contatoId: ${contatoId}`);
-                fotoUrl = await client.getProfilePicFromServer(contatoId);
-                console.log(`[CRIAR PEDIDO] Resultado da busca (fotoUrl):`, fotoUrl);
+                fotoUrl = await whatsappService.getProfilePicUrl(telefoneValidado);
             } catch (e) {
                 console.warn(`Não foi possível obter a foto para o novo contato ${telefoneValidado}.`);
                 fotoUrl = null;

@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
 const token = localStorage.getItem('token');
 if (!token) { window.location.href = '/login.html'; return; }
+function parseJwt(t){try{return JSON.parse(atob(t.split('.')[1]));}catch(e){return {};}}
+const userData = parseJwt(token);
 const showUpgradeModal = () => { if(modalUpgradeEl) modalUpgradeEl.classList.add('active'); };
 const authFetch = async (url, options = {}) => {
     options.headers = options.headers || {};
@@ -42,14 +44,12 @@ const authFetch = async (url, options = {}) => {
     const notificacaoCloseBtnEl = document.getElementById('notificacao-close-btn');
     const filterContainerEl = document.getElementById('filter-container');
     const btnSalvarAutomacoesEl = document.getElementById('btn-salvar-automacoes');
-    const statusIndicatorEl = document.getElementById('status-whatsapp');
+    const connectionStatusEl = document.getElementById('connection-status');
+    const connectionStatusTextEl = document.getElementById('connection-status-text');
+    const loggedUserEl = document.getElementById('logged-user');
     const qrCodeContainerEl = document.getElementById('qr-code-container');
     const btnConectarEl = document.getElementById('btn-conectar');
     const btnDesconectarEl = document.getElementById('btn-desconectar');
-    const statusTextLabelEl = document.getElementById('status-text-label');
-    const statusBotInfoEl = document.getElementById('status-bot-info');
-    const botAvatarContainerEl = document.getElementById('bot-avatar-container');
-    const botAvatarImgEl = document.getElementById('bot-avatar-img');
     const settingsProfileInfoEl = document.getElementById('settings-profile-info');
     const settingsBotAvatarEl = document.getElementById('settings-bot-avatar');
     const settingsBotNameEl = document.getElementById('settings-bot-name');
@@ -82,6 +82,7 @@ const authFetch = async (url, options = {}) => {
     const modalUpgradeEl = document.getElementById('modal-upgrade');
     const btnUpgradePlansEl = document.getElementById('btn-upgrade-plans');
 const planStatusEl = document.getElementById('plan-status');
+    if (loggedUserEl) loggedUserEl.textContent = userData.email || 'Usuário';
 
     const variableTooltips = {
         '{{link_rastreio}}': 'Insere o link completo e clicável para a página de rastreamento dos Correios.',
@@ -238,13 +239,11 @@ const planStatusEl = document.getElementById('plan-status');
         if (settingsProfileInfoEl) settingsProfileInfoEl.classList.add('hidden');
         if (settingsConnectionStatusEl) settingsConnectionStatusEl.classList.add('hidden');
         if (qrCodeContainerEl) qrCodeContainerEl.innerHTML = '';
-        if (statusIndicatorEl) {
-            statusIndicatorEl.className = 'status-indicator';
-            statusIndicatorEl.classList.add(status.toLowerCase());
+        if (connectionStatusEl) {
+            connectionStatusEl.className = 'connection-status';
+            connectionStatusEl.classList.add(status.toLowerCase());
         }
-        if (statusTextLabelEl) statusTextLabelEl.textContent = statusText;
-        if (statusBotInfoEl) statusBotInfoEl.textContent = '';
-        if (botAvatarContainerEl) botAvatarContainerEl.classList.add('hidden');
+        if (connectionStatusTextEl) connectionStatusTextEl.textContent = statusText;
 
         if (status === 'QR_CODE' && data.qrCode) {
             if (settingsConnectionStatusEl) settingsConnectionStatusEl.classList.remove('hidden');
@@ -263,11 +262,7 @@ const planStatusEl = document.getElementById('plan-status');
             }
             if (settingsBotNameEl) settingsBotNameEl.textContent = data.botInfo.nome || 'Nome não encontrado';
             if (settingsBotNumberEl) settingsBotNumberEl.textContent = data.botInfo.numero;
-            if (statusBotInfoEl) statusBotInfoEl.textContent = `${data.botInfo.nome || ''} (${data.botInfo.numero})`;
-            if (data.botInfo.fotoUrl && botAvatarImgEl && botAvatarContainerEl) {
-                botAvatarImgEl.src = data.botInfo.fotoUrl;
-                botAvatarContainerEl.classList.remove('hidden');
-            }
+            if (connectionStatusTextEl) connectionStatusTextEl.textContent = 'Conectado';
         } else {
             if (settingsConnectionStatusEl) settingsConnectionStatusEl.classList.remove('hidden');
             if (settingsStatusTextEl) settingsStatusTextEl.textContent = statusText;
@@ -386,12 +381,11 @@ const planStatusEl = document.getElementById('plan-status');
             } catch (error) { console.error("Falha ao marcar como lido:", error); }
         }
         pedidoAtivoId = pedido.id;
-        const btnAtualizarFotoHtml = `<button class="btn-atualizar-foto" data-id="${pedido.id}" title="Atualizar Foto de Perfil"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.5a.5.5 0 0 1 0-1h1.417a.5.5 0 0 1 .5.5v1.417a.5.5 0 0 1-1 0V8a5.002 5.002 0 0 0-9.19-2.734.5.5 0 0 1-.82-.57A6.002 6.002 0 0 1 8 3z"/></svg> Atualizar Foto</button>`;
         const btnExcluirHtml = `<button class="btn-excluir-main" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5h-4a.5.5 0 0 1-.5-.5v-7z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1 0-2h3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1h3a1 1 0 0 1 1 1zM5 4v9h6V4H5z"/></svg></button>`;
         const telefoneIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M3.654 1.328a.678.678 0 0 1 .737-.203l2.522.84a.678.678 0 0 1 .449.604l.146 2.757a.678.678 0 0 1-.202.494l-1.013 1.013a11.27 11.27 0 0 0 4.664 4.664l1.013-1.013a.678.678 0 0 1 .494-.202l2.757.146a.678.678 0 0 1 .604.449l.84 2.522a.678.678 0 0 1-.203.737l-2.3 2.3a.678.678 0 0 1-.737.15c-1.204-.502-2.38-1.196-3.518-2.034a17.567 17.567 0 0 1-4.401-4.401c-.838-1.138-1.532-2.314-2.034-3.518a.678.678 0 0 1 .15-.737l2.3-2.3z"/></svg>`;
         const produtoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8.21 1.03a1 1 0 0 0-.42 0L2 2.522V6c0 3.066 2.582 5.854 6 6.92 3.418-1.066 6-3.855 6-6.92V2.522L8.21 1.03z"/><path d="M8 3.048 13.377 4.6 8 6.152 2.623 4.6 8 3.048zM3.022 5.825l4.978 1.559v4.97l-4.978-2.03V5.825zm5.956 6.529V7.384l4.978-1.559v4.499l-4.978 2.03z"/></svg>`;
         const rastreioIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M0 1a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v3h2.5a.5.5 0 0 1 .39.188l2.5 3a.5.5 0 0 1 .11.312V11a2 2 0 1 1-4 0h-8a2 2 0 1 1-4 0V1z"/><path d="M6 11a2 2 0 1 0 4 0H6z"/></svg>`;
-        chatWindowEl.innerHTML = `<div class="detalhes-header"><h3>${pedido.nome} (#${pedido.id})</h3><div>${btnAtualizarFotoHtml}<button class="btn-editar-main">Editar</button>${btnExcluirHtml}</div></div><div class="detalhes-body"><p>${telefoneIcon} ${pedido.telefone}</p><p>${produtoIcon} ${pedido.produto || 'N/A'}</p><p>${rastreioIcon} ${pedido.codigoRastreio || 'Nenhum'}</p></div><div class="chat-feed" id="chat-feed"><p class="info-mensagem">A carregar histórico...</p></div>`;
+        chatWindowEl.innerHTML = `<div class="detalhes-header"><h3>${pedido.nome}</h3><div><button class="btn-editar-main">Editar</button>${btnExcluirHtml}</div></div><div class="detalhes-body"><p>${telefoneIcon} ${pedido.telefone}</p><p>${produtoIcon} ${pedido.produto || 'N/A'}</p><p>${rastreioIcon} ${pedido.codigoRastreio || 'Nenhum'}</p></div><div class="chat-feed" id="chat-feed"><p class="info-mensagem">A carregar histórico...</p></div>`;
         chatFooterEl.classList.add('active');
         formEnviarMensagemEl.querySelector('input').disabled = false;
         formEnviarMensagemEl.querySelector('button').disabled = false;
@@ -1002,24 +996,6 @@ const planStatusEl = document.getElementById('plan-status');
                 showConfirmationModal('Atenção: Este contato possui um código de rastreio ativo e já está consumindo um uso do seu plano este mês. Ao apagar, ele não poderá mais receber mensagens automáticas, mas o uso não será devolvido. Deseja continuar?', executarExclusao);
             } else {
                 executarExclusao();
-            }
-        }
-        const btnAtualizar = e.target.closest('.btn-atualizar-foto');
-        if (btnAtualizar) {
-            btnAtualizar.innerHTML = '🔄';
-            btnAtualizar.disabled = true;
-            try {
-                const pedidoId = btnAtualizar.dataset.id;
-                const response = await authFetch(`/api/pedidos/${pedidoId}/atualizar-foto`, { method: 'POST' });
-                const resultado = await response.json();
-                if (!response.ok) throw new Error(resultado.error || 'Falha ao buscar foto.');
-                showNotification(resultado.message, 'success');
-                await fetchErenderizarTudo();
-            } catch (error) {
-                showNotification(error.message, 'error');
-            } finally {
-                // A lógica para restaurar o botão será mais complexa se o botão original for um svg
-                // Por agora, vamos manter simples.
             }
         }
     });
