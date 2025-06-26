@@ -9,13 +9,14 @@ module.exports = async (req, res, next) => {
         await subscriptionService.resetUsageIfNeeded(req.db, sub.id);
         if (sub.status !== 'active') return res.status(403).json({ error: 'Plano inativo' });
 
-        const usage = await subscriptionService.calculateUsage(req.db, sub);
-        sub.usage = usage;
-
         const addingCode =
             ((req.method === 'POST' && req.path === '/api/pedidos' && req.body.codigoRastreio) ||
             (req.method === 'POST' && req.path === '/api/postback' && req.body.codigoRastreio) ||
             (req.method === 'PUT' && /^\/api\/pedidos\/\d+$/.test(req.path) && req.body.codigoRastreio));
+
+        // Recalcula o uso sempre que um código é adicionado para evitar brechas
+        const usage = await subscriptionService.calculateUsage(req.db, sub);
+        sub.usage = usage;
 
         if (addingCode && sub.monthly_limit !== -1 && usage >= sub.monthly_limit) {
             return res.status(403).json({ error: 'Limite do plano excedido' });

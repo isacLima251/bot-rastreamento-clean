@@ -261,6 +261,10 @@ const authFetch = async (url, options = {}) => {
             const data = JSON.parse(event.data);
             if (data.type === 'nova_mensagem' || data.type === 'novo_contato' || data.type === 'pedido_atualizado') {
                 fetchErenderizarTudo();
+                if (data.type === 'nova_mensagem' && pedidoAtivoId && data.pedidoId === pedidoAtivoId) {
+                    const pedido = todosOsPedidos.find(p => p.id === pedidoAtivoId);
+                    if (pedido) selecionarPedidoErenderizarDetalhes(pedido);
+                }
             } else if (data.type === 'status_update') {
                 updateStatusUI(data.status, data);
             }

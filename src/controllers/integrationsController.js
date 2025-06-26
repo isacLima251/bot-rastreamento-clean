@@ -3,6 +3,7 @@ const pedidoService = require('../services/pedidoService');
 const userService = require('../services/userService');
 const integrationService = require('../services/integrationConfigService');
 const subscriptionService = require('../services/subscriptionService');
+const envioController = require('./envioController');
 
 /**
  * Função 1: Recebe o postback de uma plataforma externa.
@@ -35,6 +36,9 @@ exports.receberPostback = async (req, res) => {
     try {
         const novoPedido = { nome: client_name, telefone: client_cell, produto: product_name };
         const pedidoCriado = await pedidoService.criarPedido(db, novoPedido, req.venomClient, clienteId);
+        pedidoCriado.cliente_id = clienteId;
+
+        await envioController.enviarMensagemBoasVindas(db, pedidoCriado, req.broadcast);
 
         req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });
         res.status(201).json({ message: "Pedido recebido e criado com sucesso!", data: pedidoCriado });
