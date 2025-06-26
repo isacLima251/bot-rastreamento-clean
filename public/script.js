@@ -676,16 +676,46 @@ const planStatusEl = document.getElementById('plan-status');
         if (!plansListEl) return;
         plansListEl.innerHTML = '<p class="info-mensagem">A carregar...</p>';
         try {
-            const resp = await authFetch('/api/plans');
-            const { data } = await resp.json();
+            const [plansResp, subResp] = await Promise.all([
+                authFetch('/api/plans'),
+                authFetch('/api/subscription')
+            ]);
+            const { data } = await plansResp.json();
+            const { subscription } = await subResp.json();
+            const activePlanId = subscription ? subscription.plan_id : null;
+
+            const planFeatures = {
+                'Grátis': ['10 pedidos/mês', 'Suporte Comunitário'],
+                'Start': ['50 pedidos/mês', 'Integrações Básicas', 'Relatórios Simples'],
+                'Basic': ['100 pedidos/mês', 'Relatórios Padrão', 'Suporte via Email'],
+                'Pro': ['250 pedidos/mês', 'Relatórios Avançados', 'Suporte Prioritário']
+            };
+
             plansListEl.innerHTML = '';
             data.filter(p => p.name !== 'Pro Plus').forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'plan-card';
+                if (p.id === activePlanId) card.classList.add('active');
+
+                const features = planFeatures[p.name] || [];
                 const limite = p.monthly_limit === -1 ? 'Ilimitado' : `${p.monthly_limit} pedidos/mês`;
-                card.innerHTML = `<h3>${p.name}</h3><p>${limite}</p><p>R$ ${p.price}</p><button class="btn-primary" data-plan="${p.id}">Assinar Agora</button>`;
+                const featuresHtml = features.map(f => `<li>${f}</li>`).join('');
+
+                let badge = '';
+                if (p.name === 'Basic') {
+                    badge = '<span class="badge popular">Mais Popular</span>';
+                }
+                if (p.id === activePlanId) {
+                    badge += '<span class="badge current">Plano Atual</span>';
+                }
+
+                const btnDisabled = p.id === activePlanId ? 'disabled' : '';
+                const btnText = p.id === activePlanId ? 'Plano Atual' : 'Assinar Agora';
+
+                card.innerHTML = `${badge}<h3>${p.name}</h3><p>${limite}</p><ul class="plan-features">${featuresHtml}</ul><p>R$ ${p.price}</p><button class="btn-primary" data-plan="${p.id}" ${btnDisabled}>${btnText}</button>`;
                 plansListEl.appendChild(card);
             });
+
             const contactCard = document.createElement('div');
             contactCard.className = 'plan-card';
             contactCard.innerHTML = `<h3>Mais de 250 pedidos?</h3><p>Entre em contato com o suporte.</p>`;
