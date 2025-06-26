@@ -52,10 +52,12 @@ exports.getBillingHistory = async (req, res) => {
     try {
         const db = req.db;
         const userId = req.user.id;
-        const sub = await subscriptionService.getUserSubscription(db, userId);
+        let sub = await subscriptionService.getUserSubscription(db, userId);
         if (!sub) return res.status(404).json({ error: 'Nenhum plano encontrado' });
+        await subscriptionService.resetUsageIfNeeded(db, sub.id);
+        sub = await subscriptionService.getUserSubscription(db, userId);
 
-        const usage = await subscriptionService.calculateUsage(db, sub);
+        const usage = sub.usage;
         const end = require('moment')(sub.renewal_date);
         const start = end.clone().subtract(1, 'month');
         const pedidos = await pedidoService.getPedidosComCodigoAtivo(

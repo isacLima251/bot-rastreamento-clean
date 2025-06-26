@@ -224,10 +224,10 @@ const startApp = async () => {
         // Detalhes da assinatura do usuário logado
         app.get('/api/subscription', async (req, res) => {
             try {
-                const sub = await subscriptionService.getUserSubscription(req.db, req.user.id);
+                let sub = await subscriptionService.getUserSubscription(req.db, req.user.id);
                 if (!sub) return res.status(404).json({ error: 'Nenhum plano encontrado' });
-                const usage = await subscriptionService.calculateUsage(req.db, sub);
-                sub.usage = usage;
+                await subscriptionService.resetUsageIfNeeded(req.db, sub.id);
+                sub = await subscriptionService.getUserSubscription(req.db, req.user.id);
                 res.json({ subscription: sub });
             } catch (err) {
                 console.error('Erro ao obter assinatura:', err);
