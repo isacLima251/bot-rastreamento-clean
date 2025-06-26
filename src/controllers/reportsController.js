@@ -20,22 +20,33 @@ exports.getReportSummary = async (req, res) => {
 
         // Executa todas as consultas necessárias em paralelo para mais eficiência
         const [
-            totalContactsRows,
-            messagesSentRows,
+            ordersInTransitRows,
+            averageDeliveryRows,
+            alertOrdersRows,
+            deliveredRows,
+            totalTrackingRows,
             statusDistributionRows,
             newContactsLast7DaysRows
         ] = await Promise.all([
-            runQuery(db, 'SELECT COUNT(*) as count FROM pedidos WHERE cliente_id = ?', [clienteId]),
-            runQuery(db, "SELECT COUNT(*) as count FROM historico_mensagens WHERE origem = 'bot' AND cliente_id = ?", [clienteId]),
+            runQuery(db, "SELECT COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND codigoRastreio IS NOT NULL AND codigoRastreio != '' AND statusInterno != 'entregue'", [clienteId]),
+            runQuery(db, "SELECT AVG(julianday(COALESCE(ultimaAtualizacao, CURRENT_TIMESTAMP)) - julianday(COALESCE(dataPostagem, dataCriacao))) as avgDays FROM pedidos WHERE cliente_id = ? AND statusInterno = 'entregue' AND ultimaAtualizacao IS NOT NULL", [clienteId]),
+            runQuery(db, "SELECT COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND statusInterno IN ('pedido_atrasado','pedido_devolvido')", [clienteId]),
+            runQuery(db, "SELECT COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND statusInterno = 'entregue'", [clienteId]),
+            runQuery(db, "SELECT COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND codigoRastreio IS NOT NULL AND codigoRastreio != ''", [clienteId]),
             runQuery(db, 'SELECT statusInterno, COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND statusInterno IS NOT NULL GROUP BY statusInterno', [clienteId]),
             runQuery(db, "SELECT strftime('%Y-%m-%d', dataCriacao) as dia, COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND dataCriacao >= date('now', '-7 days') GROUP BY dia ORDER BY dia ASC", [clienteId])
         ]);
 
-        // Formata os resultados num único objeto JSON
+        const avgDays = parseFloat(averageDeliveryRows[0]?.avgDays || 0);
+        const delivered = deliveredRows[0]?.count || 0;
+        const totalTracking = totalTrackingRows[0]?.count || 0;
+        const deliveryRate = totalTracking > 0 ? ((delivered / totalTracking) * 100) : 0;
+
         const summary = {
-            totalContacts: totalContactsRows[0]?.count || 0,
-            messagesSent: messagesSentRows[0]?.count || 0,
-            ordersDelivered: statusDistributionRows.find(row => row.statusInterno === 'entregue')?.count || 0,
+            ordersInTransit: ordersInTransitRows[0]?.count || 0,
+            averageDeliveryTime: Number(avgDays.toFixed(1)),
+            alertOrders: alertOrdersRows[0]?.count || 0,
+            deliveryRate: Number(deliveryRate.toFixed(1)),
             statusDistribution: statusDistributionRows,
             newContactsLast7Days: newContactsLast7DaysRows
         };
