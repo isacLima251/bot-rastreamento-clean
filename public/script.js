@@ -84,7 +84,6 @@ const planStatusEl = document.getElementById('plan-status');
         '{{status_rastreio}}': "Mostra o status resumido do rastreamento (Ex: 'A caminho', 'Entregue', 'Postado').",
         '{{cidade_etapa_origem}}': 'Mostra a cidade de ONDE o pacote saiu na última movimentação registrada pelos Correios.',
         '{{cidade_etapa_destino}}': 'Mostra a cidade para ONDE o pacote está indo na última movimentação registrada.',
-        '{{status_detalhado_correios}}': 'Insere o texto completo e original do último status informado pelos Correios. (Ex: \"Objeto em trânsito - de Unidade de Tratamento em SAO PAULO para Unidade de Distribuição em RECIFE\").',
         '{{data_postagem_formatada}}': 'A data em que o pedido foi postado, no formato dd/mm/aaaa.',
         '{{data_atualizacao_formatada}}': 'A data e a hora da última atualização do rastreio, no formato dd/mm/aaaa HH:mm.'
     };

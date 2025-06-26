@@ -47,10 +47,8 @@ function personalizarMensagem(mensagem, pedido) {
         .replace(/{{codigo_rastreio}}/g, pedido.codigoRastreio || '')
         .replace(/{{status_atual}}/g, pedido.statusInterno || 'Status não disponível')
         .replace(/{{data_atualizacao}}/g, dataFormatada || 'Data não disponível')
-        .replace(/{{ultima_localizacao}}/g, pedido.ultimaLocalizacao || 'Localização não disponível')
         .replace(/{{cidade_etapa_origem}}/g, pedido.origemUltimaMovimentacao || '')
         .replace(/{{cidade_etapa_destino}}/g, pedido.destinoUltimaMovimentacao || '')
-        .replace(/{{status_detalhado_correios}}/g, pedido.descricaoUltimoEvento || '')
         .replace(/{{link_rastreio}}/g, linkRastreio);
 }
 
