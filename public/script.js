@@ -72,6 +72,8 @@ const authFetch = async (url, options = {}) => {
     const newContactsChartCanvas = document.getElementById('new-contacts-chart');
     const statusPieChartCanvas = document.getElementById('status-pie-chart');
     const billingTableBodyEl = document.getElementById('billing-table-body');
+    const integrationHistoryBodyEl = document.getElementById('integration-history-body');
+    const integrationPaginationEl = document.getElementById('integration-pagination');
     const toggleCreateContactEl = document.getElementById('toggle-create-contact');
     const toggleCreateContactLabelEl = document.getElementById('toggle-create-contact-label');
     const plansListEl = document.getElementById('plans-list');
@@ -98,6 +100,8 @@ const planStatusEl = document.getElementById('plan-status');
     let filtroAtivo = 'todos';
     let contactsChart = null;
     let statusChart = null;
+    let integrationCurrentPage = 1;
+    const integrationLimit = 5;
 
 
      const accordionHeaders = document.querySelectorAll('.accordion-header');
@@ -171,7 +175,10 @@ const planStatusEl = document.getElementById('plan-status');
 
         if (viewId === 'contacts-view') renderizarContatosPaginaCompleta();
         if (viewId === 'automations-view') loadAutomations();
-        if (viewId === 'integrations-view') loadIntegrationInfo();
+        if (viewId === 'integrations-view') {
+            loadIntegrationInfo();
+            loadIntegrationHistory();
+        }
         if (viewId === 'settings-view') loadUserSettings();
         if (viewId === 'reports-view') loadReportData();
         if (viewId === 'logs-view') loadBillingHistory();
@@ -667,6 +674,55 @@ const planStatusEl = document.getElementById('plan-status');
             plansListEl.appendChild(contactCard);
         } catch (err) {
             plansListEl.innerHTML = '<p class="info-mensagem">Erro ao carregar planos.</p>';
+        }
+    }
+
+    function renderIntegrationPagination(total) {
+        if (!integrationPaginationEl) return;
+        const totalPages = Math.max(1, Math.ceil(total / integrationLimit));
+        integrationPaginationEl.innerHTML = '';
+        if (totalPages <= 1) return;
+        const prev = document.createElement('button');
+        prev.textContent = 'Anterior';
+        prev.disabled = integrationCurrentPage === 1;
+        prev.addEventListener('click', () => loadIntegrationHistory(integrationCurrentPage - 1));
+        integrationPaginationEl.appendChild(prev);
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            if (i === integrationCurrentPage) btn.classList.add('active');
+            btn.addEventListener('click', () => loadIntegrationHistory(i));
+            integrationPaginationEl.appendChild(btn);
+        }
+        const next = document.createElement('button');
+        next.textContent = 'Próximo';
+        next.disabled = integrationCurrentPage === totalPages;
+        next.addEventListener('click', () => loadIntegrationHistory(integrationCurrentPage + 1));
+        integrationPaginationEl.appendChild(next);
+    }
+
+    async function loadIntegrationHistory(page = 1) {
+        if (!integrationHistoryBodyEl) return;
+        integrationCurrentPage = page;
+        integrationHistoryBodyEl.innerHTML = '<tr><td colspan="4">A carregar...</td></tr>';
+        try {
+            const resp = await authFetch(`/api/integrations/history?page=${page}&limit=${integrationLimit}`);
+            if (!resp.ok) throw new Error('Falha ao carregar histórico.');
+            const { data, total } = await resp.json();
+            integrationHistoryBodyEl.innerHTML = '';
+            if (!data || data.length === 0) {
+                integrationHistoryBodyEl.innerHTML = '<tr><td colspan="4">Nenhum registro.</td></tr>';
+            } else {
+                data.forEach(item => {
+                    const tr = document.createElement('tr');
+                    const dt = new Date(item.created_at);
+                    tr.innerHTML = `<td>${dt.toLocaleString('pt-BR')}</td><td>${item.client_name || '-'}</td><td>${item.product_name || '-'}</td><td><span class="status-badge ${item.status === 'sucesso' ? 'success' : 'error'}">${item.status === 'sucesso' ? 'Recebido' : 'Falhou'}</span></td>`;
+                    integrationHistoryBodyEl.appendChild(tr);
+                });
+            }
+            renderIntegrationPagination(total);
+        } catch (err) {
+            integrationHistoryBodyEl.innerHTML = '<tr><td colspan="4">Erro ao carregar.</td></tr>';
         }
     }
 

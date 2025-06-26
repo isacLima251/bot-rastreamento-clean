@@ -69,6 +69,21 @@ const initDb = () => {
                     if (err) return reject(err);
                 });
 
+                // Tabela de Histórico de Integrações
+                db.run(`
+                    CREATE TABLE IF NOT EXISTS integration_history (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER,
+                        client_name TEXT,
+                        client_cell TEXT,
+                        product_name TEXT,
+                        status TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                `, (err) => {
+                    if (err) return reject(err);
+                });
+
                 // Tabela de Automações com chave composta (cliente + gatilho)
                 db.run(`
                     CREATE TABLE IF NOT EXISTS automacoes (
