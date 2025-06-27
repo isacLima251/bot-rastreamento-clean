@@ -3,6 +3,10 @@ const token = localStorage.getItem('token');
 if (!token) { window.location.href = '/login.html'; return; }
 function parseJwt(t){try{return JSON.parse(atob(t.split('.')[1]));}catch(e){return {};}}
 const userData = parseJwt(token);
+if (userData.precisa_trocar_senha) {
+    window.location.href = '/change-password.html';
+    return;
+}
 const showUpgradeModal = () => { if(modalUpgradeEl) modalUpgradeEl.classList.add('active'); };
 const authFetch = async (url, options = {}) => {
     options.headers = options.headers || {};

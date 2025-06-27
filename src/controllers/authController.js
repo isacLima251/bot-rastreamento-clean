@@ -27,7 +27,7 @@ exports.login = async (req, res) => {
         if (!user) return res.status(401).json({ error: 'Credenciais inválidas.' });
         if (!bcrypt.compareSync(password, user.password)) return res.status(401).json({ error: 'Credenciais inválidas.' });
         if (!user.is_active) return res.status(403).json({ error: 'Usuário desativado.' });
-        const token = jwt.sign({ id: user.id, email: user.email, is_admin: user.is_admin }, JWT_SECRET, { expiresIn: '12h' });
+        const token = jwt.sign({ id: user.id, email: user.email, is_admin: user.is_admin, precisa_trocar_senha: user.precisa_trocar_senha }, JWT_SECRET, { expiresIn: '12h' });
         res.json({ token });
     } catch (err) {
         res.status(500).json({ error: 'Falha ao realizar login.' });

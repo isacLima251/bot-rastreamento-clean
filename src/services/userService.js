@@ -6,17 +6,17 @@ function generateApiKey() {
     return crypto.randomBytes(20).toString('hex');
 }
 
-function createUser(db, email, password, isAdmin = 0, isActive = 1) {
+function createUser(db, email, password, isAdmin = 0, isActive = 1, needsPasswordChange = 1) {
     return new Promise((resolve, reject) => {
         const hashed = bcrypt.hashSync(password, 10);
         const apiKey = generateApiKey();
-        const stmt = db.prepare('INSERT INTO users (email, password, api_key, is_admin, is_active) VALUES (?, ?, ?, ?, ?)');
-        stmt.run(email, hashed, apiKey, isAdmin, isActive, function(err) {
+        const stmt = db.prepare('INSERT INTO users (email, password, api_key, is_admin, is_active, precisa_trocar_senha) VALUES (?, ?, ?, ?, ?, ?)');
+        stmt.run(email, hashed, apiKey, isAdmin, isActive, needsPasswordChange, function(err) {
             if (err) return reject(err);
             const userId = this.lastID;
             integrationConfigService.createDefault(db, userId)
                 .then(() => {
-                    resolve({ id: userId, email, api_key: apiKey, is_admin: isAdmin, is_active: isActive });
+                    resolve({ id: userId, email, api_key: apiKey, is_admin: isAdmin, is_active: isActive, precisa_trocar_senha: needsPasswordChange });
                 })
                 .catch(reject);
         });
@@ -89,6 +89,10 @@ function updateUser(db, id, fields) {
     if (fields.is_active !== undefined) {
         sets.push('is_active = ?');
         params.push(fields.is_active);
+    }
+    if (fields.precisa_trocar_senha !== undefined) {
+        sets.push('precisa_trocar_senha = ?');
+        params.push(fields.precisa_trocar_senha);
     }
     if (!sets.length) return Promise.resolve();
     params.push(id);
