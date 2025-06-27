@@ -14,7 +14,7 @@ exports.receberPostback = async (req, res) => {
     const clienteId = req.user.id;
 
     const payload = req.body;
-    const token = payload.token || payload.basic_authentication;
+    const tictoToken = req.headers['x-ticto-token'];
     const email = payload.customer_email || payload.email;
     const planId = payload.product_id || payload.plan_id;
     const status = (payload.transaction_status || payload.status || '').toLowerCase();
@@ -24,7 +24,7 @@ exports.receberPostback = async (req, res) => {
     const config = await integrationService.getConfig(db, clienteId);
     const secret = (config && config.postback_secret) || process.env.TICTO_SECRET || '';
 
-    if (token !== secret) {
+    if (tictoToken !== secret) {
         console.warn(`[Integração] Recebida requisição com token inválido.`);
         return res.status(401).json({ error: 'Token inválido' });
     }
