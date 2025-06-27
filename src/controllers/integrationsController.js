@@ -10,6 +10,12 @@ const integrationHistoryService = require('../services/integrationHistoryService
  * Função 1: Recebe o postback de uma plataforma externa.
  */
 exports.receberPostback = async (req, res) => {
+    // LOG PARA DEPURAÇÃO COMPLETA - NÃO REMOVER
+    console.log('--- DADOS COMPLETOS DO WEBHOOK DA TICTO RECEBIDO ---');
+    console.log(JSON.stringify(req.headers, null, 2));
+    console.log(JSON.stringify(req.body, null, 2));
+    console.log('----------------------------------------------------');
+
     const db = req.db;
     const clienteId = req.user.id;
 
