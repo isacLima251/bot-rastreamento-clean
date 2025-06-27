@@ -109,6 +109,7 @@ const initDb = () => {
                         api_key TEXT UNIQUE,
                         is_admin INTEGER NOT NULL DEFAULT 0,
                         is_active INTEGER NOT NULL DEFAULT 1,
+                        precisa_trocar_senha INTEGER NOT NULL DEFAULT 1,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 `, (err) => {
@@ -137,6 +138,9 @@ const initDb = () => {
                         if (e && !e.message.includes('duplicate')) return reject(e);
                     });
                     db.run("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) return reject(e);
+                    });
+                    db.run("ALTER TABLE users ADD COLUMN precisa_trocar_senha INTEGER DEFAULT 1", [], (e) => {
                         if (e && !e.message.includes('duplicate')) return reject(e);
                     });
 

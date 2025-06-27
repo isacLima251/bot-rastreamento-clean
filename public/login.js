@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/';
         return;
     }
+    function parseJwt(t){try{return JSON.parse(atob(t.split('.')[1]));}catch(e){return {};}}
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value.trim();
@@ -16,7 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!resp.ok) throw new Error('Credenciais incorretas');
             const data = await resp.json();
             localStorage.setItem('token', data.token);
-            window.location.href = '/';
+            const info = parseJwt(data.token);
+            if (info.precisa_trocar_senha) {
+                window.location.href = '/change-password.html';
+            } else {
+                window.location.href = '/';
+            }
         } catch (err) {
             alert('Falha no login: ' + err.message);
         }

@@ -292,6 +292,7 @@ const startApp = async () => {
 
         // Conta do usuário
         app.delete('/api/users/me', userController.deleteMe);
+        app.put('/api/users/me/password', userController.updatePassword);
 
         // Rotas do WhatsApp
         app.get('/api/whatsapp/status', (req, res) => res.json({ status: whatsappStatus, qrCode: qrCodeData, botInfo: botInfo }));
