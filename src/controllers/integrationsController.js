@@ -20,23 +20,28 @@ exports.receberPostback = async (req, res) => {
     const clienteId = req.user.id;
 
     const payload = req.body;
-    const tictoToken = req.headers['x-ticto-token'];
-    const email = payload.customer_email || payload.email;
-    const planId = payload.product_id || payload.plan_id;
-    const status = (payload.transaction_status || payload.status || '').toLowerCase();
-    const clientName = payload.client_name || payload.customer_name || '';
-    const clientCell = payload.client_cell || payload.customer_phone || '';
 
-    const config = await integrationService.getConfig(db, clienteId);
-    const secret = (config && config.postback_secret) || process.env.TICTO_SECRET || '';
-
-    if (tictoToken !== secret) {
-        console.warn(`[Integração] Recebida requisição com token inválido.`);
-        return res.status(401).json({ error: 'Token inválido' });
+    // Validação do token enviado pela Ticto
+    const tictoToken = payload.token;
+    const nossoSecret = process.env.TICTO_SECRET;
+    if (tictoToken !== nossoSecret) {
+        return res.status(401).json({ error: 'Token do webhook da Ticto inválido.' });
     }
 
-    if (!email || !planId || status !== 'approved') {
-        return res.status(400).json({ error: 'Dados insuficientes ou status inválido.' });
+    const status = (payload.status || '').toLowerCase();
+    if (status !== 'paid' && status !== 'approved') {
+        console.log(`Webhook ignorado: status '${payload.status}' não é uma venda aprovada.`);
+        return res.status(200).json({ message: 'Evento recebido, mas não processado.' });
+    }
+
+    const email = payload?.customer?.email;
+    const planId = payload?.order?.product_id;
+    const clientName = payload?.customer?.name || '';
+    const phone = payload?.customer?.phone || {};
+    const clientCell = (phone.ddd || '') + (phone.number || '');
+
+    if (!email || !planId) {
+        return res.status(400).json({ error: 'Dados insuficientes para processar postback.' });
     }
 
     try {
