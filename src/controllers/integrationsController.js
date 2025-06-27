@@ -4,6 +4,7 @@ const integrationService = require('../services/integrationConfigService');
 const subscriptionService = require('../services/subscriptionService');
 const emailService = require('../services/emailService');
 const crypto = require('crypto');
+const integrationHistoryService = require('../services/integrationHistoryService');
 
 /**
  * Função 1: Recebe o postback de uma plataforma externa.
@@ -12,35 +13,40 @@ exports.receberPostback = async (req, res) => {
     const db = req.db;
     const clienteId = req.user.id;
 
-    const {
-        basic_authentication,
-        email,
-        plan_id,
-        client_name,
-        client_cell
-    } = req.body;
-    const config = await integrationService.getConfig(db, clienteId);
-    const secret = (config && config.postback_secret) || process.env.POSTBACK_SECRET || '';
+    const payload = req.body;
+    const token = payload.token || payload.basic_authentication;
+    const email = payload.customer_email || payload.email;
+    const planId = payload.product_id || payload.plan_id;
+    const status = (payload.transaction_status || payload.status || '').toLowerCase();
+    const clientName = payload.client_name || payload.customer_name || '';
+    const clientCell = payload.client_cell || payload.customer_phone || '';
 
-    if (basic_authentication !== secret) {
-        console.warn(`[Integração] Recebida requisição com chave de autenticação inválida.`);
-        return res.status(401).json({ error: "Chave de autenticação inválida." });
+    const config = await integrationService.getConfig(db, clienteId);
+    const secret = (config && config.postback_secret) || process.env.TICTO_SECRET || '';
+
+    if (token !== secret) {
+        console.warn(`[Integração] Recebida requisição com token inválido.`);
+        return res.status(401).json({ error: 'Token inválido' });
     }
 
-    if (!email || !plan_id) {
-        return res.status(400).json({ error: 'Dados insuficientes.' });
+    if (!email || !planId || status !== 'approved') {
+        return res.status(400).json({ error: 'Dados insuficientes ou status inválido.' });
     }
 
     try {
         let user = await userService.findUserByEmail(db, email);
         const generatedPassword = crypto.randomBytes(8).toString('hex');
+
         if (user) {
-            await subscriptionService.updateUserPlan(db, user.id, plan_id);
+            await subscriptionService.updateUserPlan(db, user.id, planId);
         } else {
             user = await userService.createUser(db, email, generatedPassword);
-            await subscriptionService.updateUserPlan(db, user.id, plan_id);
+            await subscriptionService.updateUserPlan(db, user.id, planId);
             await emailService.sendWelcomeEmail(email, generatedPassword);
         }
+
+        await integrationHistoryService.addEntry(db, clienteId, clientName, clientCell, String(planId), status);
+
         res.status(200).json({ message: 'Postback processado com sucesso' });
     } catch (error) {
         console.error('Erro ao processar postback:', error);

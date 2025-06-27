@@ -252,7 +252,7 @@ const startApp = async () => {
                 res.status(500).json({ error: err.message });
             }
         });
-        app.post('/api/payment/checkout', paymentController.createCheckout);
+
 
 
         console.log("✔️ Registrando rotas da API...");

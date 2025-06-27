@@ -48,11 +48,8 @@ cp .env.example .env
 Edite o `.env` com suas chaves e URLs de callback. As principais variáveis são:
 - `JWT_SECRET` – chave usada para assinar os tokens JWT
 - `SITERASTREIO_API_KEY` – chave da API do Site Rastreio
-- `POSTBACK_SECRET` – autenticação de postbacks de qualquer plataforma de vendas
+- `TICTO_SECRET` – token para validar os webhooks da Ticto
 - `PORT` – porta em que o servidor irá rodar (padrão 3000)
-- `STRIPE_SECRET` – chave secreta do Stripe
-- `PAY_SUCCESS_URL` e `PAY_CANCEL_URL` – páginas de retorno do checkout
-- `PAY_WEBHOOK_URL` e `PAY_WEBHOOK_SECRET` – endpoint e segredo do webhook de pagamento
 - `DB_PATH` – caminho para o arquivo SQLite (opcional)
 
 ---
@@ -134,13 +131,11 @@ As configurações de integração (como a chave de postback e a API do Site Ras
 
 ---
 
-## 💳 Pagamentos
+## 💳 Integração com a Ticto
 
-1. Defina as variáveis `STRIPE_SECRET`, `PAY_SUCCESS_URL`, `PAY_CANCEL_URL`, `PAY_WEBHOOK_URL` e `PAY_WEBHOOK_SECRET` no `.env`.
-2. No painel do Stripe acesse **Developers > Webhooks** e crie um endpoint apontando para o valor de `PAY_WEBHOOK_URL`.
-3. Adicione o evento `checkout.session.completed` e copie a chave secreta fornecida para `PAY_WEBHOOK_SECRET`.
+Configure a variável `TICTO_SECRET` no `.env`. Esse token será usado para validar os webhooks enviados pela Ticto sempre que uma compra for aprovada.
 
-Com isso, quando o pagamento for confirmado, o servidor atualizará o status da sua assinatura automaticamente.
+Ao receber um webhook válido, o servidor criará a conta do usuário (caso ainda não exista), atribuirá o plano adquirido e enviará um e-mail de boas-vindas com uma senha provisória.
 
 ---
 

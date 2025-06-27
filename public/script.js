@@ -717,10 +717,7 @@ const planStatusEl = document.getElementById('plan-status');
                     badge += '<span class="badge current">Plano Atual</span>';
                 }
 
-                const btnDisabled = p.id === activePlanId ? 'disabled' : '';
-                const btnText = p.id === activePlanId ? 'Plano Atual' : 'Assinar Agora';
-
-                card.innerHTML = `${badge}<h3>${p.name}</h3><p>${limite}</p><ul class="plan-features">${featuresHtml}</ul><p>R$ ${p.price}</p><button class="btn-primary" data-plan="${p.id}" ${btnDisabled}>${btnText}</button>`;
+                card.innerHTML = `${badge}<h3>${p.name}</h3><p>${limite}</p><ul class="plan-features">${featuresHtml}</ul><p>R$ ${p.price}</p>`;
                 plansListEl.appendChild(card);
             });
 
@@ -939,22 +936,8 @@ const planStatusEl = document.getElementById('plan-status');
         });
     });
 
-    if (plansListEl) plansListEl.addEventListener('click', async (e) => {
-        const btn = e.target.closest('button[data-plan]');
-        if (!btn) return;
-        const planId = btn.dataset.plan;
-        try {
-            const resp = await authFetch('/api/payment/checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ planId })
-            });
-            const data = await resp.json();
-            if (!resp.ok) throw new Error(data.error || 'Falha ao iniciar pagamento.');
-            window.location.href = data.url;
-        } catch (err) {
-            showNotification(err.message, 'error');
-        }
+    if (plansListEl) plansListEl.addEventListener('click', (e) => {
+        e.preventDefault();
     });
 
     if (btnUpgradePlansEl) btnUpgradePlansEl.addEventListener('click', () => {
