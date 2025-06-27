@@ -48,7 +48,7 @@ cp .env.example .env
 Edite o `.env` com suas chaves e URLs de callback. As principais variáveis são:
 - `JWT_SECRET` – chave usada para assinar os tokens JWT
 - `SITERASTREIO_API_KEY` – chave da API do Site Rastreio
-- `TICTO_SECRET` – token para validar os webhooks da Ticto
+- `TICTO_SECRET` – token para validar os webhooks da Ticto (enviado no header `X-Ticto-Token`)
 - `PORT` – porta em que o servidor irá rodar (padrão 3000)
 - `DB_PATH` – caminho para o arquivo SQLite (opcional)
 
@@ -133,7 +133,7 @@ As configurações de integração (como a chave de postback e a API do Site Ras
 
 ## 💳 Integração com a Ticto
 
-Configure a variável `TICTO_SECRET` no `.env`. Esse token será usado para validar os webhooks enviados pela Ticto sempre que uma compra for aprovada.
+Configure a variável `TICTO_SECRET` no `.env`. Esse token deve coincidir com o valor enviado pela Ticto no cabeçalho `X-Ticto-Token` sempre que uma compra for aprovada.
 
 Ao receber um webhook válido, o servidor criará a conta do usuário (caso ainda não exista), atribuirá o plano adquirido e enviará um e-mail de boas-vindas com uma senha provisória.
 
