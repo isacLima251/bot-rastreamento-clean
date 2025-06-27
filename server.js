@@ -203,8 +203,8 @@ const startApp = async () => {
         app.post('/api/register', authController.register);
         app.post('/api/login', authController.login);
 
-        // Postback - validação por API Key + controle de plano
-        app.post('/api/postback', apiKeyMiddleware, planCheck, integrationsController.receberPostback);
+        // Postback - validação por API Key
+        app.post('/api/postback', apiKeyMiddleware, integrationsController.receberPostback);
 
         // Rota da página de administração (verificação feita no frontend)
         app.get('/admin', (req, res) => {
