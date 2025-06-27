@@ -1,6 +1,9 @@
 const subscriptionService = require('../services/subscriptionService');
 
 module.exports = async (req, res, next) => {
+    if (req.user && req.user.is_admin) {
+        return next();
+    }
     const userId = req.user && req.user.id;
     if (!userId) return res.status(401).json({ error: 'Usuário não autenticado' });
     try {
