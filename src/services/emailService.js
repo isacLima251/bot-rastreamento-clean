@@ -14,7 +14,7 @@ Senha provisória: <strong>${password}</strong></p>
 <p>Acesse <a href="${loginUrl}">${loginUrl}</a> para entrar e trocar sua senha.</p>`;
     try {
         await resend.emails.send({
-            from: 'Suporte <no-reply@example.com>',
+            from: 'Boas-Vindas <nao-responda@whatsship.com.br>',
             to,
             subject: 'Boas-vindas ao sistema',
             html
