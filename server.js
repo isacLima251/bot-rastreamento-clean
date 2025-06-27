@@ -211,6 +211,12 @@ const startApp = async () => {
             res.sendFile(path.join(__dirname, 'public', 'admin.html'));
         });
 
+        // ROTA DE TESTE PÚBLICA PARA DIAGNÓSTICO
+        app.get('/api/teste-conexao', (req, res) => {
+            console.log('✅ SUCESSO! A rota de teste foi acessada!');
+            res.status(200).json({ message: 'Se voce esta vendo isso, a conexao com o servidor Node.js esta funcionando.' });
+        });
+
         // Middleware de autenticação para rotas abaixo
         app.use(authMiddleware);
 
