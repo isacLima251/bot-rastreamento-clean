@@ -190,6 +190,10 @@ const startApp = async () => {
         app.post('/api/payment/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
 
         app.use(express.json());
+        // Landing page como rota principal
+        app.get('/', (req, res) => {
+            res.sendFile(path.join(__dirname, 'public', 'landing.html'));
+        });
         app.use(express.static('public'));
 
         app.use((req, res, next) => {
