@@ -65,6 +65,9 @@ npm start
 Esse comando executa o `server.js`, responsável pela API, WebSocket e tarefas de rastreamento.
 O acompanhamento dos pedidos é feito de forma automática enquanto o WhatsApp estiver conectado.
 
+Após iniciar, abra [http://localhost:3000](http://localhost:3000/) no navegador para acessar a página de apresentação.
+Nela há um botão que direciona para o fluxo de login e cadastro.
+
 ### 2. Opcional: iniciar apenas o bot do WhatsApp
 
 ```bash
