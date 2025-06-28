@@ -1,0 +1,15 @@
+{
+  // Faça o CSS ser interpretado como PostCSS (reconhece @apply, @theme etc)
+  "files.associations": {
+    "*.css": "postcss"
+  },
+  // Desativa o validador CSS nativo (ele que acusa regras desconhecidas)
+  "css.validate": false,
+  "less.validate": false,
+  "scss.validate": false,
+
+  // Se você tiver a extensão Tailwind CSS IntelliSense:
+  "tailwindCSS.includeLanguages": {
+    "postcss": "tailwindcss"
+  }
+}
