@@ -221,8 +221,8 @@ const startApp = async () => {
             res.status(200).json({ message: 'Se voce esta vendo isso, a conexao com o servidor Node.js esta funcionando.' });
         });
 
-        // Middleware de autenticação para rotas abaixo
-        app.use(authMiddleware);
+        // Middleware de autenticação apenas para rotas /api
+        app.use('/api', authMiddleware);
 
         // Rotas administrativas protegidas
         app.get('/api/admin/clients', adminCheck, adminController.listClients);
