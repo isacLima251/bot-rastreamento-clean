@@ -74,7 +74,22 @@ Nela há um botão que direciona para o fluxo de login e cadastro.
 node index.js
 ```
 
-### 3. Criar ou promover administradores
+### 3. Desenvolver a landing page com Vite
+
+```bash
+npm run dev
+```
+
+Esse comando inicia o servidor do Vite em modo de desenvolvimento.
+Ao finalizar, gere os arquivos de produção com:
+
+```bash
+npm run build
+```
+
+Os arquivos compilados serão colocados em `dist/`.
+
+### 4. Criar ou promover administradores
 
 Para gerenciar contas de administrador via terminal execute o script `criar-admin.js`:
 
