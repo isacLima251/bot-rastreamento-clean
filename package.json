@@ -6,7 +6,9 @@
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "create-admin": "node criar-admin.js",
-    "clean-users": "node limpar-usuarios.js"
+    "clean-users": "node limpar-usuarios.js",
+    "dev": "vite",
+    "build": "vite build"
   },
   "keywords": [],
   "author": "",
@@ -19,14 +21,23 @@
     "express": "^5.1.0",
     "googleapis": "^149.0.0",
     "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.525.0",
     "moment": "^2.30.1",
     "node-fetch": "^2.7.0",
     "puppeteer": "^24.9.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "resend": "^4.6.0",
     "sqlite3": "^5.1.7",
     "stripe": "^13.8.0",
     "venom-bot": "^5.3.0",
     "ws": "^8.18.2",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
+    "vite": "^7.0.0"
   }
 }

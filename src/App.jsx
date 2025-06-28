@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button.jsx'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
-import { Badge } from '@/components/ui/badge.jsx'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible.jsx'
+import { Button } from './components/ui/button.jsx'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card.jsx'
+import { Badge } from './components/ui/badge.jsx'
 import { 
   ChevronDown, 
   Bell, 
@@ -29,7 +28,6 @@ import {
 import './App.css'
 
 // Importar o logotipo
-import whatsshipLogo from './assets/whatsship_logo.png'
 
 function App() {
   const [openFaq, setOpenFaq] = useState(null)
@@ -154,7 +152,7 @@ function App() {
       <header className="fixed top-0 w-full z-50 glass-effect border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <img src={whatsshipLogo} alt="Whatsship" className="h-10 w-auto" />
+            <img src="/vite.svg" alt="Whatsship" className="h-10 w-auto" />
           </div>
           
           <nav className="hidden md:flex items-center space-x-8">
@@ -563,23 +561,22 @@ function App() {
           <div className="space-y-4">
             {faqData.map((faq, index) => (
               <Card key={index} className="hover-lift smooth-transition border-0 shadow-lg">
-                <Collapsible open={openFaq === index} onOpenChange={() => toggleFaq(index)}>
-                  <CollapsibleTrigger asChild>
-                    <CardHeader className="cursor-pointer hover:bg-muted/50 smooth-transition">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-left text-lg font-semibold">{faq.question}</CardTitle>
-                        <ChevronDown 
-                          className={`w-6 h-6 smooth-transition text-primary ${openFaq === index ? 'rotate-180' : ''}`} 
-                        />
-                      </div>
-                    </CardHeader>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <CardContent>
-                      <p className="text-muted-foreground leading-relaxed text-lg">{faq.answer}</p>
-                    </CardContent>
-                  </CollapsibleContent>
-                </Collapsible>
+                <CardHeader
+                  onClick={() => toggleFaq(index)}
+                  className="cursor-pointer hover:bg-muted/50 smooth-transition"
+                >
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-left text-lg font-semibold">{faq.question}</CardTitle>
+                    <ChevronDown
+                      className={`w-6 h-6 smooth-transition text-primary ${openFaq === index ? 'rotate-180' : ''}`}
+                    />
+                  </div>
+                </CardHeader>
+                {openFaq === index && (
+                  <CardContent>
+                    <p className="text-muted-foreground leading-relaxed text-lg">{faq.answer}</p>
+                  </CardContent>
+                )}
               </Card>
             ))}
           </div>
@@ -613,7 +610,7 @@ function App() {
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <img src={whatsshipLogo} alt="Whatsship" className="h-8 w-auto filter invert" />
+              <img src="/vite.svg" alt="Whatsship" className="h-8 w-auto filter invert" />
             </div>
             <div className="text-center md:text-right">
               <p className="text-sm opacity-75">&copy; 2025 Whatsship. Todos os direitos reservados.</p>
