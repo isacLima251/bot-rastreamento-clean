@@ -56,17 +56,22 @@ Edite o `.env` com suas chaves e URLs de callback. As principais variáveis são
 
 ## 🔹 Como Usar
 
-### 1. Iniciar o servidor
+### 1. Iniciar o backend
 
 ```bash
 npm start
 ```
 
-Esse comando executa o `server.js`, responsável pela API, WebSocket e tarefas de rastreamento.
-O acompanhamento dos pedidos é feito de forma automática enquanto o WhatsApp estiver conectado.
+Este comando executa o `server.js`, responsável pela API e WebSocket.
+Mantenha-o rodando e, em outro terminal, inicie o frontend:
 
-Após iniciar, abra [http://localhost:3000](http://localhost:3000/) no navegador para acessar a página de apresentação.
-Nela há um botão que direciona para o fluxo de login e cadastro.
+```bash
+npm run dev
+```
+
+O Vite exibirá o endereço (geralmente `http://localhost:5173`).
+Acesse essa URL para visualizar a landing page. As chamadas para `/api` serão
+automaticamente redirecionadas para `http://localhost:3000`.
 
 ### 2. Opcional: iniciar apenas o bot do WhatsApp
 
@@ -74,14 +79,7 @@ Nela há um botão que direciona para o fluxo de login e cadastro.
 node index.js
 ```
 
-### 3. Desenvolver a landing page com Vite
-
-```bash
-npm run dev
-```
-
-Esse comando inicia o servidor do Vite em modo de desenvolvimento.
-Ao finalizar, gere os arquivos de produção com:
+### 3. Gerar build de produção
 
 ```bash
 npm run build
