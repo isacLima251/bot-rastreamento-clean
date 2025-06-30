@@ -81,7 +81,7 @@ async function connectToWhatsApp() {
     broadcastStatus('CONNECTING');
 
     venom.create({
-        session: 'automaza-bot',
+        session: 'whatsship-bot',
         useChrome: false,
         headless: 'new',
         browserArgs: ['--no-sandbox', '--disable-setuid-sandbox']
