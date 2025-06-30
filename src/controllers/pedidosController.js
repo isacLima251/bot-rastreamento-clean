@@ -4,6 +4,7 @@ const whatsappService = require('../services/whatsappService');
 const logService = require('../services/logService');
 const subscriptionService = require('../services/subscriptionService');
 const envioController = require('./envioController');
+const { body, validationResult } = require('express-validator');
 
 // LÊ todos os pedidos
 exports.listarPedidos = (req, res) => {
@@ -62,19 +63,29 @@ function normalizeTelefone(telefoneRaw) {
 }
 
 // CRIA um novo pedido
-exports.criarPedido = async (req, res) => {
-    const db = req.db;
-    const client = req.venomClient;
-    const clienteId = req.user.id;
-    const { nome, telefone, produto, codigoRastreio } = req.body;
-    const telefoneNormalizado = normalizeTelefone(telefone);
+exports.criarPedido = [
+    body('nome').trim().notEmpty().escape().withMessage('O nome é obrigatório.'),
+    body('telefone').isMobilePhone('pt-BR').withMessage('Número de telefone inválido.'),
+    body('codigoRastreio').optional({ checkFalsy: true }).isAlphanumeric().withMessage('Código de rastreio inválido.'),
 
-    if (!telefoneNormalizado || !nome) {
-        return res.status(400).json({ error: "Nome e um número de celular válido são obrigatórios." });
-    }
-    
-    try {
-        const pedidoExistente = await pedidoService.findPedidoByTelefone(db, telefoneNormalizado, clienteId);
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const db = req.db;
+        const client = req.venomClient;
+        const clienteId = req.user.id;
+        const { nome, telefone, produto, codigoRastreio } = req.body;
+        const telefoneNormalizado = normalizeTelefone(telefone);
+
+        if (!telefoneNormalizado) {
+            return res.status(400).json({ error: "Nome e um número de celular válido são obrigatórios." });
+        }
+
+        try {
+            const pedidoExistente = await pedidoService.findPedidoByTelefone(db, telefoneNormalizado, clienteId);
         if (pedidoExistente) {
             return res.status(409).json({ error: `Este número (${telefoneNormalizado}) já está cadastrado.` });
         }
@@ -103,7 +114,7 @@ exports.criarPedido = async (req, res) => {
         console.error("Erro ao criar pedido:", error.message);
         res.status(500).json({ error: "Erro interno no servidor ao criar pedido." });
     }
-};
+}];
 
 // ATUALIZA um pedido
 exports.atualizarPedido = async (req, res) => {
