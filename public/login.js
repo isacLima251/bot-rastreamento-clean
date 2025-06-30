@@ -1,10 +1,40 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Se o utilizador ja tem um token e tenta aceder à página de login,
-    // ele deve ser redirecionado para o painel principal, e não para a landing page.
+    // Se o utilizador já tem um token, redireciona para o painel.
     if (localStorage.getItem('token')) {
         window.location.href = '/index.html';
         return;
     }
+
+    // --- LÓGICA DO NOVO MODAL DE AVISO ---
+    const modalAviso = document.getElementById('modal-aviso-login');
+    const modalTitulo = document.getElementById('modal-aviso-login-titulo');
+    const modalTexto = document.getElementById('modal-aviso-login-texto');
+    const modalOkBtn = document.getElementById('btn-modal-aviso-login-ok');
+
+    function mostrarAviso(titulo, texto) {
+        if (modalAviso) {
+            modalTitulo.textContent = titulo;
+            modalTexto.textContent = texto;
+            modalAviso.classList.add('active');
+        } else {
+            // Fallback para o alert caso o HTML do modal não exista
+            alert(`${titulo}: ${texto}`);
+        }
+    }
+
+    function fecharAviso() {
+        if (modalAviso) {
+            modalAviso.classList.remove('active');
+        }
+    }
+
+    if(modalOkBtn) modalOkBtn.onclick = fecharAviso;
+    if(modalAviso) modalAviso.onclick = (e) => {
+        if (e.target === modalAviso) {
+            fecharAviso();
+        }
+    };
+    // --- FIM DA LÓGICA DO MODAL ---
 
     function parseJwt(t) {
         try {
@@ -27,7 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!resp.ok) {
-                throw new Error('Credenciais incorretas');
+                const dataError = await resp.json().catch(() => ({ error: 'Credenciais incorretas' }));
+                throw new Error(dataError.error || 'Credenciais incorretas');
             }
 
             const data = await resp.json();
@@ -37,11 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (info.precisa_trocar_senha) {
                 window.location.href = '/change-password.html';
             } else {
-                // Após o login, o utilizador também deve ir para o painel.
                 window.location.href = '/index.html';
             }
         } catch (err) {
-            alert('Falha no login: ' + err.message);
+            // SUBSTITUINDO O alert() PELA CHAMADA DA FUNÇÃO DO MODAL
+            mostrarAviso('Falha no login', err.message);
         }
     });
 });
