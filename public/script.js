@@ -1044,9 +1044,13 @@ const planStatusEl = document.getElementById('plan-status');
         });
     });
 
-    if (plansListEl) plansListEl.addEventListener('click', (e) => {
-        e.preventDefault();
-    });
+    if (plansListEl) {
+        plansListEl.addEventListener('click', (e) => {
+            if (!e.target.closest('a.btn-primary')) {
+                e.preventDefault();
+            }
+        });
+    }
 
     if (btnUpgradePlansEl) btnUpgradePlansEl.addEventListener('click', () => {
         if(modalUpgradeEl) modalUpgradeEl.classList.remove('active');
