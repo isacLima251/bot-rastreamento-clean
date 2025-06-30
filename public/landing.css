@@ -1,0 +1,231 @@
+:root {
+    --primary-color: #3b82f6;
+    --primary-hover: #2563eb;
+    --bg-light: #f8fafc;
+    --bg-white: #ffffff;
+    --text-dark: #1f2937;
+    --text-gray: #6b7280;
+    --border-light: #e5e7eb;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    margin: 0;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.subtitle {
+    font-size: 1.15rem;
+    color: var(--text-gray);
+    max-width: 650px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* --- Botões --- */
+.btn {
+    display: inline-block;
+    padding: 14px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--border-light);
+}
+.btn-secondary:hover {
+    background-color: var(--bg-light);
+    border-color: var(--primary-color);
+}
+
+
+/* --- Hero Section --- */
+.hero {
+    text-align: center;
+    padding: 80px 0;
+    background-color: var(--bg-white);
+}
+
+.hero h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.hero .subtitle {
+    margin-bottom: 35px;
+}
+
+/* --- Features Section --- */
+.features {
+    padding: 80px 0;
+}
+
+.features .container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.feature {
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+}
+
+.feature-icon {
+    display: inline-block;
+    font-size: 1.5rem;
+    background-color: #eef2ff;
+    color: var(--primary-color);
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+}
+
+.feature h3 {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+}
+
+.feature p {
+    color: var(--text-gray);
+    margin: 0;
+}
+
+/* --- Pricing Section --- */
+.pricing {
+    padding: 80px 0;
+    text-align: center;
+}
+
+.pricing h2 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.pricing-table {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-top: 50px;
+    text-align: left;
+}
+
+.plan {
+    background: var(--bg-white);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+.plan.popular {
+    border-color: var(--primary-color);
+    border-width: 2px;
+}
+
+.plan .badge {
+    position: absolute;
+    top: 15px;
+    right: -40px;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 5px 40px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transform: rotate(45deg);
+}
+
+
+.plan h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.plan .price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 15px 0;
+    color: var(--text-dark);
+}
+.plan .price-period {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--text-gray);
+}
+
+.plan .plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+    color: var(--text-gray);
+    flex-grow: 1; /* Faz a lista crescer e empurra o botão para baixo */
+}
+
+.plan .plan-features li {
+    margin-bottom: 12px;
+    padding-left: 25px;
+    position: relative;
+}
+
+.plan .plan-features li::before {
+    content: '✓';
+    color: var(--primary-color);
+    position: absolute;
+    left: 0;
+}
+
+.plan .btn {
+    width: 100%;
+    text-align: center;
+}
+
+
+/* --- Footer CTA --- */
+.cta {
+    background-color: var(--bg-white);
+    text-align: center;
+    padding: 80px 0;
+    border-top: 1px solid var(--border-light);
+}
+
+.cta h2 {
+    font-size: 2rem;
+    margin-bottom: 15px;
+}

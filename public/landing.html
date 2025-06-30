@@ -3,81 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsShip</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-color); }
-        header.hero { text-align:center; padding:80px 20px; background: var(--main-bg); }
-        .hero h1 { font-size:2.5rem; margin-bottom:20px; }
-        .hero p { font-size:1.25rem; color: var(--text-secondary); margin-bottom:30px; }
-        .hero .btn-primary { padding:12px 30px; font-size:1rem; }
-        .features { display:flex; justify-content:center; flex-wrap:wrap; gap:20px; padding:60px 20px; }
-        .feature { flex:1 1 200px; max-width:250px; background:#fff; border:1px solid var(--border-color); border-radius:8px; padding:20px; text-align:center; }
-        .pricing { padding:60px 20px; background: var(--main-bg); }
-        .pricing h2 { text-align:center; margin-bottom:40px; }
-        .pricing-table { display:flex; justify-content:center; flex-wrap:wrap; gap:20px; }
-        .pricing-table .plan { background:#fff; border:1px solid var(--border-color); border-radius:8px; padding:20px; flex:1 1 250px; text-align:center; display:flex; flex-direction:column; gap:10px; }
-        .pricing-table .price { font-size:2rem; margin:10px 0; }
-        footer.cta { text-align:center; padding:40px 20px; }
-        footer.cta h2 { margin-bottom:20px; }
-    </style>
+    <title>WhatsShip - Automação para WhatsApp</title>
+    <link rel="stylesheet" href="landing.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="landing-page">
+<body>
+
     <header class="hero">
-        <h1>WhatsShip</h1>
-        <p>Automatize o rastreamento de pedidos e avise seus clientes pelo WhatsApp.</p>
-        <a href="/login.html" class="btn-primary">Começar Agora</a>
+        <div class="container">
+            <h1>O Fim da Ansiedade dos Seus Clientes</h1>
+            <p class="subtitle">Com o WhatsShip, você notifica automaticamente sobre cada etapa do rastreamento de pedidos, direto no WhatsApp. Menos chamados de suporte, mais clientes felizes.</p>
+            <a href="/login.html" class="btn btn-primary">Começar Agora (Grátis)</a>
+        </div>
     </header>
 
-    <section class="features">
-        <div class="feature">
-            <h3>Rastreamento Automático</h3>
-            <p>Acompanhe todos os códigos sem esforço.</p>
-        </div>
-        <div class="feature">
-            <h3>Mensagens Personalizadas</h3>
-            <p>Envie atualizações no WhatsApp de forma simples.</p>
-        </div>
-        <div class="feature">
-            <h3>Integração Rápida</h3>
-            <p>Conecte suas planilhas e APIs em minutos.</p>
-        </div>
-    </section>
+    <main>
+        <section class="features">
+            <div class="container">
+                <div class="feature">
+                    <div class="feature-icon">✔️</div>
+                    <h3>Rastreamento Automático</h3>
+                    <p>Basta adicionar o código de rastreio e o nosso sistema cuida do resto, 24/7.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">💬</div>
+                    <h3>Mensagens Personalizadas</h3>
+                    <p>Envie atualizações com o nome do cliente e do produto, tornando a comunicação mais pessoal.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>Integração Rápida</h3>
+                    <p>Conecte-se facilmente com as principais plataformas de e-commerce e marketing.</p>
+                </div>
+            </div>
+        </section>
 
-    <section class="pricing">
-        <h2>Planos</h2>
-        <div class="pricing-table">
-            <div class="plan">
-                <h3>Start</h3>
-                <p class="price">R$39,99/mês</p>
-                <ul class="plan-features">
-                    <li>50 rastreios/mês</li>
-                </ul>
-                <a href="/login.html" class="btn-primary">Assinar</a>
+        <section class="pricing">
+            <div class="container">
+                <h2>Planos simples para o seu negócio crescer</h2>
+                <p class="subtitle">Comece gratuitamente. Mude de plano quando quiser.</p>
+                <div class="pricing-table">
+                    <div class="plan">
+                        <h3>Start</h3>
+                        <p class="price">R$39,99<span class="price-period">/mês</span></p>
+                        <ul class="plan-features">
+                            <li>Até 50 rastreios/mês</li>
+                            <li>Automações de mensagens</li>
+                            <li>Suporte via email</li>
+                        </ul>
+                        <a href="https://payment.ticto.app/O6073F635" target="_blank" class="btn btn-secondary">Assinar Start</a>
+                    </div>
+                    <div class="plan popular">
+                        <span class="badge">Mais Popular</span>
+                        <h3>Basic</h3>
+                        <p class="price">R$59,99<span class="price-period">/mês</span></p>
+                        <ul class="plan-features">
+                            <li>Até 100 rastreios/mês</li>
+                            <li>Automações de mensagens</li>
+                            <li>Relatórios de entrega</li>
+                            <li>Suporte via email</li>
+                        </ul>
+                        <a href="https://payment.ticto.app/O8EC5C302" target="_blank" class="btn btn-primary">Assinar Basic</a>
+                    </div>
+                    <div class="plan">
+                        <h3>Pro</h3>
+                        <p class="price">R$99,99<span class="price-period">/mês</span></p>
+                        <ul class="plan-features">
+                            <li>Até 250 rastreios/mês</li>
+                            <li>Automações de mensagens</li>
+                            <li>Relatórios de entrega</li>
+                            <li>Suporte prioritário</li>
+                        </ul>
+                        <a href="https://payment.ticto.app/OEE2CBEAA" target="_blank" class="btn btn-secondary">Assinar Pro</a>
+                    </div>
+                </div>
             </div>
-            <div class="plan">
-                <h3>Basic</h3>
-                <p class="price">R$59,99/mês</p>
-                <ul class="plan-features">
-                    <li>100 rastreios/mês</li>
-                </ul>
-                <a href="/login.html" class="btn-primary">Assinar</a>
-            </div>
-            <div class="plan">
-                <h3>Pro</h3>
-                <p class="price">R$99,99/mês</p>
-                <ul class="plan-features">
-                    <li>250 rastreios/mês</li>
-                </ul>
-                <a href="/login.html" class="btn-primary">Assinar</a>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <footer class="cta">
-        <h2>Pronto para automatizar seu rastreamento?</h2>
-        <a href="/login.html" class="btn-primary">Criar minha conta</a>
-    </footer>
+        <footer class="cta">
+            <div class="container">
+                <h2>Pronto para começar?</h2>
+                <p>Crie a sua conta e experimente gratuitamente. Sem compromisso, sem cartão de crédito.</p>
+                <a href="/login.html" class="btn btn-primary">Criar Minha Conta Grátis</a>
+            </div>
+        </footer>
+    </main>
+
 </body>
 </html>
