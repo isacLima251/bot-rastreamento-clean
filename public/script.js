@@ -312,6 +312,42 @@ const planStatusEl = document.getElementById('plan-status');
         };
     };
 
+    // --- LÓGICA DO MODAL DE AVISO GENÉRICO ---
+    const modalAvisoEl = document.getElementById('modal-aviso');
+    const modalAvisoTituloEl = document.getElementById('modal-aviso-titulo');
+    const modalAvisoTextoEl = document.getElementById('modal-aviso-texto');
+    const btnModalAvisoOkEl = document.getElementById('btn-modal-aviso-ok');
+
+    function mostrarAviso(titulo, texto) {
+        if (modalAvisoEl) {
+            modalAvisoTituloEl.textContent = titulo;
+            modalAvisoTextoEl.textContent = texto;
+            modalAvisoEl.classList.add('active');
+        }
+    }
+
+    function fecharAviso() {
+        if (modalAvisoEl) modalAvisoEl.classList.remove('active');
+    }
+
+    if (btnModalAvisoOkEl) btnModalAvisoOkEl.onclick = fecharAviso;
+    if (modalAvisoEl) modalAvisoEl.addEventListener('click', e => { if (e.target === modalAvisoEl) fecharAviso(); });
+
+    // --- MENSAGEM DE BOAS-VINDAS (BETA) ---
+    window.addEventListener('DOMContentLoaded', () => {
+        const BEM_VINDO_BETA_KEY = 'bemVindoBetaMostrado';
+
+        if (!sessionStorage.getItem(BEM_VINDO_BETA_KEY)) {
+            setTimeout(() => {
+                mostrarAviso(
+                    'Bem-vindo(a) à Fase Beta!',
+                    'Obrigado pela sua confiança! Este sistema ainda está em desenvolvimento. Seu feedback é muito importante para nós. Aproveite a experiência!'
+                );
+                sessionStorage.setItem(BEM_VINDO_BETA_KEY, 'true');
+            }, 1500);
+        }
+    });
+
     // --- 4. Funções de Lógica e Renderização ---
     function formatarDataContato(dataISO) {
         if (!dataISO) return '';
