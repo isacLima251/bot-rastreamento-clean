@@ -11,6 +11,9 @@ exports.listarPedidos = (req, res) => {
     const db = req.db;
     const clienteId = req.user.id;
     const { busca, filtroStatus } = req.query;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const offset = (page - 1) * limit;
 
     let params = [clienteId];
     let conditions = ["cliente_id = ?"];
@@ -33,11 +36,16 @@ exports.listarPedidos = (req, res) => {
     if (conditions.length > 0) {
         sql += " WHERE " + conditions.join(" AND ");
     }
-    sql += " ORDER BY dataUltimaMensagem DESC, id DESC";
+    const whereClause = conditions.length > 0 ? " WHERE " + conditions.join(" AND ") : "";
+    const sqlPaginated = `${sql} ORDER BY dataUltimaMensagem DESC, id DESC LIMIT ? OFFSET ?`;
+    const sqlCount = `SELECT COUNT(*) as total FROM pedidos${whereClause}`;
 
-    db.all(sql, params, (err, rows) => {
+    db.all(sqlPaginated, [...params, limit, offset], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ data: rows });
+        db.get(sqlCount, params, (err2, row) => {
+            if (err2) return res.status(500).json({ error: err2.message });
+            res.json({ data: rows, total: row.total });
+        });
     });
 };
 
