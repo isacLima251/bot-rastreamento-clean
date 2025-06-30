@@ -1,7 +1,7 @@
 // src/database/database.js
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, '../../automaza.db');
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, '../../whatsship.db');
 
 const initDb = () => {
     return new Promise((resolve, reject) => {
