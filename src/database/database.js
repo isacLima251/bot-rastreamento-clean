@@ -169,7 +169,8 @@ const initDb = () => {
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             name TEXT NOT NULL,
                             price REAL NOT NULL,
-                            monthly_limit INTEGER NOT NULL
+                            monthly_limit INTEGER NOT NULL,
+                            checkout_url TEXT
                         )
                     `, (err) => {
                         if (err) {
@@ -179,16 +180,19 @@ const initDb = () => {
                         console.log("✔️ Tabela 'plans' pronta.");
 
                         // Planos padrão
-                        const planStmt = db.prepare("INSERT OR REPLACE INTO plans (id, name, price, monthly_limit) VALUES (?, ?, ?, ?)");
+                        const planStmt = db.prepare("INSERT OR REPLACE INTO plans (id, name, price, monthly_limit, checkout_url) VALUES (?, ?, ?, ?, ?)");
                         const plansData = [
-                            [1, 'Gr\u00e1tis', 0, 10],
-                            [2, 'Start', 39, 50],
-                            [3, 'Basic', 59, 100],
-                            [4, 'Pro', 99, 250],
-                            [5, 'Pro Plus', 0, 600]
+                            [1, 'Gr\u00e1tis', 0, 10, null],
+                            [2, 'Start', 39.99, 50, 'https://payment.ticto.app/O6073F635'],
+                            [3, 'Basic', 59.99, 100, 'https://payment.ticto.app/O8EC5C302'],
+                            [4, 'Pro', 99.99, 250, 'https://payment.ticto.app/OEE2CBEAA'],
+                            [5, 'Pro Plus', 0, 600, null]
                         ];
                         for (const data of plansData) planStmt.run(data);
                         planStmt.finalize();
+                        db.run("ALTER TABLE plans ADD COLUMN checkout_url TEXT", [], (e) => {
+                            if (e && !e.message.includes('duplicate')) return reject(e);
+                        });
                     });
 
                     // Tabela de Assinaturas

@@ -32,6 +32,8 @@ const authFetch = async (url, options = {}) => {
     const listaContactosEl = document.getElementById('lista-contactos');
     const listaContactosCompletaEl = document.getElementById('lista-contactos-completa');
     const totalContactsCountEl = document.getElementById('total-contacts-count');
+    const barraBuscaContatosEl = document.getElementById('barra-busca-contatos');
+    const contactsPaginationEl = document.getElementById('contacts-pagination');
     const mainContentAreaEl = document.getElementById('main-content-area');
     const chatWindowEl = document.getElementById('chat-window');
     const chatFooterEl = document.getElementById('chat-footer');
@@ -112,6 +114,9 @@ const planStatusEl = document.getElementById('plan-status');
     let statusChart = null;
     let integrationCurrentPage = 1;
     const integrationLimit = 5;
+    let contactsCurrentPage = 1;
+    const contactsLimit = 10;
+    let contactsTotal = 0;
 
 
      const accordionHeaders = document.querySelectorAll('.accordion-header');
@@ -183,7 +188,7 @@ const planStatusEl = document.getElementById('plan-status');
             if (btn.dataset.view === viewId) btn.classList.add('active');
         });
 
-        if (viewId === 'contacts-view') renderizarContatosPaginaCompleta();
+        if (viewId === 'contacts-view') loadContacts();
         if (viewId === 'automations-view') loadAutomations();
         if (viewId === 'integrations-view') {
             loadIntegrationInfo();
@@ -367,7 +372,7 @@ const planStatusEl = document.getElementById('plan-status');
     const renderizarContatosPaginaCompleta = () => {
         if (!listaContactosCompletaEl || !totalContactsCountEl) return;
         listaContactosCompletaEl.innerHTML = '';
-        totalContactsCountEl.textContent = todosOsPedidos.length;
+        totalContactsCountEl.textContent = contactsTotal;
         if (todosOsPedidos.length === 0) {
             listaContactosCompletaEl.innerHTML = `<p class="info-mensagem">Nenhum contacto para exibir.</p>`;
             return;
@@ -535,6 +540,10 @@ const planStatusEl = document.getElementById('plan-status');
     }
 
     async function saveAutomations() {
+        if (!btnSalvarAutomacoesEl) return;
+        const originalText = btnSalvarAutomacoesEl.textContent;
+        btnSalvarAutomacoesEl.disabled = true;
+        btnSalvarAutomacoesEl.textContent = 'A guardar...';
         const novasConfiguracoes = {};
         document.querySelectorAll('.automation-card').forEach(card => {
             const automationId = card.dataset.automationId;
@@ -556,6 +565,9 @@ const planStatusEl = document.getElementById('plan-status');
             showNotification(resultado.message, 'success');
         } catch (error) {
             showNotification(error.message, 'error');
+        } finally {
+            btnSalvarAutomacoesEl.disabled = false;
+            btnSalvarAutomacoesEl.textContent = originalText;
         }
     }
 
@@ -717,7 +729,15 @@ const planStatusEl = document.getElementById('plan-status');
                     badge += '<span class="badge current">Plano Atual</span>';
                 }
 
-                card.innerHTML = `${badge}<h3>${p.name}</h3><p>${limite}</p><ul class="plan-features">${featuresHtml}</ul><p>R$ ${p.price}</p>`;
+                let actionButton;
+                if (p.id === activePlanId) {
+                    actionButton = `<button class="btn-secondary" disabled>Plano Atual</button>`;
+                } else {
+                    const checkoutUrlWithEmail = p.checkout_url ? `${p.checkout_url}?email=${userData.email}` : '#';
+                    actionButton = `<a href="${checkoutUrlWithEmail}" target="_blank" class="btn-primary">Fazer Upgrade</a>`;
+                }
+
+                card.innerHTML = `${badge}<h3>${p.name}</h3><p>${limite}</p><ul class="plan-features">${featuresHtml}</ul><p>R$ ${p.price}</p>${actionButton}`;
                 plansListEl.appendChild(card);
             });
 
@@ -727,6 +747,53 @@ const planStatusEl = document.getElementById('plan-status');
             plansListEl.appendChild(contactCard);
         } catch (err) {
             plansListEl.innerHTML = '<p class="info-mensagem">Erro ao carregar planos.</p>';
+        }
+    }
+
+    function renderContactsPagination(total) {
+        if (!contactsPaginationEl) return;
+        const totalPages = Math.max(1, Math.ceil(total / contactsLimit));
+        contactsPaginationEl.innerHTML = '';
+        if (totalPages <= 1) return;
+        const prev = document.createElement('button');
+        prev.textContent = 'Anterior';
+        prev.disabled = contactsCurrentPage === 1;
+        prev.addEventListener('click', () => loadContacts(contactsCurrentPage - 1));
+        contactsPaginationEl.appendChild(prev);
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            if (i === contactsCurrentPage) btn.classList.add('active');
+            btn.addEventListener('click', () => loadContacts(i));
+            contactsPaginationEl.appendChild(btn);
+        }
+        const next = document.createElement('button');
+        next.textContent = 'Próximo';
+        next.disabled = contactsCurrentPage === totalPages;
+        next.addEventListener('click', () => loadContacts(contactsCurrentPage + 1));
+        contactsPaginationEl.appendChild(next);
+    }
+
+    async function loadContacts(page = 1) {
+        if (!listaContactosCompletaEl) return;
+        contactsCurrentPage = page;
+        listaContactosCompletaEl.innerHTML = '<p class="info-mensagem">A carregar...</p>';
+        const url = new URL('/api/pedidos', window.location.origin);
+        url.searchParams.append('page', page);
+        url.searchParams.append('limit', contactsLimit);
+        url.searchParams.append('filtroStatus', filtroAtivo);
+        const termo = barraBuscaContatosEl ? barraBuscaContatosEl.value : '';
+        if (termo) url.searchParams.append('busca', termo);
+        try {
+            const resp = await authFetch(url);
+            if (!resp.ok) throw new Error('Falha ao buscar pedidos.');
+            const { data, total } = await resp.json();
+            todosOsPedidos = data || [];
+            contactsTotal = total;
+            renderizarContatosPaginaCompleta();
+            renderContactsPagination(total);
+        } catch (err) {
+            listaContactosCompletaEl.innerHTML = '<p class="info-mensagem">Erro ao carregar.</p>';
         }
     }
 
@@ -918,6 +985,11 @@ const planStatusEl = document.getElementById('plan-status');
     if (barraBuscaEl) barraBuscaEl.addEventListener('input', () => {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(fetchErenderizarTudo, 300);
+    });
+
+    if (barraBuscaContatosEl) barraBuscaContatosEl.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => loadContacts(1), 300);
     });
 
     if(filterContainerEl) filterContainerEl.addEventListener('click', (e) => {
