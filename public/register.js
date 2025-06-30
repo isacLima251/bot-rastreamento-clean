@@ -20,10 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await resp.json();
 
             if (!resp.ok) {
-                throw new Error(result.error || 'Falha ao registar.');
+                throw new Error(result.error || 'Falha ao registar. O email pode já estar em uso.');
             }
 
-            alert('Conta criada com sucesso! Agora pode fazer login.');
+            alert('Conta criada com sucesso! Será redirecionado para a página de login.');
+
+            // Redirecionamento CORRETO
             window.location.href = '/login.html';
 
         } catch (err) {
