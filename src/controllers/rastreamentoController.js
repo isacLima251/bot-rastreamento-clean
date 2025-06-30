@@ -25,28 +25,33 @@ async function verificarRastreios(db) {
         console.log(`🚚 Rastreando ${pedidosParaRastrear.length} pedido(s)...`);
 
         for (const pedido of pedidosParaRastrear) {
-            const config = await integrationService.getConfig(db, pedido.cliente_id || 1);
-            const apiKey = config && config.rastreio_api_key;
-            const dadosRastreio = await rastreamentoService.rastrearCodigo(pedido.codigoRastreio, apiKey);
+            try {
+                const config = await integrationService.getConfig(db, pedido.cliente_id || 1);
+                const apiKey = config && config.rastreio_api_key;
+                const dadosRastreio = await rastreamentoService.rastrearCodigo(pedido.codigoRastreio, apiKey);
 
-            const novoStatus = (dadosRastreio.statusInterno || '').toLowerCase();
+                const novoStatus = (dadosRastreio.statusInterno || '').toLowerCase();
 
-            // Actualiza o DB apenas se o status da API for novo e diferente do que já temos
-            if (novoStatus && novoStatus !== pedido.statusInterno) {
-                
-                const dadosParaAtualizar = {
-                    statusInterno: novoStatus,
-                    ultimaLocalizacao: dadosRastreio.ultimaLocalizacao,
-                    ultimaAtualizacao: dadosRastreio.ultimaAtualizacao,
-                    origemUltimaMovimentacao: dadosRastreio.origemUltimaMovimentacao,
-                    destinoUltimaMovimentacao: dadosRastreio.destinoUltimaMovimentacao,
-                    descricaoUltimoEvento: dadosRastreio.descricaoUltimoEvento,
-                };
-                
-                await pedidoService.updateCamposPedido(db, pedido.id, dadosParaAtualizar);
-                console.log(`🔄 Pedido #${pedido.id} (${pedido.nome}) atualizado para: ${novoStatus}`);
+                // Actualiza o DB apenas se o status da API for novo e diferente do que já temos
+                if (novoStatus && novoStatus !== pedido.statusInterno) {
 
-                await logService.addLog(db, pedido.cliente_id || 1, 'rastreamento', JSON.stringify({ pedidoId: pedido.id, status: novoStatus }));
+                    const dadosParaAtualizar = {
+                        statusInterno: novoStatus,
+                        ultimaLocalizacao: dadosRastreio.ultimaLocalizacao,
+                        ultimaAtualizacao: dadosRastreio.ultimaAtualizacao,
+                        origemUltimaMovimentacao: dadosRastreio.origemUltimaMovimentacao,
+                        destinoUltimaMovimentacao: dadosRastreio.destinoUltimaMovimentacao,
+                        descricaoUltimoEvento: dadosRastreio.descricaoUltimoEvento,
+                    };
+
+                    await pedidoService.updateCamposPedido(db, pedido.id, dadosParaAtualizar);
+                    console.log(`🔄 Pedido #${pedido.id} (${pedido.nome}) atualizado para: ${novoStatus}`);
+
+                    await logService.addLog(db, pedido.cliente_id || 1, 'rastreamento', JSON.stringify({ pedidoId: pedido.id, status: novoStatus }));
+                }
+            } catch (err) {
+                console.error(`❌ Falha ao rastrear o pedido #${pedido.id}. Erro:`, err.message);
+                await logService.addLog(db, pedido.cliente_id, 'falha_rastreamento', JSON.stringify({ pedidoId: pedido.id, erro: err.message }));
             }
         }
     } catch (err) {

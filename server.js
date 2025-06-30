@@ -1,10 +1,12 @@
 // server.js (VERSÃO FINAL E OTIMIZADA)
 require('dotenv').config();
 const express = require('express');
+const helmet = require('helmet');
 const venom = require('venom-bot');
 const http = require('http');
 const { WebSocketServer } = require('ws');
 const { initDb } = require('./src/database/database.js');
+const logger = require('./src/logger');
 
 // --- Importações dos controllers e serviços ---
 const reportsController = require('./src/controllers/reportsController');
@@ -184,11 +186,12 @@ const startApp = async () => {
     try {
         const db = await initDb();
         app.set('db', db);
-        console.log("Banco de dados pronto.");
+        logger.info('Banco de dados pronto.');
 
         // Webhook precisa do corpo raw para validação
         app.post('/api/payment/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
 
+        app.use(helmet());
         app.use(express.json());
         // Landing page como rota principal
         app.get('/', (req, res) => {
@@ -319,10 +322,10 @@ const startApp = async () => {
         setInterval(() => { if (venomClient) rastreamentoController.verificarRastreios(db, broadcast) }, 300000);
         setInterval(() => { if (venomClient) envioController.enviarMensagensComRegras(db, broadcast) }, 60000);
         
-        server.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
+        server.listen(PORT, () => logger.info(`🚀 Servidor rodando em http://localhost:${PORT}`));
 
     } catch (error) {
-        console.error("❌ Falha fatal ao iniciar a aplicação:", error);
+        logger.error('❌ Falha fatal:', { message: error.message, stack: error.stack });
         process.exit(1);
     }
 };
