@@ -29,7 +29,7 @@ exports.createClient = async (req, res) => {
         return res.status(400).json({ error: 'Dados obrigatórios ausentes' });
     }
     try {
-        const user = await userService.createUser(req.db, email, password, 0, 1);
+        const user = await userService.createUser(req.db, email, password, 0, 1, 0);
         await subscriptionService.createSubscription(req.db, user.id, plan_id);
         res.status(201).json({ id: user.id, email: user.email });
     } catch (err) {

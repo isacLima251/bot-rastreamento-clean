@@ -95,3 +95,12 @@ body {
 .modal-overlay.active {
     display: flex; /* Mostra o modal */
 }
+
+/* Estilo para o texto de ajuda do formulário */
+.form-hint {
+    font-size: 0.8rem;
+    color: #6b7280; /* --text-secondary */
+    text-align: center;
+    margin-top: -8px;
+    margin-bottom: 16px;
+}
