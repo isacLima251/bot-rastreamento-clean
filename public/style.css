@@ -819,33 +819,6 @@ input:checked ~ .toggle-label { color: var(--success-color); font-weight: 600; }
     cursor: not-allowed;
 }
 
-/* Card de Contato Personalizado */
-.custom-plan-card {
-    grid-column: 1 / -1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #fff;
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 30px;
-    gap: 20px;
-}
-.custom-plan-card h4 {
-    font-size: 1.2rem; margin: 0 0 5px 0;
-}
-.custom-plan-card p {
-    margin: 0; color: var(--text-secondary);
-}
-
-@media(max-width: 768px) {
-    .custom-plan-card {
-        flex-direction: column;
-        text-align: center;
-    }
-}
-
-/* Remove os estilos antigos e genéricos se ainda existirem */
 #plans-list .plan-card .badge,
 #plans-list .plan-card .plan-features li::before {
     display: none;
@@ -910,4 +883,66 @@ input:checked ~ .toggle-label { color: var(--success-color); font-weight: 600; }
     background-color: var(--success-color);
     border-radius: 4px;
     transition: width 0.5s ease-in-out;
+}
+
+/* =================================
+   ESTILOS FINAIS PARA O CARD DE CONTATO
+   ================================= */
+.custom-plan-card {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    background: linear-gradient(135deg, #f8fafc, #eff6ff);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 30px;
+    transition: all 0.2s ease-out;
+}
+
+.custom-plan-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 15px -2px rgba(59, 130, 246, 0.1);
+}
+
+.custom-plan-icon {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border-radius: 50%;
+    color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.custom-plan-text {
+    flex-grow: 1;
+}
+
+.custom-plan-text h4 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.2rem;
+    margin: 0 0 5px 0;
+    color: var(--text-color);
+}
+
+.custom-plan-text p {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.custom-plan-card .btn-plan {
+    flex-shrink: 0;
+}
+
+
+/* Ajustes de responsividade para o card de contato */
+@media(max-width: 768px) {
+    .custom-plan-card {
+        flex-direction: column;
+        text-align: center;
+    }
 }
