@@ -778,17 +778,24 @@ const planStatusEl = document.getElementById('plan-status');
                 item.className = 'billing-item';
 
                 const statusInfo = statusMap[p.statusInterno] || statusMap['default'];
-
                 const link = p.codigoRastreio ? `https://www.linkcorreios.com.br/${p.codigoRastreio}` : '#';
+                const dataFormatada = new Date(p.dataCriacao).toLocaleDateString('pt-BR');
 
                 item.innerHTML = `
-                <div class="billing-status-dot status-${statusInfo.class}"></div>
-                <div class="billing-info">
-                    <a href="${link}" target="_blank" class="billing-code">${p.codigoRastreio}</a>
-                    <span class="billing-customer">${p.nome}</span>
-                </div>
-                <div class="billing-status-tag tag-${statusInfo.class}">${statusInfo.text}</div>
-            `;
+                    <div class="billing-status-dot status-${statusInfo.class}"></div>
+                    <div class="billing-info">
+                        <div class="billing-info-main">
+                            <a href="${link}" target="_blank" class="billing-code">${p.codigoRastreio}</a>
+                            <span class="billing-customer">${p.nome}</span>
+                        </div>
+                        <div class="billing-info-meta">
+                            <span>Produto: <strong>${p.produto || 'Não informado'}</strong></span>
+                            <span class="meta-divider">|</span>
+                            <span>Data: <strong>${dataFormatada}</strong></span>
+                        </div>
+                    </div>
+                    <div class="billing-status-tag tag-${statusInfo.class}">${statusInfo.text}</div>
+                `;
 
                 billingListContainerEl.appendChild(item);
             });
