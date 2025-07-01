@@ -37,6 +37,7 @@ const authFetch = async (url, options = {}) => {
     const mainContentAreaEl = document.getElementById('main-content-area');
     const chatWindowEl = document.getElementById('chat-window');
     const chatFooterEl = document.getElementById('chat-footer');
+    const detailsPanelEl = document.getElementById('details-panel');
     const barraBuscaEl = document.getElementById('barra-busca');
     const btnAdicionarNovoEl = document.getElementById('btn-adicionar-novo');
     const modalPedidoEl = document.getElementById('modal-pedido');
@@ -428,7 +429,15 @@ const planStatusEl = document.getElementById('plan-status');
     };
 
     const selecionarPedidoErenderizarDetalhes = async (pedido) => {
-        if (!pedido || !chatWindowEl || !chatFooterEl || !formEnviarMensagemEl) return;
+        if (!pedido) return;
+
+        // Elementos das 3 colunas
+        const chatWindowEl = document.getElementById('chat-window');
+        const chatFooterEl = document.getElementById('chat-footer');
+        const formEnviarMensagemEl = document.getElementById('form-enviar-mensagem');
+        const detailsPanelEl = document.getElementById('details-panel');
+
+        // Marcar como lido e atualizar estado
         if (pedido.mensagensNaoLidas > 0) {
             try {
                 await authFetch(`/api/pedidos/${pedido.id}/marcar-como-lido`, { method: 'PUT' });
@@ -436,15 +445,53 @@ const planStatusEl = document.getElementById('plan-status');
             } catch (error) { console.error("Falha ao marcar como lido:", error); }
         }
         pedidoAtivoId = pedido.id;
-        const btnExcluirHtml = `<button class="btn-excluir-main">Excluir</button>`;
-        const telefoneIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M3.654 1.328a.678.678 0 0 1 .737-.203l2.522.84a.678.678 0 0 1 .449.604l.146 2.757a.678.678 0 0 1-.202.494l-1.013 1.013a11.27 11.27 0 0 0 4.664 4.664l1.013-1.013a.678.678 0 0 1 .494-.202l2.757.146a.678.678 0 0 1 .604.449l.84 2.522a.678.678 0 0 1-.203.737l-2.3 2.3a.678.678 0 0 1-.737.15c-1.204-.502-2.38-1.196-3.518-2.034a17.567 17.567 0 0 1-4.401-4.401c-.838-1.138-1.532-2.314-2.034-3.518a.678.678 0 0 1 .15-.737l2.3-2.3z"/></svg>`;
-        const produtoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8.21 1.03a1 1 0 0 0-.42 0L2 2.522V6c0 3.066 2.582 5.854 6 6.92 3.418-1.066 6-3.855 6-6.92V2.522L8.21 1.03z"/><path d="M8 3.048 13.377 4.6 8 6.152 2.623 4.6 8 3.048zM3.022 5.825l4.978 1.559v4.97l-4.978-2.03V5.825zm5.956 6.529V7.384l4.978-1.559v4.499l-4.978 2.03z"/></svg>`;
-        const rastreioIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M0 1a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v3h2.5a.5.5 0 0 1 .39.188l2.5 3a.5.5 0 0 1 .11.312V11a2 2 0 1 1-4 0h-8a2 2 0 1 1-4 0V1z"/><path d="M6 11a2 2 0 1 0 4 0H6z"/></svg>`;
-        chatWindowEl.innerHTML = `<div class="detalhes-header"><h3>${pedido.nome}</h3><div><button class="btn-editar-main">Editar</button>${btnExcluirHtml}</div></div><div class="detalhes-body"><p>${telefoneIcon} ${pedido.telefone}</p><p>${produtoIcon} ${pedido.produto || 'N/A'}</p><p>${rastreioIcon} ${pedido.codigoRastreio || 'Nenhum'}</p></div><div class="chat-feed" id="chat-feed"><p class="info-mensagem">A carregar histórico...</p></div>`;
+        renderizarListaDeContactos();
+
+        // 1. PREENCHER A COLUNA 2: JANELA DE CHAT
+        const chatHeaderHtml = `
+            <div class="chat-header-main">
+                <div class="contact-info-main">
+                    <div class="avatar-container small">
+                        <img src="${pedido.fotoPerfilUrl || 'https://i.imgur.com/z28n3Nz.png'}" alt="Foto de ${pedido.nome}" onerror="this.src='https://i.imgur.com/z28n3Nz.png';">
+                    </div>
+                    <h3>${pedido.nome}</h3>
+                </div>
+            </div>
+        `;
+
+        const chatFeedHtml = `<div class="chat-feed" id="chat-feed"><div class="loader-container"><div class="loader"></div></div></div>`;
+        chatWindowEl.innerHTML = chatHeaderHtml + chatFeedHtml;
+
         chatFooterEl.classList.add('active');
         formEnviarMensagemEl.querySelector('input').disabled = false;
         formEnviarMensagemEl.querySelector('button').disabled = false;
-        renderizarListaDeContactos();
+
+        // 2. PREENCHER A COLUNA 3: PAINEL DE DETALHES
+        detailsPanelEl.innerHTML = `
+            <div class="details-header">
+                <h3>Detalhes do Contato</h3>
+                <div>
+                    <button class="btn-icon" id="btn-editar-contato" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/></svg></button>
+                    <button class="btn-icon" id="btn-excluir-contato" title="Excluir"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/><path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/></svg></button>
+                </div>
+            </div>
+            <div class="details-body">
+                <div class="detail-item">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M3.654 1.328a.678.678 0 0 1 .737-.203l2.522.84a.678.678 0 0 1 .449.604l.146 2.757a.678.678 0 0 1-.202.494l-1.013 1.013a11.27 11.27 0 0 0 4.664 4.664l1.013-1.013a.678.678 0 0 1 .494-.202l2.757.146a.678.678 0 0 1 .604.449l.84 2.522a.678.678 0 0 1-.203.737l-2.3 2.3a.678.678 0 0 1-.737.15c-1.204-.502-2.38-1.196-3.518-2.034a17.567 17.567 0 0 1-4.401-4.401c-.838-1.138-1.532-2.314-2.034-3.518a.678.678 0 0 1 .15-.737l2.3-2.3z"/></svg>
+                    <span>${pedido.telefone}</span>
+                </div>
+                <div class="detail-item">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.551a.5.5 0 0 0-.369.462v5.13a.5.5 0 0 0 .144.384l6.5 6.5a.5.5 0 0 0 .708 0l6.5-6.5a.5.5 0 0 0 .144-.384V4.013a.5.5 0 0 0-.369-.462zM2.19 3.856 8 1.631 13.81 3.856v4.667l-5.81 5.81-5.81-5.81z"/><path d="M5.5 5.5A.5.5 0 0 1 6 6v1.5a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 0a.5.5 0 0 1 .5.5v1.5a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5"/></svg>
+                    <span>${pedido.produto || 'N/A'}</span>
+                </div>
+                <div class="detail-item">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M4 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z"/><path d="M1.5 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM1 7a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5z"/></svg>
+                    <span>${pedido.codigoRastreio || 'Nenhum'}</span>
+                </div>
+            </div>
+        `;
+
+        // 3. BUSCAR E RENDERIZAR O HISTÓRICO DE MENSAGENS
         try {
             const response = await authFetch(`/api/pedidos/${pedido.id}/historico`);
             const { data: historico } = await response.json();
@@ -452,16 +499,18 @@ const planStatusEl = document.getElementById('plan-status');
             if(chatFeedEl) {
                 chatFeedEl.innerHTML = '';
                 if (!historico || historico.length === 0) {
-                    chatFeedEl.innerHTML = '<p class="info-mensagem">Nenhuma mensagem neste histórico.</p>';
+                    chatFeedEl.innerHTML = '<div class="date-separator"><span>Sem mensagens ainda</span></div>';
                 } else {
                     historico.forEach(msg => {
                         const msgDiv = document.createElement('div');
                         const isAuto = msg.origem === 'bot' && msg.tipo_mensagem && msg.tipo_mensagem !== 'manual';
-                        msgDiv.className = `chat-message ${msg.origem === 'cliente' ? 'recebido' : 'enviado'}${isAuto ? ' automatic' : ''}`;
+                        msgDiv.className = `chat-message ${msg.origem === 'cliente' ? 'recebido' : 'enviado'}`;
                         const dataUtc = new Date(msg.data_envio.includes('Z') ? msg.data_envio : msg.data_envio.replace(' ', 'T') + 'Z');
-                        const dataFormatada = dataUtc.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
-                        const autoIcon = isAuto ? ' <span class="auto-indicator" title="Automática">🤖</span>' : '';
-                        msgDiv.innerHTML = `<p>${msg.mensagem.replace(/\n/g, '<br>')}</p><span class="timestamp">${dataFormatada}${autoIcon}</span>`;
+                        const horaFormatada = dataUtc.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+
+                        const statusIcon = msg.origem === 'bot' ? `<span class="message-status"><svg width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="m11.354 4.646l-4.5 4.5l-1.5-1.5a.5.5 0 0 0-.708.708l2 2a.5.5 0 0 0 .708 0l5-5a.5.5 0 0 0-.708-.708M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0"/></svg></span>` : '';
+
+                        msgDiv.innerHTML = `<p>${msg.mensagem.replace(/\n/g, '<br>')}</p><div class="message-meta"><span class="timestamp">${horaFormatada}</span>${statusIcon}</div>`;
                         chatFeedEl.appendChild(msgDiv);
                     });
                     chatFeedEl.scrollTop = chatFeedEl.scrollHeight;
@@ -1150,6 +1199,37 @@ const planStatusEl = document.getElementById('plan-status');
         const btnExcluir = e.target.closest('.btn-excluir-main');
         if (btnExcluir) {
             const pedido = todosOsPedidos.find(p => p.id === pedidoAtivoId);
+            if (!pedido) return;
+            const executarExclusao = async () => {
+                try {
+                    const resp = await authFetch(`/api/pedidos/${pedido.id}`, { method: 'DELETE' });
+                    const resultado = await resp.json();
+                    if (!resp.ok) throw new Error(resultado.error || 'Falha ao excluir.');
+                    showNotification(resultado.message, 'success');
+                    pedidoAtivoId = null;
+                    await fetchErenderizarTudo();
+                } catch (err) {
+                    showNotification(err.message, 'error');
+                }
+            };
+            if (pedido.codigoRastreio) {
+                showConfirmationModal('Atenção: Este contato possui um código de rastreio ativo e já está consumindo um uso do seu plano este mês. Ao apagar, ele não poderá mais receber mensagens automáticas, mas o uso não será devolvido. Deseja continuar?', executarExclusao);
+            } else {
+                executarExclusao();
+            }
+        }
+    });
+
+    if(detailsPanelEl) detailsPanelEl.addEventListener('click', (e) => {
+        const pedidoId = pedidoAtivoId;
+        if (!pedidoId) return;
+
+        if (e.target.closest('#btn-editar-contato')) {
+            const pedido = todosOsPedidos.find(p => p.id === pedidoId);
+            if (pedido) abrirModal(pedido);
+        }
+        if (e.target.closest('#btn-excluir-contato')) {
+            const pedido = todosOsPedidos.find(p => p.id === pedidoId);
             if (!pedido) return;
             const executarExclusao = async () => {
                 try {
