@@ -1464,3 +1464,64 @@ a:focus {
     will-change: left;
 }
 
+/* =================================
+   ESTILOS PARA OS BOTÕES DO MENU
+   ================================= */
+
+/* Container para os botões no menu */
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Estilo base para os botões do menu */
+.btn-nav-primary, .btn-nav-secondary {
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    border: 2px solid transparent;
+}
+
+/* Botão Primário (Começar Grátis) - COM DESTAQUE */
+.btn-nav-primary {
+    background-color: var(--primary-color);
+    color: var(--dark-900);
+}
+
+.btn-nav-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 212, 170, 0.3);
+}
+
+/* Botão Secundário (Entrar) - VAZADO */
+.btn-nav-secondary {
+    background-color: transparent;
+    color: var(--gray-300);
+    border-color: var(--gray-600);
+}
+
+.btn-nav-secondary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--dark-900);
+}
+
+/* Ajuste no layout mobile */
+@media (max-width: 768px) {
+    .nav-actions {
+        flex-direction: column;
+        width: 100%;
+        padding: 1rem;
+    }
+    .btn-nav-primary, .btn-nav-secondary {
+        width: 100%;
+        text-align: center;
+        max-width: 250px;
+    }
+}
+
