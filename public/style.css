@@ -1003,8 +1003,10 @@ input:checked ~ .toggle-label { color: var(--success-color); font-weight: 600; }
 
 /* Feed de Mensagens */
 .chat-feed {
-    background-color: #e5ddd5; /* Cor de fundo do WhatsApp */
-    background-image: url('https://i.imgur.com/6C9s1m9.png'); /* Padrão de fundo opcional */
+    background-color: #e5ddd5;
+    /* Nova URL de imagem de fundo que funciona */
+    background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+    background-repeat: repeat; /* Garante que a imagem se repita */
 }
 
 .chat-message {
@@ -1088,13 +1090,31 @@ input:checked ~ .toggle-label { color: var(--success-color); font-weight: 600; }
 .details-body { padding: 25px; }
 .detail-item {
     display: flex;
-    align-items: center;
-    gap: 15px;
+    flex-direction: column; /* Coloca o label em cima do span */
+    align-items: flex-start; /* Alinha à esquerda */
+    gap: 4px; /* Pequeno espaço entre o label e o dado */
     margin-bottom: 20px;
-    color: var(--text-secondary);
 }
-.detail-item svg { color: var(--primary-color); flex-shrink: 0; }
-.detail-item span { font-weight: 500; color: var(--text-color); }
+
+/* Remove o ícone SVG que não usamos mais neste layout */
+.detail-item svg {
+    display: none;
+}
+
+/* Estilo para o label (etiqueta) */
+.detail-item label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase; /* Deixa o texto em maiúsculas para dar um ar mais de "título" */
+}
+
+/* Estilo para o dado (span) */
+.detail-item span {
+    font-weight: 500;
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
 
 /* =================================
    ESTILOS PARA A NOVA SEÇÃO DE NOTAS
