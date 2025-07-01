@@ -729,8 +729,13 @@ const planStatusEl = document.getElementById('plan-status');
     }
 
     async function loadPlans() {
-        if (!plansListEl) return;
+        const plansListEl = document.getElementById('plans-list');
+        const currentPlanDisplayEl = document.getElementById('current-plan-display');
+        if (!plansListEl || !currentPlanDisplayEl) return;
+
         plansListEl.innerHTML = '<p class="info-mensagem">A carregar planos...</p>';
+        currentPlanDisplayEl.classList.add('hidden');
+
         try {
             const [plansResp, subResp] = await Promise.all([
                 authFetch('/api/plans'),
@@ -741,26 +746,49 @@ const planStatusEl = document.getElementById('plan-status');
                 throw new Error('Falha ao carregar dados de planos ou assinatura.');
             }
 
-            const { data } = await plansResp.json();
+            const { data: allPlans } = await plansResp.json();
             const { subscription } = await subResp.json();
             const activePlanId = subscription ? subscription.plan_id : null;
+            const currentPlan = allPlans.find(p => p.id === activePlanId);
 
-            const planFeatures = {
-                'Grátis': ['10 pedidos/mês', 'Suporte Comunitário'],
-                'Start': ['50 pedidos/mês', 'Integrações Básicas', 'Relatórios Simples'],
-                'Basic': ['100 pedidos/mês', 'Relatórios Padrão', 'Suporte via Email'],
-                'Pro': ['250 pedidos/mês', 'Relatórios Avançados', 'Suporte Prioritário']
-            };
+            if (currentPlan) {
+                currentPlanDisplayEl.classList.remove('hidden');
+                const usage = subscription.usage || 0;
+                const limit = currentPlan.monthly_limit === -1 ? 'Ilimitado' : currentPlan.monthly_limit;
+                const usagePercent = limit === 'Ilimitado' ? 0 : Math.min(100, (usage / limit) * 100);
+
+                currentPlanDisplayEl.innerHTML = `
+                    <div class="current-plan-header">
+                        <h4>Seu Plano Atual</h4>
+                        <h2>${currentPlan.name}</h2>
+                    </div>
+                    <div class="current-plan-usage">
+                        <div class="usage-text">
+                            <strong>Uso do Mês:</strong>
+                            <span>${usage} / ${limit} pedidos com rastreio</span>
+                        </div>
+                        <div class="usage-bar">
+                            <div class="usage-bar-fill" style="width: ${usagePercent}%;"></div>
+                        </div>
+                    </div>
+                `;
+            }
 
             plansListEl.innerHTML = '';
 
-            data.filter(p => p.name !== 'Pro Plus').forEach(p => {
+            const upgradeablePlans = allPlans.filter(p => p.id !== activePlanId && p.name !== 'Grátis');
+
+            upgradeablePlans.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'plan-card';
-                if (p.id === activePlanId) card.classList.add('active');
                 if (p.name === 'Basic') card.classList.add('popular');
 
-                const features = planFeatures[p.name] || [];
+                const features = {
+                    'Start': ['50 pedidos/mês', 'Integrações Básicas', 'Relatórios Simples'],
+                    'Basic': ['100 pedidos/mês', 'Relatórios Padrão', 'Suporte via Email'],
+                    'Pro': ['250 pedidos/mês', 'Relatórios Avançados', 'Suporte Prioritário']
+                }[p.name] || [];
+
                 const featuresHtml = features.map(f => `
                     <li>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
@@ -768,27 +796,15 @@ const planStatusEl = document.getElementById('plan-status');
                     </li>
                 `).join('');
 
-                let badgeHtml = '';
-                if (p.name === 'Basic') {
-                    badgeHtml += '<span class="badge popular">Mais Popular</span>';
-                }
-                if (p.id === activePlanId) {
-                    badgeHtml += '<span class="badge current">Plano Atual</span>';
-                }
-
-                let actionButton;
-                if (p.id === activePlanId) {
-                    actionButton = `<button class="btn-plan btn-secondary" disabled>Seu Plano Atual</button>`;
-                } else {
-                    const checkoutUrlWithEmail = p.checkout_url ? `${p.checkout_url}?email=${userData.email}` : '#';
-                    actionButton = `<a href="${checkoutUrlWithEmail}" target="_blank" class="btn-plan ${p.name === 'Basic' ? 'btn-primary' : 'btn-outline'}">Fazer Upgrade</a>`;
-                }
+                const badgeHtml = p.name === 'Basic' ? '<span class="badge popular">Mais Popular</span>' : '';
+                const checkoutUrlWithEmail = p.checkout_url ? `${p.checkout_url}?email=${userData.email}` : '#';
+                const actionButton = `<a href="${checkoutUrlWithEmail}" target="_blank" class="btn-plan ${p.name === 'Basic' ? 'btn-primary' : 'btn-outline'}">Fazer Upgrade</a>`;
 
                 card.innerHTML = `
                     ${badgeHtml}
                     <div class="plan-header">
                         <h3>${p.name}</h3>
-                        <p>${p.name === 'Grátis' ? 'Ideal para começar' : (p.name === 'Basic' ? 'Para negócios em crescimento' : 'Para escalar sua operação')}</p>
+                        <p>${p.name === 'Basic' ? 'Para negócios em crescimento' : 'Para escalar sua operação'}</p>
                     </div>
                     <div class="plan-price">
                         <span class="price-currency">R$</span>
