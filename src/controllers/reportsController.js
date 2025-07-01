@@ -18,35 +18,29 @@ exports.getReportSummary = async (req, res) => {
         const db = req.db;
         const clienteId = req.user.id;
 
-        // Executa todas as consultas necessárias em paralelo para mais eficiência
         const [
             ordersInTransitRows,
             averageDeliveryRows,
-            alertOrdersRows,
-            deliveredRows,
-            totalTrackingRows,
+            delayedOrdersRows,
+            cancelledOrdersRows,
             statusDistributionRows,
             newContactsLast7DaysRows
         ] = await Promise.all([
-            runQuery(db, "SELECT COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND codigoRastreio IS NOT NULL AND codigoRastreio != '' AND statusInterno != 'entregue'", [clienteId]),
+            runQuery(db, "SELECT COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND codigoRastreio IS NOT NULL AND statusInterno NOT IN ('entregue', 'pedido_cancelado')", [clienteId]),
             runQuery(db, "SELECT AVG(julianday(COALESCE(ultimaAtualizacao, CURRENT_TIMESTAMP)) - julianday(COALESCE(dataPostagem, dataCriacao))) as avgDays FROM pedidos WHERE cliente_id = ? AND statusInterno = 'entregue' AND ultimaAtualizacao IS NOT NULL", [clienteId]),
-            runQuery(db, "SELECT COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND statusInterno IN ('pedido_atrasado','pedido_devolvido')", [clienteId]),
-            runQuery(db, "SELECT COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND statusInterno = 'entregue'", [clienteId]),
-            runQuery(db, "SELECT COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND codigoRastreio IS NOT NULL AND codigoRastreio != ''", [clienteId]),
+            runQuery(db, "SELECT COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND statusInterno = 'pedido_atrasado'", [clienteId]),
+            runQuery(db, "SELECT COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND statusInterno = 'pedido_cancelado'", [clienteId]),
             runQuery(db, 'SELECT statusInterno, COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND statusInterno IS NOT NULL GROUP BY statusInterno', [clienteId]),
             runQuery(db, "SELECT strftime('%Y-%m-%d', dataCriacao) as dia, COUNT(*) as count FROM pedidos WHERE cliente_id = ? AND dataCriacao >= date('now', '-7 days') GROUP BY dia ORDER BY dia ASC", [clienteId])
         ]);
 
         const avgDays = parseFloat(averageDeliveryRows[0]?.avgDays || 0);
-        const delivered = deliveredRows[0]?.count || 0;
-        const totalTracking = totalTrackingRows[0]?.count || 0;
-        const deliveryRate = totalTracking > 0 ? ((delivered / totalTracking) * 100) : 0;
 
         const summary = {
             ordersInTransit: ordersInTransitRows[0]?.count || 0,
             averageDeliveryTime: Number(avgDays.toFixed(1)),
-            alertOrders: alertOrdersRows[0]?.count || 0,
-            deliveryRate: Number(deliveryRate.toFixed(1)),
+            delayedOrders: delayedOrdersRows[0]?.count || 0,
+            cancelledOrders: cancelledOrdersRows[0]?.count || 0,
             statusDistribution: statusDistributionRows,
             newContactsLast7Days: newContactsLast7DaysRows
         };

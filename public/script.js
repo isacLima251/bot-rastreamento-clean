@@ -76,10 +76,6 @@ const authFetch = async (url, options = {}) => {
     const modalConfirmacaoTextoEl = document.getElementById('modal-confirmacao-texto');
     const btnConfirmacaoCancelarEl = document.getElementById('btn-confirmacao-cancelar');
     const btnConfirmacaoConfirmarEl = document.getElementById('btn-confirmacao-confirmar');
-    const ordersInTransitCardEl = document.getElementById('orders-in-transit-card');
-    const averageDeliveryTimeCardEl = document.getElementById('average-delivery-time-card');
-    const alertOrdersCardEl = document.getElementById('alert-orders-card');
-    const deliveryRateCardEl = document.getElementById('delivery-rate-card');
     const newContactsChartCanvas = document.getElementById('new-contacts-chart');
     const statusPieChartCanvas = document.getElementById('status-pie-chart');
     const billingTableBodyEl = document.getElementById('billing-table-body');
@@ -695,30 +691,36 @@ const planStatusEl = document.getElementById('plan-status');
     function createStatusChart(data) {
         if (!statusPieChartCanvas || typeof Chart === 'undefined') return;
         if (statusChart) statusChart.destroy();
-        const labels = data.map(item => item.statusInterno ? (item.statusInterno.charAt(0).toUpperCase() + item.statusInterno.slice(1)) : 'Não definido');
+
+        const labels = data.map(item => item.statusInterno ? (item.statusInterno.charAt(0).toUpperCase() + item.statusInterno.slice(1).replace(/_/g, ' ')) : 'Não definido');
         const counts = data.map(item => item.count);
-        const colorMap = {
-            entregue: 'rgba(34,197,94,0.7)',
-            pedido_atrasado: 'rgba(234,179,8,0.7)',
-            pedido_devolvido: 'rgba(239,68,68,0.7)'
-        };
-        const backgroundColors = data.map(item => colorMap[item.statusInterno] || 'rgba(59,130,246,0.7)');
+
+        const backgroundColors = [
+            '#3b82f6',
+            '#22c55e',
+            '#eab308',
+            '#ef4444',
+            '#6b7280',
+            '#8b5cf6',
+        ];
+
         statusChart = new Chart(statusPieChartCanvas, {
-            type: 'bar',
+            type: 'doughnut',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Status dos Pedidos',
+                    label: 'Distribuição de Status',
                     data: counts,
                     backgroundColor: backgroundColors,
-                    borderWidth: 1
+                    borderColor: '#ffffff',
+                    borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
-                indexAxis: 'y',
-                plugins: { legend: { display: false } },
-                scales: { x: { beginAtZero: true } }
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
             }
         });
     }
@@ -727,10 +729,17 @@ const planStatusEl = document.getElementById('plan-status');
             const response = await authFetch('/api/reports/summary');
             if (!response.ok) throw new Error('Falha ao carregar dados do relatório.');
             const data = await response.json();
+
+            const ordersInTransitCardEl = document.getElementById('orders-in-transit-card');
+            const averageDeliveryTimeCardEl = document.getElementById('average-delivery-time-card');
+            const delayedOrdersCardEl = document.getElementById('delayed-orders-card');
+            const cancelledOrdersCardEl = document.getElementById('cancelled-orders-card');
+
             if(ordersInTransitCardEl) ordersInTransitCardEl.textContent = data.ordersInTransit;
-            if(averageDeliveryTimeCardEl) averageDeliveryTimeCardEl.textContent = data.averageDeliveryTime;
-            if(alertOrdersCardEl) alertOrdersCardEl.textContent = data.alertOrders;
-            if(deliveryRateCardEl) deliveryRateCardEl.textContent = data.deliveryRate + '%';
+            if(averageDeliveryTimeCardEl) averageDeliveryTimeCardEl.textContent = data.averageDeliveryTime + ' dias';
+            if(delayedOrdersCardEl) delayedOrdersCardEl.textContent = data.delayedOrders;
+            if(cancelledOrdersCardEl) cancelledOrdersCardEl.textContent = data.cancelledOrders;
+
             createContactsChart(data.newContactsLast7Days);
             createStatusChart(data.statusDistribution);
         } catch (error) {
