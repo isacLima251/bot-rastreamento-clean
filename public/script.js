@@ -740,29 +740,61 @@ const planStatusEl = document.getElementById('plan-status');
     }
 
     async function loadBillingHistory() {
-        if (!billingTableBodyEl) return;
-        billingTableBodyEl.innerHTML = '<tr><td colspan="4">A carregar...</td></tr>';
+        const billingListContainerEl = document.getElementById('billing-list-container');
+        if (!billingListContainerEl) return;
+
+        billingListContainerEl.innerHTML = '<p class="info-mensagem">A carregar...</p>';
+
         try {
             const resp = await authFetch('/api/billing/history');
             if (!resp.ok) throw new Error('Falha ao carregar histórico.');
+
             const { pedidos } = await resp.json();
-            billingTableBodyEl.innerHTML = '';
+
+            billingListContainerEl.innerHTML = '';
+
             if (billingSummaryEl) {
                 const count = pedidos ? pedidos.length : 0;
                 billingSummaryEl.textContent = `Exibindo ${count} pedidos com rastreio ativo que estão contando para o seu ciclo atual.`;
             }
+
             if (!pedidos || pedidos.length === 0) {
-                billingTableBodyEl.innerHTML = '<tr><td colspan="4" class="billing-empty"><div class="placeholder-view"><div style="font-size:2rem">📦</div><h1>Nenhum Rastreio Ativo</h1><p>Adicione um código de rastreio a um dos seus contatos para começar a acompanhar e ver seu consumo aqui.</p></div></td></tr>';
+                billingListContainerEl.innerHTML = '<div class="placeholder-view"><div style="font-size:2rem">📦</div><h1>Nenhum Rastreio Ativo</h1><p>Adicione um código de rastreio a um dos seus contatos para começar a acompanhar e ver seu consumo aqui.</p></div>';
                 return;
             }
+
+            const statusMap = {
+                'entregue': { text: 'Entregue', class: 'success' },
+                'pedido_a_caminho': { text: 'Em Trânsito', class: 'info' },
+                'pedido_atrasado': { text: 'Atrasado', class: 'danger' },
+                'pedido_devolvido': { text: 'Devolvido', class: 'danger' },
+                'pedido_a_espera': { text: 'Aguardando Retirada', class: 'warning' },
+                'postado': { text: 'Postado', class: 'default' },
+                'default': { text: 'Indefinido', class: 'default' }
+            };
+
             pedidos.forEach(p => {
-                const tr = document.createElement('tr');
-                const link = `https://www.linkcorreios.com.br/${p.codigoRastreio}`;
-                tr.innerHTML = `<td>${new Date(p.dataCriacao).toLocaleDateString()}</td><td>${p.nome}</td><td>${p.produto || ''}</td><td><a href="${link}" target="_blank">${p.codigoRastreio}</a></td>`;
-                billingTableBodyEl.appendChild(tr);
+                const item = document.createElement('div');
+                item.className = 'billing-item';
+
+                const statusInfo = statusMap[p.statusInterno] || statusMap['default'];
+
+                const link = p.codigoRastreio ? `https://www.linkcorreios.com.br/${p.codigoRastreio}` : '#';
+
+                item.innerHTML = `
+                <div class="billing-status-dot status-${statusInfo.class}"></div>
+                <div class="billing-info">
+                    <a href="${link}" target="_blank" class="billing-code">${p.codigoRastreio}</a>
+                    <span class="billing-customer">${p.nome}</span>
+                </div>
+                <div class="billing-status-tag tag-${statusInfo.class}">${statusInfo.text}</div>
+            `;
+
+                billingListContainerEl.appendChild(item);
             });
         } catch (err) {
             console.error('Erro ao carregar histórico de faturamento:', err);
+            billingListContainerEl.innerHTML = '<p class="info-mensagem" style="color: red">Erro ao carregar o histórico.</p>';
         }
     }
 
