@@ -293,6 +293,9 @@ const initDb = () => {
                     db.run("ALTER TABLE pedidos ADD COLUMN descricaoUltimoEvento TEXT", [], (e) => {
                         if (e && !e.message.includes('duplicate')) return reject(e);
                     });
+                    db.run("ALTER TABLE pedidos ADD COLUMN notas TEXT", [], (e) => {
+                        if (e && !e.message.includes('duplicate column')) return reject(e);
+                    });
 
                     // Bloco movido para dentro da criação da tabela 'users'
 
