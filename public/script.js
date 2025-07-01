@@ -730,12 +730,17 @@ const planStatusEl = document.getElementById('plan-status');
 
     async function loadPlans() {
         if (!plansListEl) return;
-        plansListEl.innerHTML = '<p class="info-mensagem">A carregar...</p>';
+        plansListEl.innerHTML = '<p class="info-mensagem">A carregar planos...</p>';
         try {
             const [plansResp, subResp] = await Promise.all([
                 authFetch('/api/plans'),
                 authFetch('/api/subscription')
             ]);
+
+            if (!plansResp.ok || !subResp.ok) {
+                throw new Error('Falha ao carregar dados de planos ou assinatura.');
+            }
+
             const { data } = await plansResp.json();
             const { subscription } = await subResp.json();
             const activePlanId = subscription ? subscription.plan_id : null;
@@ -748,41 +753,68 @@ const planStatusEl = document.getElementById('plan-status');
             };
 
             plansListEl.innerHTML = '';
+
             data.filter(p => p.name !== 'Pro Plus').forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'plan-card';
                 if (p.id === activePlanId) card.classList.add('active');
+                if (p.name === 'Basic') card.classList.add('popular');
 
                 const features = planFeatures[p.name] || [];
-                const limite = p.monthly_limit === -1 ? 'Ilimitado' : `${p.monthly_limit} pedidos/mês`;
-                const featuresHtml = features.map(f => `<li>${f}</li>`).join('');
+                const featuresHtml = features.map(f => `
+                    <li>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>
+                        <span>${f}</span>
+                    </li>
+                `).join('');
 
-                let badge = '';
+                let badgeHtml = '';
                 if (p.name === 'Basic') {
-                    badge = '<span class="badge popular">Mais Popular</span>';
+                    badgeHtml += '<span class="badge popular">Mais Popular</span>';
                 }
                 if (p.id === activePlanId) {
-                    badge += '<span class="badge current">Plano Atual</span>';
+                    badgeHtml += '<span class="badge current">Plano Atual</span>';
                 }
 
                 let actionButton;
                 if (p.id === activePlanId) {
-                    actionButton = `<button class="btn-secondary" disabled>Plano Atual</button>`;
+                    actionButton = `<button class="btn-plan btn-secondary" disabled>Seu Plano Atual</button>`;
                 } else {
                     const checkoutUrlWithEmail = p.checkout_url ? `${p.checkout_url}?email=${userData.email}` : '#';
-                    actionButton = `<a href="${checkoutUrlWithEmail}" target="_blank" class="btn-primary">Fazer Upgrade</a>`;
+                    actionButton = `<a href="${checkoutUrlWithEmail}" target="_blank" class="btn-plan ${p.name === 'Basic' ? 'btn-primary' : 'btn-outline'}">Fazer Upgrade</a>`;
                 }
 
-                card.innerHTML = `${badge}<h3>${p.name}</h3><p>${limite}</p><ul class="plan-features">${featuresHtml}</ul><p>R$ ${p.price}</p>${actionButton}`;
+                card.innerHTML = `
+                    ${badgeHtml}
+                    <div class="plan-header">
+                        <h3>${p.name}</h3>
+                        <p>${p.name === 'Grátis' ? 'Ideal para começar' : (p.name === 'Basic' ? 'Para negócios em crescimento' : 'Para escalar sua operação')}</p>
+                    </div>
+                    <div class="plan-price">
+                        <span class="price-currency">R$</span>
+                        <span class="price-amount">${p.price.toFixed(2).replace('.', ',')}</span>
+                        <span class="price-period">/mês</span>
+                    </div>
+                    <ul class="plan-features">${featuresHtml}</ul>
+                    <div class="plan-footer">${actionButton}</div>
+                `;
                 plansListEl.appendChild(card);
             });
 
             const contactCard = document.createElement('div');
-            contactCard.className = 'plan-card';
-            contactCard.innerHTML = `<h3>Mais de 250 pedidos?</h3><p>Entre em contato com o suporte.</p>`;
+            contactCard.className = 'custom-plan-card';
+            contactCard.innerHTML = `
+                <div>
+                    <h4>Precisa de mais de 250 pedidos?</h4>
+                    <p>Oferecemos planos empresariais com limites personalizados e suporte dedicado. Vamos conversar?</p>
+                </div>
+                <a href="#" class="btn-plan btn-secondary">Entrar em Contato</a>
+            `;
             plansListEl.appendChild(contactCard);
+
         } catch (err) {
-            plansListEl.innerHTML = '<p class="info-mensagem">Erro ao carregar planos.</p>';
+            plansListEl.innerHTML = '<p class="info-mensagem" style="color: red;">Erro ao carregar os planos. Tente novamente mais tarde.</p>';
+            console.error(err);
         }
     }
 
