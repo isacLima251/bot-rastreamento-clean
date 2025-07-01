@@ -850,3 +850,64 @@ input:checked ~ .toggle-label { color: var(--success-color); font-weight: 600; }
 #plans-list .plan-card .plan-features li::before {
     display: none;
 }
+
+/* =================================
+   ESTILOS PARA O CARD DE PLANO ATUAL
+   ================================= */
+#current-plan-display {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: white;
+    padding: 30px;
+    border-radius: 16px;
+    margin-bottom: 40px;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+}
+
+.current-plan-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.current-plan-header h4 {
+    color: #bdc3c7;
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.current-plan-header h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 2rem;
+    margin: 5px 0 0 0;
+}
+
+.current-plan-usage .usage-text {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+}
+
+.current-plan-usage .usage-text strong {
+    font-weight: 600;
+}
+
+.current-plan-usage .usage-text span {
+    color: #ecf0f1;
+}
+
+.usage-bar {
+    width: 100%;
+    height: 8px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.usage-bar-fill {
+    height: 100%;
+    background-color: var(--success-color);
+    border-radius: 4px;
+    transition: width 0.5s ease-in-out;
+}
