@@ -1525,3 +1525,95 @@ a:focus {
     }
 }
 
+/* =================================
+   NOVOS ESTILOS PARA A SEÇÃO 'SOLUTION'
+   ================================= */
+
+.solution {
+    padding: var(--section-padding);
+    background: var(--dark-800); /* Fundo escuro */
+    color: var(--white);
+    position: relative;
+    overflow: hidden;
+}
+
+.solution-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+    opacity: 0.3;
+}
+
+.solution .container {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.solution-header {
+    text-align: center;
+    max-width: 800px;
+    margin-bottom: 3rem;
+}
+
+.solution-header h2 {
+    color: var(--white);
+    font-size: clamp(2.2rem, 4.5vw, 3.5rem);
+    line-height: 1.2;
+}
+
+.solution-header p {
+    color: var(--gray-300);
+    font-size: 1.1rem;
+    max-width: 650px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.solution-visual {
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 4rem;
+}
+
+.solution-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    width: 100%;
+}
+
+.solution .feature-item {
+    background: var(--dark-700);
+    border: 1px solid var(--dark-600);
+    text-align: center;
+    padding: 2rem;
+}
+
+.solution .feature-item:hover {
+    background: var(--dark-600);
+    transform: translateY(-5px);
+    box-shadow: none;
+}
+
+.solution .feature-icon {
+    margin: 0 auto 1rem;
+}
+
+.solution .feature-content h4 {
+    color: var(--white);
+}
+
+.solution .feature-content p {
+    color: var(--gray-400);
+}
+
+/* Remover layout antigo */
+.solution-content {
+    display: block;
+}
