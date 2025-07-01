@@ -473,12 +473,24 @@ const planStatusEl = document.getElementById('plan-status');
                 </div>
             </div>
             <div class="details-body">
-                <div class="detail-item"><span>${pedido.telefone}</span></div>
-                <div class="detail-item"><span>${pedido.produto || 'N/A'}</span></div>
-                <div class="detail-item"><span>${pedido.codigoRastreio || 'Nenhum'}</span></div>
+                <div class="detail-item">
+                    <label>Telefone</label>
+                    <span>${pedido.telefone}</span>
+                </div>
+                <div class="detail-item">
+                    <label>Produto</label>
+                    <span>${pedido.produto || 'Não informado'}</span>
+                </div>
+                <div class="detail-item">
+                    <label>Código de Rastreio</label>
+                    <span>${pedido.codigoRastreio || 'Nenhum'}</span>
+                </div>
                 <div class="detail-item-divider"></div>
                 <div class="detail-item-notes">
-                    <div class="notes-header"><h4>Notas</h4></div>
+                    <div class="notes-header">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M4.5 12.5A.5.5 0 0 1 5 12h3a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5m-2-3A.5.5 0 0 1 3 9h6a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m-2-3A.5.5 0 0 1 1 6h9a.5.5 0 0 1 0 1H1a.5.5 0 0 1-.5-.5M1.5 3a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-10a.5.5 0 0 0-.5-.5z"/></svg>
+                        <h4>Notas</h4>
+                    </div>
                     <div id="notes-content" class="editable-notes" tabindex="0">
                         ${pedido.notas ? pedido.notas.replace(/\n/g, '<br>') : '<span class="placeholder-text">Clique para adicionar uma nota...</span>'}
                     </div>
