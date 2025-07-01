@@ -191,7 +191,16 @@ const startApp = async () => {
         // Webhook precisa do corpo raw para validação
         app.post('/api/payment/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
 
-        app.use(helmet());
+        app.use(helmet({
+            contentSecurityPolicy: {
+                directives: {
+                    ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+                    "script-src": ["'self'", "https://cdn.jsdelivr.net"],
+                    "img-src": ["'self'", "data:", "blob:", "https://i.imgur.com"],
+                    "connect-src": ["'self'", "wss:", "ws:"]
+                },
+            },
+        }));
         app.use(express.json());
         // Landing page como rota principal
         app.get('/', (req, res) => {

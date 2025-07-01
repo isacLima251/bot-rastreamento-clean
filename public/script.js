@@ -431,13 +431,11 @@ const planStatusEl = document.getElementById('plan-status');
     const selecionarPedidoErenderizarDetalhes = async (pedido) => {
         if (!pedido) return;
 
-        // Elementos das 3 colunas
         const chatWindowEl = document.getElementById('chat-window');
         const chatFooterEl = document.getElementById('chat-footer');
         const formEnviarMensagemEl = document.getElementById('form-enviar-mensagem');
         const detailsPanelEl = document.getElementById('details-panel');
 
-        // Marcar como lido e atualizar estado
         if (pedido.mensagensNaoLidas > 0) {
             try {
                 await authFetch(`/api/pedidos/${pedido.id}/marcar-como-lido`, { method: 'PUT' });
@@ -458,10 +456,9 @@ const planStatusEl = document.getElementById('plan-status');
                 </div>
             </div>
         `;
-
         const chatFeedHtml = `<div class="chat-feed" id="chat-feed"><div class="loader-container"><div class="loader"></div></div></div>`;
         chatWindowEl.innerHTML = chatHeaderHtml + chatFeedHtml;
-
+        
         chatFooterEl.classList.add('active');
         formEnviarMensagemEl.querySelector('input').disabled = false;
         formEnviarMensagemEl.querySelector('button').disabled = false;
@@ -476,52 +473,35 @@ const planStatusEl = document.getElementById('plan-status');
                 </div>
             </div>
             <div class="details-body">
-                <div class="detail-item">
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M3.654 1.328a.678.678 0 0 1 .737-.203l2.522.84a.678.678 0 0 1 .449.604l.146 2.757a.678.678 0 0 1-.202.494l-1.013 1.013a11.27 11.27 0 0 0 4.664 4.664l1.013-1.013a.678.678 0 0 1 .494-.202l2.757.146a.678.678 0 0 1 .604.449l.84 2.522a.678.678 0 0 1-.203.737l-2.3 2.3a.678.678 0 0 1-.737.15c-1.204-.502-2.38-1.196-3.518-2.034a17.567 17.567 0 0 1-4.401-4.401c-.838-1.138-1.532-2.314-2.034-3.518a.678.678 0 0 1 .15-.737l2.3-2.3z"/></svg>
-                    <span>${pedido.telefone}</span>
-                </div>
-                <div class="detail-item">
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.551a.5.5 0 0 0-.369.462v5.13a.5.5 0 0 0 .144.384l6.5 6.5a.5.5 0 0 0 .708 0l6.5-6.5a.5.5 0 0 0 .144-.384V4.013a.5.5 0 0 0-.369-.462zM2.19 3.856 8 1.631 13.81 3.856v4.667l-5.81 5.81-5.81-5.81z"/><path d="M5.5 5.5A.5.5 0 0 1 6 6v1.5a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 0a.5.5 0 0 1 .5.5v1.5a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5"/></svg>
-                    <span>${pedido.produto || 'N/A'}</span>
-                </div>
-                <div class="detail-item">
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M4 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z"/><path d="M1.5 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM1 7a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5z"/></svg>
-                    <span>${pedido.codigoRastreio || 'Nenhum'}</span>
-                </div>
-
+                <div class="detail-item"><span>${pedido.telefone}</span></div>
+                <div class="detail-item"><span>${pedido.produto || 'N/A'}</span></div>
+                <div class="detail-item"><span>${pedido.codigoRastreio || 'Nenhum'}</span></div>
                 <div class="detail-item-divider"></div>
                 <div class="detail-item-notes">
-                    <div class="notes-header">
-                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M4.5 12.5A.5.5 0 0 1 5 12h3a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5m-2-3A.5.5 0 0 1 3 9h6a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m-2-3A.5.5 0 0 1 1 6h9a.5.5 0 0 1 0 1H1a.5.5 0 0 1-.5-.5M1.5 3a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-10a.5.5 0 0 0-.5-.5z"/></svg>
-                        <h4>Notas</h4>
-                    </div>
+                    <div class="notes-header"><h4>Notas</h4></div>
                     <div id="notes-content" class="editable-notes" tabindex="0">
-                        ${pedido.notas || '<span class="placeholder-text">Clique para adicionar uma nota...</span>'}
+                        ${pedido.notas ? pedido.notas.replace(/\n/g, '<br>') : '<span class="placeholder-text">Clique para adicionar uma nota...</span>'}
                     </div>
                 </div>
             </div>
         `;
-        `;
 
-        // 3. BUSCAR E RENDERIZAR O HISTÓRICO DE MENSAGENS
+        // 3. BUSCAR E RENDERIZAR O HISTÓRICO
         try {
             const response = await authFetch(`/api/pedidos/${pedido.id}/historico`);
             const { data: historico } = await response.json();
             const chatFeedEl = document.getElementById('chat-feed');
             if(chatFeedEl) {
-                chatFeedEl.innerHTML = '';
+                chatFeedEl.innerHTML = ''; // Limpa o loader
                 if (!historico || historico.length === 0) {
                     chatFeedEl.innerHTML = '<div class="date-separator"><span>Sem mensagens ainda</span></div>';
                 } else {
                     historico.forEach(msg => {
                         const msgDiv = document.createElement('div');
-                        const isAuto = msg.origem === 'bot' && msg.tipo_mensagem && msg.tipo_mensagem !== 'manual';
                         msgDiv.className = `chat-message ${msg.origem === 'cliente' ? 'recebido' : 'enviado'}`;
                         const dataUtc = new Date(msg.data_envio.includes('Z') ? msg.data_envio : msg.data_envio.replace(' ', 'T') + 'Z');
                         const horaFormatada = dataUtc.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
-
                         const statusIcon = msg.origem === 'bot' ? `<span class="message-status"><svg width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="m11.354 4.646l-4.5 4.5l-1.5-1.5a.5.5 0 0 0-.708.708l2 2a.5.5 0 0 0 .708 0l5-5a.5.5 0 0 0-.708-.708M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0"/></svg></span>` : '';
-
                         msgDiv.innerHTML = `<p>${msg.mensagem.replace(/\n/g, '<br>')}</p><div class="message-meta"><span class="timestamp">${horaFormatada}</span>${statusIcon}</div>`;
                         chatFeedEl.appendChild(msgDiv);
                     });
@@ -1237,8 +1217,9 @@ const planStatusEl = document.getElementById('plan-status');
         if (!pedidoId) return;
 
         const notesContent = document.getElementById('notes-content');
-        if (e.target.closest('#notes-content') && notesContent && !notesContent.querySelector('textarea')) {
-            const currentNotes = todosOsPedidos.find(p => p.id === pedidoId)?.notas || '';
+        if (e.target.closest('#notes-content') && !notesContent.querySelector('textarea')) {
+            const pedidoAtual = todosOsPedidos.find(p => p.id === pedidoId);
+            const currentNotes = pedidoAtual ? pedidoAtual.notas || '' : '';
             notesContent.innerHTML = `<textarea id="notes-textarea" class="notes-editor">${currentNotes}</textarea>`;
             const textarea = document.getElementById('notes-textarea');
             textarea.focus();
@@ -1252,12 +1233,11 @@ const planStatusEl = document.getElementById('plan-status');
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ notas: newNotes })
                     });
-                    const pedido = todosOsPedidos.find(p => p.id === pedidoId);
-                    if (pedido) pedido.notas = newNotes;
-                    notesContent.innerHTML = newNotes || '<span class="placeholder-text">Clique para adicionar uma nota...</span>';
+                    if (pedidoAtual) pedidoAtual.notas = newNotes;
+                    notesContent.innerHTML = newNotes.replace(/\n/g, '<br>') || '<span class="placeholder-text">Clique para adicionar uma nota...</span>';
                 } catch (err) {
                     showNotification('Falha ao salvar a nota.', 'error');
-                    notesContent.innerHTML = currentNotes || '<span class="placeholder-text">Clique para adicionar uma nota...</span>';
+                    notesContent.innerHTML = currentNotes.replace(/\n/g, '<br>') || '<span class="placeholder-text">Clique para adicionar uma nota...</span>';
                 }
             });
         }
@@ -1266,9 +1246,11 @@ const planStatusEl = document.getElementById('plan-status');
             const pedido = todosOsPedidos.find(p => p.id === pedidoId);
             if (pedido) abrirModal(pedido);
         }
+
         if (e.target.closest('#btn-excluir-contato')) {
             const pedido = todosOsPedidos.find(p => p.id === pedidoId);
             if (!pedido) return;
+            
             const executarExclusao = async () => {
                 try {
                     const resp = await authFetch(`/api/pedidos/${pedido.id}`, { method: 'DELETE' });
@@ -1276,16 +1258,18 @@ const planStatusEl = document.getElementById('plan-status');
                     if (!resp.ok) throw new Error(resultado.error || 'Falha ao excluir.');
                     showNotification(resultado.message, 'success');
                     pedidoAtivoId = null;
+                    detailsPanelEl.innerHTML = '<div class="placeholder-details"><p>Contato excluído.</p></div>';
                     await fetchErenderizarTudo();
                 } catch (err) {
                     showNotification(err.message, 'error');
                 }
             };
-            if (pedido.codigoRastreio) {
-                showConfirmationModal('Atenção: Este contato possui um código de rastreio ativo e já está consumindo um uso do seu plano este mês. Ao apagar, ele não poderá mais receber mensagens automáticas, mas o uso não será devolvido. Deseja continuar?', executarExclusao);
-            } else {
-                executarExclusao();
-            }
+
+            const confirmMessage = pedido.codigoRastreio 
+                ? 'Atenção: Este contato possui um código de rastreio ativo. Ao apagar, ele não poderá mais receber mensagens automáticas. Deseja continuar?'
+                : 'Tem certeza que deseja excluir este contato? Esta ação é irreversível.';
+            
+            showConfirmationModal(confirmMessage, executarExclusao);
         }
     });
 
