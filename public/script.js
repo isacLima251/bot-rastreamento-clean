@@ -488,7 +488,19 @@ const planStatusEl = document.getElementById('plan-status');
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M4 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z"/><path d="M1.5 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM1 7a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5z"/></svg>
                     <span>${pedido.codigoRastreio || 'Nenhum'}</span>
                 </div>
+
+                <div class="detail-item-divider"></div>
+                <div class="detail-item-notes">
+                    <div class="notes-header">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M4.5 12.5A.5.5 0 0 1 5 12h3a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5m-2-3A.5.5 0 0 1 3 9h6a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m-2-3A.5.5 0 0 1 1 6h9a.5.5 0 0 1 0 1H1a.5.5 0 0 1-.5-.5M1.5 3a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-10a.5.5 0 0 0-.5-.5z"/></svg>
+                        <h4>Notas</h4>
+                    </div>
+                    <div id="notes-content" class="editable-notes" tabindex="0">
+                        ${pedido.notas || '<span class="placeholder-text">Clique para adicionar uma nota...</span>'}
+                    </div>
+                </div>
             </div>
+        `;
         `;
 
         // 3. BUSCAR E RENDERIZAR O HISTÓRICO DE MENSAGENS
@@ -1223,6 +1235,32 @@ const planStatusEl = document.getElementById('plan-status');
     if(detailsPanelEl) detailsPanelEl.addEventListener('click', (e) => {
         const pedidoId = pedidoAtivoId;
         if (!pedidoId) return;
+
+        const notesContent = document.getElementById('notes-content');
+        if (e.target.closest('#notes-content') && notesContent && !notesContent.querySelector('textarea')) {
+            const currentNotes = todosOsPedidos.find(p => p.id === pedidoId)?.notas || '';
+            notesContent.innerHTML = `<textarea id="notes-textarea" class="notes-editor">${currentNotes}</textarea>`;
+            const textarea = document.getElementById('notes-textarea');
+            textarea.focus();
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+            textarea.addEventListener('blur', async () => {
+                const newNotes = textarea.value.trim();
+                try {
+                    await authFetch(`/api/pedidos/${pedidoId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ notas: newNotes })
+                    });
+                    const pedido = todosOsPedidos.find(p => p.id === pedidoId);
+                    if (pedido) pedido.notas = newNotes;
+                    notesContent.innerHTML = newNotes || '<span class="placeholder-text">Clique para adicionar uma nota...</span>';
+                } catch (err) {
+                    showNotification('Falha ao salvar a nota.', 'error');
+                    notesContent.innerHTML = currentNotes || '<span class="placeholder-text">Clique para adicionar uma nota...</span>';
+                }
+            });
+        }
 
         if (e.target.closest('#btn-editar-contato')) {
             const pedido = todosOsPedidos.find(p => p.id === pedidoId);
