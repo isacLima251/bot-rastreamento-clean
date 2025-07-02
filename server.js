@@ -282,6 +282,7 @@ const startApp = async () => {
         // Rotas de Pedidos
         app.get('/api/pedidos', planCheck, pedidosController.listarPedidos);
         app.post('/api/pedidos', planCheck, pedidosController.criarPedido);
+        app.post('/api/pedidos/importar', planCheck, pedidosController.importarPedidos);
         app.put('/api/pedidos/:id', planCheck, pedidosController.atualizarPedido);
         app.delete('/api/pedidos/:id', planCheck, pedidosController.deletarPedido);
         app.get('/api/pedidos/:id/historico', planCheck, pedidosController.getHistoricoDoPedido);
