@@ -90,6 +90,10 @@ const btnUpgradePlansEl = document.getElementById('btn-upgrade-plans');
 const planStatusEl = document.getElementById('plan-status');
 const btnImportarCsv = document.getElementById('btn-importar-csv');
 const csvFileInput = document.getElementById('csv-file-input');
+const btnAddIntegration = document.getElementById('btn-add-integration');
+const modalPlatformSelect = document.getElementById('modal-platform-select');
+const btnClosePlatformModal = document.getElementById('btn-close-platform-modal');
+const platformGrid = document.getElementById('platform-grid');
     if (loggedUserEl) loggedUserEl.textContent = userData.email || 'Usuário';
 
     const variableTooltips = {
@@ -1421,6 +1425,45 @@ const csvFileInput = document.getElementById('csv-file-input');
             window.location.href = '/login.html';
         });
     }
+
+    // ---- Integrações ----
+    const supportedPlatforms = [
+        { id: 'kiwify', name: 'Kiwify' },
+        { id: 'hotmart', name: 'Hotmart' },
+        { id: 'monetizze', name: 'Monetizze' },
+        { id: 'braip', name: 'Braip' },
+        { id: 'perfectpay', name: 'Perfect Pay' },
+        { id: 'logzz', name: 'Logzz' },
+        { id: 'payt', name: 'Payt' },
+        { id: 'keedpay', name: 'Keedpay' },
+    ];
+
+    function openPlatformModal() {
+        if (!modalPlatformSelect || !platformGrid) return;
+        platformGrid.innerHTML = '';
+        supportedPlatforms.forEach(platform => {
+            const platformTile = document.createElement('div');
+            platformTile.className = 'platform-tile';
+            platformTile.dataset.platformId = platform.id;
+            platformTile.textContent = platform.name;
+            platformTile.addEventListener('click', () => {
+                alert(`Configurar integração para: ${platform.name}`);
+                closePlatformModal();
+            });
+            platformGrid.appendChild(platformTile);
+        });
+        modalPlatformSelect.classList.add('active');
+    }
+
+    function closePlatformModal() {
+        if (modalPlatformSelect) modalPlatformSelect.classList.remove('active');
+    }
+
+    if (btnAddIntegration) btnAddIntegration.addEventListener('click', openPlatformModal);
+    if (btnClosePlatformModal) btnClosePlatformModal.addEventListener('click', closePlatformModal);
+    if (modalPlatformSelect) modalPlatformSelect.addEventListener('click', (e) => {
+        if (e.target === modalPlatformSelect) closePlatformModal();
+    });
 
     // --- 7. Inicialização ---
     fetchErenderizarTudo();
