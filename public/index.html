@@ -226,66 +226,31 @@
             <div id="integrations-view" class="view-container hidden">
                 <div class="page-container">
                     <header class="page-header">
-                        <div><h1>Integrações via Postback/Webhook</h1><p>Use o link abaixo para integrar com plataformas externas e criar contatos automaticamente.</p></div>
+                        <div>
+                            <h1>Minhas Integrações</h1>
+                            <p>Conecte o WhatsShip às suas plataformas de venda.</p>
+                        </div>
+                        <button class="btn-primary" id="btn-add-integration">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                            <span>Nova Integração</span>
+                        </button>
                     </header>
-                    <div class="integration-card">
-                        <h3>Seu Link de Postback</h3>
-                        <p>Copie este link e cole-o na área de postback da sua plataforma de vendas (Hotmart, Kiwify, PerfectPay ou qualquer outra).</p>
-                        <div class="webhook-url-container">
-                            <div id="webhook-url-display" class="webhook-url-display">A carregar...</div>
-                            <button class="btn-secondary" id="btn-copy-webhook">Copiar</button>
-                        </div>
-                        <button class="btn-tertiary" id="btn-regenerate-webhook">Regenerar Link</button>
-                    </div>
-                    <div class="integration-card instructions-card">
-                        <h3>Como Configurar a Automação Completa</h3>
-                        <p>Para automatizar todo o processo, você precisa configurar <strong>dois Webhooks (Postbacks)</strong> na sua plataforma de vendas (Hotmart, Kiwify, etc.). Use o seu "Link de Postback" acima para ambos.</p>
 
-                        <div class="instruction-step">
-                            <h4>1. Webhook de Venda Aprovada</h4>
-                            <p>Este aviso cria o contato no WhatsShip assim que a venda é feita. Configure-o para ser enviado no evento de <strong>"Compra Aprovada"</strong> ou <strong>"Boleto Pago"</strong>.</p>
-                            <p>O seu sistema precisa de receber, no mínimo, o e-mail do cliente. Exemplo de dados:</p>
-                            <pre><code>{
-    "event": "purchase_approved",
-    "customer": {
-        "name": "João da Silva",
-        "email": "joao.silva@email.com",
-        "phone": { "ddd": "11", "number": "999998888" }
-    }
-}</code></pre>
+                    <div id="integrations-list" class="integrations-list">
+                        <div class="placeholder-view">
+                            <p>Nenhuma integração configurada ainda.</p>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="instruction-step">
-                            <h4>2. Webhook de Código de Rastreio</h4>
-                            <p>Este segundo aviso atualiza o contato que já existe com o código de rastreio. Configure-o para o evento de <strong>"Código de Rastreio Cadastrado"</strong> na sua plataforma.</p>
-                            <p>Ele precisa de enviar o e-mail (para sabermos qual contato atualizar) e o novo código. Exemplo de dados:</p>
-                            <pre><code>{
-    "event": "tracking_code_added",
-    "customer": {
-        "email": "joao.silva@email.com"
-    },
-    "tracking_code": "BR123456789BR"
-}</code></pre>
+                <div id="modal-platform-select" class="modal-overlay">
+                    <div class="modal-content modal-platform-content">
+                        <div class="modal-platform-header">
+                            <h3>Selecione uma plataforma</h3>
+                            <button id="btn-close-platform-modal" class="btn-icon" title="Fechar">&times;</button>
                         </div>
-                        <p class="instruction-note"><strong>Importante:</strong> Os nomes dos campos (como <code>event</code>, <code>customer</code>, <code>tracking_code</code>) podem variar entre as plataformas. Consulte a documentação da sua plataforma de vendas para saber os nomes exatos dos campos e eventos.</p>
-                    </div>
-                    <div class="integration-card">
-                        <h3>Chave Secreta de Postback</h3>
-                        <p>Insira abaixo a chave secreta utilizada para validar os postbacks de qualquer plataforma de vendas (Hotmart, Kiwify, etc.).</p>
-                        <div class="webhook-url-container">
-                            <input type="text" id="input-postback-secret" placeholder="Sua chave secreta">
-                            <button class="btn-primary" id="btn-save-postback-secret">Salvar</button>
-                        </div>
-                    </div>
-                    <div class="integration-card">
-                        <h3>Histórico de Integrações</h3>
-                        <div class="table-wrapper">
-                            <table id="integration-history-table">
-                                <thead><tr><th>Data</th><th>Nome do Cliente</th><th>Produto</th><th>Status</th></tr></thead>
-                                <tbody id="integration-history-body"></tbody>
-                            </table>
-                        </div>
-                        <div id="integration-pagination" class="pagination"></div>
+                        <div id="platform-grid" class="platform-grid">
+                            </div>
                     </div>
                 </div>
             </div>
