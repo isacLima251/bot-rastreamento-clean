@@ -5,60 +5,79 @@ const subscriptionService = require('../services/subscriptionService');
 const emailService = require('../services/emailService');
 const crypto = require('crypto');
 const integrationHistoryService = require('../services/integrationHistoryService');
+const pedidoService = require('../services/pedidoService');
 
 /**
  * Função 1: Recebe o postback de uma plataforma externa.
  */
 exports.receberPostback = async (req, res) => {
-    // LOG PARA DEPURAÇÃO COMPLETA - NÃO REMOVER
-    console.log('--- DADOS COMPLETOS DO WEBHOOK DA TICTO RECEBIDO ---');
-    console.log(JSON.stringify(req.headers, null, 2));
+    // LOG PARA DEPURAÇÃO COMPLETA
+    console.log('--- WEBHOOK RECEBIDO ---');
     console.log(JSON.stringify(req.body, null, 2));
-    console.log('----------------------------------------------------');
+    console.log('------------------------');
 
     const db = req.db;
-    const clienteId = req.user.id;
-
     const payload = req.body;
 
-    // Validação do token enviado pela Ticto
+    // Validação do token (se aplicável)
     const tictoToken = payload.token;
-    const nossoSecret = process.env.TICTO_SECRET;
-    if (tictoToken !== nossoSecret) {
-        return res.status(401).json({ error: 'Token do webhook da Ticto inválido.' });
-    }
-
-    const status = (payload.status || '').toLowerCase();
-    if (status !== 'paid' && status !== 'approved') {
-        console.log(`Webhook ignorado: status '${payload.status}' não é uma venda aprovada.`);
-        return res.status(200).json({ message: 'Evento recebido, mas não processado.' });
+    if (tictoToken && tictoToken !== process.env.TICTO_SECRET) {
+        return res.status(401).json({ error: 'Token do webhook inválido.' });
     }
 
     const email = payload?.customer?.email;
-    const planId = payload?.order?.product_id;
-    const clientName = payload?.customer?.name || '';
-    const phone = payload?.customer?.phone || {};
-    const clientCell = (phone.ddd || '') + (phone.number || '');
+    const status = (payload.status || '').toLowerCase();
 
-    if (!email || !planId) {
-        return res.status(400).json({ error: 'Dados insuficientes para processar postback.' });
+    if (!email) {
+        return res.status(400).json({ error: 'Email do cliente não encontrado no webhook.' });
     }
 
     try {
-        let user = await userService.findUserByEmail(db, email);
-        const generatedPassword = crypto.randomBytes(8).toString('hex');
+        const user = await userService.findUserByEmail(db, email);
 
-        if (user) {
-            await subscriptionService.updateUserPlan(db, user.id, planId);
-        } else {
-            user = await userService.createUser(db, email, generatedPassword);
-            await subscriptionService.updateUserPlan(db, user.id, planId);
-            await emailService.sendWelcomeEmail(email, generatedPassword);
+        // --- LÓGICA PARA VENDA APROVADA ---
+        if (status === 'paid' || status === 'approved') {
+            const planId = payload?.order?.product_id;
+            if (!planId) return res.status(400).json({ error: 'ID do produto não encontrado para venda aprovada.' });
+
+            if (user) { // Usuário já existe, faz upgrade
+                await subscriptionService.updateUserPlan(db, user.id, planId);
+            } else { // Novo usuário
+                const generatedPassword = require('crypto').randomBytes(8).toString('hex');
+                const newUser = await userService.createUser(db, email, generatedPassword);
+                await subscriptionService.updateUserPlan(db, newUser.id, planId);
+                await emailService.sendWelcomeEmail(email, generatedPassword);
+            }
+            return res.status(200).json({ message: 'Venda processada com sucesso.' });
         }
 
-        await integrationHistoryService.addEntry(db, clienteId, clientName, clientCell, String(planId), status);
+        // --- NOVA LÓGICA PARA CANCELAMENTO/REEMBOLSO ---
+        if (status === 'refunded' || status === 'chargeback' || status === 'cancelled') {
+            if (!user) {
+                return res.status(404).json({ message: 'Usuário não encontrado para processar o cancelamento.' });
+            }
 
-        res.status(200).json({ message: 'Postback processado com sucesso' });
+            const sub = await subscriptionService.getUserSubscription(db, user.id);
+            if (sub) {
+                // Devolve 1 uso ao limite do plano
+                await subscriptionService.decrementUsage(db, sub.id);
+                console.log(`[Reembolso] 1 uso devolvido para o usuário ${user.email} (ID: ${user.id})`);
+
+                // Opcional mas recomendado: Tenta encontrar e marcar o pedido como cancelado
+                const telefoneCliente = (payload?.customer?.phone?.ddd || '') + (payload?.customer?.phone?.number || '');
+                if (telefoneCliente) {
+                    const pedido = await pedidoService.findPedidoByTelefone(db, telefoneCliente, user.id);
+                    if (pedido) {
+                        await pedidoService.updateCamposPedido(db, pedido.id, { statusInterno: 'pedido_cancelado' });
+                    }
+                }
+            }
+            return res.status(200).json({ message: 'Cancelamento processado e limite devolvido.' });
+        }
+
+        // Se o status não for nenhum dos acima, apenas ignoramos
+        return res.status(200).json({ message: 'Evento recebido, mas nenhuma ação necessária.' });
+
     } catch (error) {
         console.error('Erro ao processar postback:', error);
         res.status(500).json({ error: 'Erro interno ao processar postback.' });
