@@ -237,6 +237,38 @@
                         </div>
                         <button class="btn-tertiary" id="btn-regenerate-webhook">Regenerar Link</button>
                     </div>
+                    <div class="integration-card instructions-card">
+                        <h3>Como Configurar a Automação Completa</h3>
+                        <p>Para automatizar todo o processo, você precisa configurar <strong>dois Webhooks (Postbacks)</strong> na sua plataforma de vendas (Hotmart, Kiwify, etc.). Use o seu "Link de Postback" acima para ambos.</p>
+
+                        <div class="instruction-step">
+                            <h4>1. Webhook de Venda Aprovada</h4>
+                            <p>Este aviso cria o contato no WhatsShip assim que a venda é feita. Configure-o para ser enviado no evento de <strong>"Compra Aprovada"</strong> ou <strong>"Boleto Pago"</strong>.</p>
+                            <p>O seu sistema precisa de receber, no mínimo, o e-mail do cliente. Exemplo de dados:</p>
+                            <pre><code>{
+    "event": "purchase_approved",
+    "customer": {
+        "name": "João da Silva",
+        "email": "joao.silva@email.com",
+        "phone": { "ddd": "11", "number": "999998888" }
+    }
+}</code></pre>
+                        </div>
+
+                        <div class="instruction-step">
+                            <h4>2. Webhook de Código de Rastreio</h4>
+                            <p>Este segundo aviso atualiza o contato que já existe com o código de rastreio. Configure-o para o evento de <strong>"Código de Rastreio Cadastrado"</strong> na sua plataforma.</p>
+                            <p>Ele precisa de enviar o e-mail (para sabermos qual contato atualizar) e o novo código. Exemplo de dados:</p>
+                            <pre><code>{
+    "event": "tracking_code_added",
+    "customer": {
+        "email": "joao.silva@email.com"
+    },
+    "tracking_code": "BR123456789BR"
+}</code></pre>
+                        </div>
+                        <p class="instruction-note"><strong>Importante:</strong> Os nomes dos campos (como <code>event</code>, <code>customer</code>, <code>tracking_code</code>) podem variar entre as plataformas. Consulte a documentação da sua plataforma de vendas para saber os nomes exatos dos campos e eventos.</p>
+                    </div>
                     <div class="integration-card">
                         <h3>Chave Secreta de Postback</h3>
                         <p>Insira abaixo a chave secreta utilizada para validar os postbacks de qualquer plataforma de vendas (Hotmart, Kiwify, etc.).</p>
