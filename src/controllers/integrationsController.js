@@ -7,6 +7,86 @@ const crypto = require('crypto');
 const integrationHistoryService = require('../services/integrationHistoryService');
 const pedidoService = require('../services/pedidoService');
 
+// Função auxiliar para identificar a plataforma de origem
+function detectarPlataforma(payload, headers) {
+    if (headers['x-hotmart-signature'] || (payload.event && payload.event.startsWith('purchase.'))) {
+        return 'hotmart';
+    }
+    if (headers['x-kiwify-signature'] || payload.platform === 'kiwify' || payload.checkout_id) {
+        return 'kiwify';
+    }
+    return 'generico';
+}
+
+// Tradutores individuais para cada plataforma
+function traduzirHotmart(payload) {
+    let evento = (payload.event || '').toLowerCase();
+    if (evento === 'purchase.approved') evento = 'purchase_approved';
+    if (evento === 'purchase.tracking.code.changed') evento = 'tracking_code_added';
+
+    const buyer = payload.buyer || payload.customer || {};
+    const telefone =
+        (buyer.phone?.ddd || '') + (buyer.phone?.number || buyer.phone?.local_number || buyer.phone || '');
+    return {
+        event: evento,
+        customer: {
+            name: buyer.name,
+            email: buyer.email,
+            phone: telefone,
+        },
+        product: {
+            name: payload.product?.name || payload.product_name,
+        },
+        tracking_code:
+            payload.tracking_code || payload.purchase?.tracking_code || payload.data?.tracking?.code,
+    };
+}
+
+function traduzirKiwify(payload) {
+    let evento = (payload.event || payload.type || '').toLowerCase();
+    if (evento === 'sale_approved' || evento === 'order.approved') evento = 'purchase_approved';
+    if (evento === 'tracking_code_added' || evento === 'order.tracking_code') evento = 'tracking_code_added';
+
+    const cliente = payload.customer || payload.cliente || {};
+    const telefone =
+        (cliente.phone?.ddd || '') + (cliente.phone?.number || cliente.phone || payload.phone || '');
+    return {
+        event: evento,
+        customer: {
+            name: cliente.name,
+            email: cliente.email || payload.email,
+            phone: telefone,
+        },
+        product: {
+            name: payload.product?.name || payload.product_name || payload.produto,
+        },
+        tracking_code: payload.tracking_code || payload.codigo_rastreio,
+    };
+}
+
+function traduzirGenerico(payload) {
+    let evento = (payload.event || '').toLowerCase();
+    if (!evento && payload.status) evento = payload.status.toLowerCase();
+    return {
+        event: evento,
+        customer: payload.customer || payload.buyer || {},
+        product: payload.product || {},
+        tracking_code: payload.tracking_code || payload.codigoRastreio || payload.codigo_rastreio,
+    };
+}
+
+function traduzirWebhook(payload, headers) {
+    const plataforma = detectarPlataforma(payload, headers);
+    switch (plataforma) {
+        case 'hotmart':
+            return traduzirHotmart(payload);
+        case 'kiwify':
+            return traduzirKiwify(payload);
+        default:
+            return traduzirGenerico(payload);
+    }
+}
+
 /**
  * Função 1: Recebe o postback de uma plataforma externa.
  * Agora suporta dois tipos de eventos:
@@ -19,7 +99,8 @@ exports.receberPostback = async (req, res) => {
     console.log('------------------------');
 
     const db = req.db;
-    const payload = req.body;
+    const payloadOriginal = req.body;
+    const payload = traduzirWebhook(payloadOriginal, req.headers);
 
     const evento = (payload.event || '').toLowerCase();
 
