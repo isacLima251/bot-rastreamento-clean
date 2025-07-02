@@ -87,6 +87,14 @@
                         <div><h1>Contatos <span id="total-contacts-count"></span></h1><p>Aqui você pode gerenciar as informações dos seus contatos</p></div>
                         <button class="btn-primary" id="btn-novo-contato-page">Novo contato</button>
                     </header>
+                    <div class="import-section">
+                        <a href="/modelo_importacao.csv" download class="btn-secondary">Descarregar Modelo</a>
+                        <div>
+                            <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+                            <button class="btn-primary" id="btn-importar-csv">Importar Contatos</button>
+                        </div>
+                        <p class="import-hint">Use o modelo para importar seus contatos. Todos os campos são obrigatórios.</p>
+                    </div>
                     <div class="page-controls">
                         <div class="search-container-full">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -411,7 +419,7 @@
         </div>
     </div>
 
-    <div id="modal-pedido" class="modal-overlay"><div class="modal-content"><h3 id="modal-titulo">Adicionar Novo Pedido</h3><form id="form-pedido"><input type="hidden" id="pedido-id" name="id"><input type="text" id="nome" name="nome" placeholder="Nome do Cliente" required><input type="text" id="telefone" name="telefone" placeholder="Telefone (com DDD)" required><input type="text" id="produto" name="produto" placeholder="Nome do Produto"><input type="text" id="codigoRastreio" name="codigoRastreio" placeholder="Código de Rastreio (Opcional)"><div class="modal-acoes"><button type="button" id="btn-modal-cancelar" class="btn-cancelar">Cancelar</button><button type="submit" id="btn-modal-salvar" class="btn-salvar">Salvar</button></div></form></div></div>
+    <div id="modal-pedido" class="modal-overlay"><div class="modal-content"><h3 id="modal-titulo">Adicionar Novo Pedido</h3><form id="form-pedido"><input type="hidden" id="pedido-id" name="id"><input type="text" id="nome" name="nome" placeholder="Nome do Cliente" required><input type="text" id="telefone" name="telefone" placeholder="Telefone (com DDD)" required><input type="text" id="produto" name="produto" placeholder="Nome do Produto"><input type="text" id="codigoRastreio" name="codigoRastreio" placeholder="Código de Rastreio" required><div class="modal-acoes"><button type="button" id="btn-modal-cancelar" class="btn-cancelar">Cancelar</button><button type="submit" id="btn-modal-salvar" class="btn-salvar">Salvar</button></div></form></div></div>
     <div id="notificacao" class="toast"><span id="notificacao-icon"></span><p id="notificacao-texto"></p><button id="notificacao-close-btn" aria-label="Fechar">&times;</button></div>
     <div id="modal-confirmacao" class="modal-overlay">
         <div class="modal-content">

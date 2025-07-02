@@ -72,9 +72,9 @@ function normalizeTelefone(telefoneRaw) {
 
 // CRIA um novo pedido
 exports.criarPedido = [
-    body('nome').trim().notEmpty().escape().withMessage('O nome é obrigatório.'),
+    body('nome').trim().notEmpty().withMessage('O nome é obrigatório.'),
     body('telefone').isMobilePhone('pt-BR').withMessage('Número de telefone inválido.'),
-    body('codigoRastreio').optional({ checkFalsy: true }).isAlphanumeric().withMessage('Código de rastreio inválido.'),
+    body('codigoRastreio').trim().notEmpty().withMessage('O código de rastreio é obrigatório.'),
 
     async (req, res) => {
         const errors = validationResult(req);
@@ -86,43 +86,43 @@ exports.criarPedido = [
         const client = req.venomClient;
         const clienteId = req.user.id;
         const { nome, telefone, produto, codigoRastreio } = req.body;
-        const telefoneNormalizado = normalizeTelefone(telefone);
-
-        if (!telefoneNormalizado) {
-            return res.status(400).json({ error: "Nome e um número de celular válido são obrigatórios." });
-        }
 
         try {
+            const sub = await subscriptionService.getUserSubscription(req.db, clienteId);
+            if (sub.monthly_limit !== -1 && sub.usage >= sub.monthly_limit) {
+                return res.status(403).json({ error: 'Limite do plano excedido. Faça um upgrade para adicionar mais pedidos.' });
+            }
+
+            const telefoneNormalizado = normalizeTelefone(telefone);
+            if (!telefoneNormalizado) {
+                return res.status(400).json({ error: "O número de celular fornecido é inválido." });
+            }
+
             const pedidoExistente = await pedidoService.findPedidoByTelefone(db, telefoneNormalizado, clienteId);
-        if (pedidoExistente) {
-            return res.status(409).json({ error: `Este número (${telefoneNormalizado}) já está cadastrado.` });
+            if (pedidoExistente) {
+                return res.status(409).json({ error: `Este número (${telefoneNormalizado}) já está cadastrado.` });
+            }
+
+            const pedidoCriado = await pedidoService.criarPedido(db, { ...req.body, telefone: telefoneNormalizado }, client, clienteId);
+            pedidoCriado.cliente_id = clienteId;
+
+            await subscriptionService.incrementUsage(db, sub.id);
+
+            await envioController.enviarMensagemBoasVindas(db, pedidoCriado, req.broadcast);
+            req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });
+            await logService.addLog(db, clienteId, 'pedido_criado', JSON.stringify({ pedidoId: pedidoCriado.id }));
+
+            res.status(201).json({
+                message: "Pedido criado com sucesso!",
+                data: pedidoCriado
+            });
+
+        } catch (error) {
+            console.error("Erro ao criar pedido:", error.message);
+            res.status(500).json({ error: "Erro interno no servidor ao criar pedido." });
         }
-        
-        const pedidoCriado = await pedidoService.criarPedido(db, { ...req.body, telefone: telefoneNormalizado }, client, clienteId);
-        pedidoCriado.cliente_id = clienteId;
-
-        if (codigoRastreio) {
-            await subscriptionService.incrementUsage(db, req.subscription.id);
-        }
-
-        // Envia boas-vindas imediatamente
-        await envioController.enviarMensagemBoasVindas(db, pedidoCriado, req.broadcast);
-
-        // Notifica o frontend
-        req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });
-
-        await logService.addLog(db, clienteId, 'pedido_criado', JSON.stringify({ pedidoId: pedidoCriado.id }));
-
-
-        res.status(201).json({
-            message: "Pedido criado com sucesso!",
-            data: pedidoCriado
-        });
-    } catch (error) {
-        console.error("Erro ao criar pedido:", error.message);
-        res.status(500).json({ error: "Erro interno no servidor ao criar pedido." });
     }
-}];
+];
 
 // ATUALIZA um pedido
 exports.atualizarPedido = async (req, res) => {
@@ -265,6 +265,65 @@ exports.marcarComoLido = async (req, res) => {
         res.status(200).json({ message: "Mensagens marcadas como lidas." });
     } catch (error) {
         res.status(500).json({ error: "Falha ao marcar como lido." });
+    }
+};
+
+// Importação em massa de pedidos
+exports.importarPedidos = async (req, res) => {
+    const db = req.db;
+    const client = req.venomClient;
+    const clienteId = req.user.id;
+    const pedidosParaImportar = req.body.pedidos;
+
+    if (!pedidosParaImportar || !Array.isArray(pedidosParaImportar) || pedidosParaImportar.length === 0) {
+        return res.status(400).json({ error: 'Nenhum dado válido para importar.' });
+    }
+
+    try {
+        const sub = await subscriptionService.getUserSubscription(req.db, clienteId);
+        const novosRastreios = pedidosParaImportar.length;
+
+        if (sub.monthly_limit !== -1 && (sub.usage + novosRastreios) > sub.monthly_limit) {
+            return res.status(403).json({
+                error: `Limite do plano excedido. Você tem ${sub.usage}/${sub.monthly_limit} usos. A importação de ${novosRastreios} novos pedidos ultrapassaria o seu limite.`
+            });
+        }
+
+        let sucessos = 0;
+        let falhas = 0;
+        const erros = [];
+
+        for (const pedidoData of pedidosParaImportar) {
+            const telefoneNormalizado = normalizeTelefone(pedidoData.telefone);
+
+            if (!telefoneNormalizado || !pedidoData.nome || !pedidoData.codigoRastreio) {
+                falhas++;
+                erros.push(`Linha com nome '${pedidoData.nome || 'N/A'}' ignorada: Nome, telefone e código de rastreio são obrigatórios.`);
+                continue;
+            }
+
+            const pedidoExistente = await pedidoService.findPedidoByTelefone(db, telefoneNormalizado, clienteId);
+            if (pedidoExistente) {
+                falhas++;
+                erros.push(`Contato com telefone ${telefoneNormalizado} já existe.`);
+                continue;
+            }
+
+            const pedidoCriado = await pedidoService.criarPedido(db, { ...pedidoData, telefone: telefoneNormalizado }, client, clienteId);
+            await subscriptionService.incrementUsage(db, sub.id);
+            sucessos++;
+        }
+
+        res.status(200).json({
+            message: 'Importação concluída.',
+            sucessos,
+            falhas,
+            erros
+        });
+
+    } catch (error) {
+        console.error("Erro na importação em massa:", error);
+        res.status(500).json({ error: "Erro interno no servidor durante a importação." });
     }
 };
 

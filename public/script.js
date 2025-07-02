@@ -85,9 +85,11 @@ const authFetch = async (url, options = {}) => {
     const toggleCreateContactEl = document.getElementById('toggle-create-contact');
     const toggleCreateContactLabelEl = document.getElementById('toggle-create-contact-label');
     const plansListEl = document.getElementById('plans-list');
-    const modalUpgradeEl = document.getElementById('modal-upgrade');
-    const btnUpgradePlansEl = document.getElementById('btn-upgrade-plans');
+const modalUpgradeEl = document.getElementById('modal-upgrade');
+const btnUpgradePlansEl = document.getElementById('btn-upgrade-plans');
 const planStatusEl = document.getElementById('plan-status');
+const btnImportarCsv = document.getElementById('btn-importar-csv');
+const csvFileInput = document.getElementById('csv-file-input');
     if (loggedUserEl) loggedUserEl.textContent = userData.email || 'Usuário';
 
     const variableTooltips = {
@@ -1220,6 +1222,58 @@ const planStatusEl = document.getElementById('plan-status');
         showView('plans-view');
     });
     if(modalUpgradeEl) modalUpgradeEl.addEventListener('click', (e) => { if(e.target === modalUpgradeEl) modalUpgradeEl.classList.remove('active'); });
+
+    if (btnImportarCsv) {
+        btnImportarCsv.addEventListener('click', () => {
+            if (csvFileInput) csvFileInput.click();
+        });
+    }
+
+    if (csvFileInput) {
+        csvFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const text = e.target.result;
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+                if (lines.length < 2) {
+                    showNotification('Arquivo CSV vazio ou inválido.', 'error');
+                    return;
+                }
+                const headers = lines[0].split(',').map(h => h.trim());
+                const pedidos = lines.slice(1).map(line => {
+                    const data = line.split(',');
+                    const pedido = {};
+                    headers.forEach((header, index) => {
+                        pedido[header] = data[index] ? data[index].trim() : '';
+                    });
+                    return pedido;
+                });
+
+                try {
+                    showNotification('A processar importação...', 'success');
+                    const response = await authFetch('/api/pedidos/importar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ pedidos })
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error);
+
+                    showNotification(`${result.sucessos} contatos importados! ${result.falhas} falharam.`, 'success');
+                    if (result.erros && result.erros.length > 0) {
+                        console.warn('Erros na importação:', result.erros);
+                    }
+                    loadContacts();
+                } catch (err) {
+                    showNotification(`Erro na importação: ${err.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
     
     const settingsView = document.getElementById('settings-view');
     if(settingsView) settingsView.addEventListener('click', (e) => {
