@@ -142,6 +142,21 @@ Ao receber um webhook válido, o servidor criará a conta do usuário (caso aind
 
 ---
 
+## 📡 Webhooks de Venda e Rastreio
+
+Para receber códigos de rastreio automaticamente configure **dois webhooks** na plataforma de vendas (Hotmart, Kiwify, Braip, etc.) apontando para o endpoint abaixo:
+
+```
+POST https://seu-servidor/api/postback?key=SUA_API_KEY
+```
+
+1. **Venda Aprovada** (`purchase_approved` ou equivalente) – envia nome, telefone e produto do cliente. O pedido é criado sem código de rastreio.
+2. **Código de Rastreio Adicionado** (`tracking_code_added`) – envia o telefone do cliente e o campo `tracking_code`. O pedido existente é atualizado com o código e o uso do plano é incrementado.
+
+Consulte a documentação da sua plataforma para confirmar os nomes dos eventos e campos enviados.
+
+---
+
 ## ⚖️ Licença
 
 MIT — Livre para usar e modificar.
