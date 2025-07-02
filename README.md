@@ -153,7 +153,7 @@ POST https://seu-servidor/api/postback?key=SUA_API_KEY
 1. **Venda Aprovada** (`purchase_approved` ou equivalente) – envia nome, telefone e produto do cliente. O pedido é criado sem código de rastreio.
 2. **Código de Rastreio Adicionado** (`tracking_code_added`) – envia o telefone do cliente e o campo `tracking_code`. O pedido existente é atualizado com o código e o uso do plano é incrementado.
 
-Consulte a documentação da sua plataforma para confirmar os nomes dos eventos e campos enviados.
+Nosso servidor já reconhece automaticamente webhooks da Hotmart e da Kiwify, convertendo os campos para esse formato padronizado. Em outras plataformas, mantenha os nomes o mais próximo possível do exemplo acima.
 
 ---
 
