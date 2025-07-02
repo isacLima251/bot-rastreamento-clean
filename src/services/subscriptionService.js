@@ -83,6 +83,17 @@ async function calculateUsage(db, sub) {
     });
 }
 
+// Adiciona a função para devolver 1 uso ao limite do plano em caso de reembolso
+function decrementUsage(db, subscriptionId) {
+    return new Promise((resolve, reject) => {
+        // Garante que o uso nunca fique abaixo de zero
+        db.run('UPDATE subscriptions SET usage = MAX(0, usage - 1) WHERE id = ?', [subscriptionId], function(err) {
+            if (err) return reject(err);
+            resolve({ changes: this.changes });
+        });
+    });
+}
+
 module.exports = {
     getUserSubscription,
     incrementUsage,
@@ -91,5 +102,6 @@ module.exports = {
     updateUserPlan,
     updateSubscriptionStatus,
     calculateUsage,
+    decrementUsage,
 };
 
