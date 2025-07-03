@@ -63,9 +63,9 @@ exports.receberPostback = async (req, res) => {
                     return res.status(400).json({ error: "Dados do cliente insuficientes para criar o pedido." });
                 }
 
-                const pedidoExistente = await pedidoService.findPedidoByEmail(req.db, dados.clientEmail, nossoUsuarioId);
+                const pedidoExistente = await pedidoService.findPedidoByTelefone(req.db, dados.clientPhone, nossoUsuarioId);
                 if (pedidoExistente) {
-                    console.log(`[Webhook] Pedido para o email ${dados.clientEmail} já existe. Ignorando criação.`);
+                    console.log(`[Webhook] Contato com telefone ${dados.clientPhone} já existe para este usuário. Ignorando criação.`);
                     break;
                 }
 
