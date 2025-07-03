@@ -70,6 +70,7 @@ exports.receberPostback = async (req, res) => {
 
                     await pedidoService.updateCamposPedido(req.db, pedido.id, { codigoRastreio: dados.trackingCode });
                     await subscriptionService.incrementUsage(req.db, sub.id);
+                    req.broadcast({ type: 'pedido_atualizado', pedidoId: pedido.id });
 
                     console.log(`Código de rastreio ${dados.trackingCode} adicionado ao pedido ${pedido.id}.`);
                 } else {
