@@ -151,7 +151,12 @@ exports.listarIntegracoes = async (req, res) => {
             if (err) {
                 return res.status(500).json({ error: "Falha ao buscar integrações." });
             }
-            res.status(200).json({ data: rows });
+            const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+            const data = rows.map(row => ({
+                ...row,
+                webhook_url: `${baseUrl}/api/postback/${row.unique_path}`
+            }));
+            res.status(200).json({ data });
         });
     } catch (error) {
         res.status(500).json({ error: "Erro interno no servidor." });
