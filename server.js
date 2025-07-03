@@ -196,7 +196,8 @@ const startApp = async () => {
                 directives: {
                     ...helmet.contentSecurityPolicy.getDefaultDirectives(),
                     "script-src": ["'self'", "https://cdn.jsdelivr.net"],
-                    "img-src": ["'self'", "data:", "blob:", "https://i.imgur.com"],
+                    // LINHA ATUALIZADA ABAIXO
+                    "img-src": ["'self'", "data:", "blob:", "https://i.imgur.com", "https://static.whatsapp.net", "https://pps.whatsapp.net"],
                     "connect-src": ["'self'", "wss:", "ws:"]
                 },
             },
