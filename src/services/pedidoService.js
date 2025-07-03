@@ -278,7 +278,7 @@ const criarPedido = (db, dadosPedido, client, clienteId = null) => {
         let fotoUrl = null;
         if (client) {
             try {
-                fotoUrl = await whatsappService.getProfilePicUrl(telefoneValidado);
+                fotoUrl = await whatsappService.getProfilePicUrl(client, telefoneValidado);
             } catch (e) {
                 console.warn(`Não foi possível obter a foto para o novo contato ${telefoneValidado}.`);
                 fotoUrl = null;

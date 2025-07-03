@@ -108,7 +108,7 @@ exports.criarPedido = [
 
             await subscriptionService.incrementUsage(db, sub.id);
 
-            await envioController.enviarMensagemBoasVindas(db, pedidoCriado, req.broadcast);
+            await envioController.enviarMensagemBoasVindas(db, pedidoCriado, req.broadcast, client);
             req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });
             await logService.addLog(db, clienteId, 'pedido_criado', JSON.stringify({ pedidoId: pedidoCriado.id }));
 
@@ -205,7 +205,7 @@ exports.enviarMensagemManual = async (req, res) => {
         const pedido = await pedidoService.getPedidoById(db, id, clienteId);
         if (!pedido) return res.status(404).json({ error: "Pedido não encontrado." });
 
-        await whatsappService.enviarMensagem(pedido.telefone, mensagem);
+        await whatsappService.enviarMensagem(req.venomClient, pedido.telefone, mensagem);
         await pedidoService.addMensagemHistorico(db, id, mensagem, 'manual', 'bot', clienteId);
 
         await logService.addLog(db, clienteId, 'mensagem_manual', JSON.stringify({ pedidoId: id }));
@@ -238,7 +238,7 @@ exports.atualizarFotoDoPedido = async (req, res) => {
             return res.status(404).json({ error: "Pedido não encontrado." });
         }
 
-        const fotoUrl = await whatsappService.getProfilePicUrl(pedido.telefone);
+        const fotoUrl = await whatsappService.getProfilePicUrl(client, pedido.telefone);
         
         if (fotoUrl) {
             await pedidoService.updateCamposPedido(db, id, { fotoPerfilUrl: fotoUrl }, clienteId);

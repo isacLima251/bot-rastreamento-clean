@@ -1,6 +1,4 @@
 // src/services/whatsappService.js
-let client = null;
-
 // --- FUNÇÕES DE AJUDA ---
 
 /**
@@ -24,7 +22,7 @@ function normalizeTelefone(telefoneRaw) {
  * @param {string} telefone - número sem máscara.
  * @returns {Promise<string|null>} URL da foto, ou null.
  */
-async function scrapeProfilePicViaPuppeteer(telefone) {
+async function scrapeProfilePicViaPuppeteer(client, telefone) {
   const tel = normalizeTelefone(telefone);
   const page = client.page;
   
@@ -79,11 +77,11 @@ async function scrapeProfilePicViaPuppeteer(telefone) {
 
 // --- FUNÇÕES PRINCIPAIS DO SERVIÇO ---
 
-function iniciarWhatsApp(venomClient) {
-    client = venomClient;
+function iniciarWhatsApp() {
+    // Mantido para compatibilidade futura
 }
 
-async function enviarMensagem(telefone, mensagem) {
+async function enviarMensagem(client, telefone, mensagem) {
     if (!client) throw new Error('Cliente WhatsApp não iniciado.');
     const numeroNormalizado = normalizeTelefone(telefone);
     const numeroFormatado = `${numeroNormalizado}@c.us`;
@@ -95,7 +93,7 @@ async function enviarMensagem(telefone, mensagem) {
  * @param {string} telefone O número do contato.
  * @returns {Promise<string|null>} A URL da foto ou nulo se não existir.
  */
-async function getProfilePicUrl(telefone) {
+async function getProfilePicUrl(client, telefone) {
     if (!client) {
         console.warn("Cliente Venom não está pronto para buscar fotos.");
         return null;
@@ -114,7 +112,7 @@ async function getProfilePicUrl(telefone) {
 
     // --- ESTRATÉGIA 2: FALLBACK VIA SCRAPING ROBUSTO COM PUPPETEER ---
     try {
-        const viaScrape = await scrapeProfilePicViaPuppeteer(telefone);
+        const viaScrape = await scrapeProfilePicViaPuppeteer(client, telefone);
         if (viaScrape) {
         }
         return viaScrape;

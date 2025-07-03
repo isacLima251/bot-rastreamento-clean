@@ -52,7 +52,7 @@ function personalizarMensagem(mensagem, pedido) {
         .replace(/{{link_rastreio}}/g, linkRastreio);
 }
 
-async function enviarMensagensComRegras(db, broadcast) {
+async function enviarMensagensComRegras(db, broadcast, sessions) {
     try {
         const automacoes = await automationService.getAutomations(db);
         const pedidos = await pedidoService.getAllPedidos(db);
@@ -93,7 +93,9 @@ async function enviarMensagensComRegras(db, broadcast) {
             }
 
             if (mensagemParaEnviar && novoStatusDaMensagem) {
-                await whatsappService.enviarMensagem(telefone, mensagemParaEnviar);
+                const client = sessions.get(pedido.cliente_id);
+                if (!client) continue;
+                await whatsappService.enviarMensagem(client, telefone, mensagemParaEnviar);
                 await pedidoService.addMensagemHistorico(db, id, mensagemParaEnviar, novoStatusDaMensagem, 'bot', pedido.cliente_id);
                 await pedidoService.updateCamposPedido(db, id, { mensagemUltimoStatus: novoStatusDaMensagem });
 
@@ -106,13 +108,15 @@ async function enviarMensagensComRegras(db, broadcast) {
     }
 }
 
-async function enviarMensagemBoasVindas(db, pedido, broadcast) {
+async function enviarMensagemBoasVindas(db, pedido, broadcast, client) {
     const automacoes = await automationService.getAutomations(db, pedido.cliente_id);
     const config = automacoes.boas_vindas;
     if (config && config.ativo) {
         const mensagemBase = config.mensagem || MENSAGENS_PADRAO.boas_vindas;
         const msg = personalizarMensagem(mensagemBase, pedido);
-        await whatsappService.enviarMensagem(pedido.telefone, msg);
+        if (client) {
+            await whatsappService.enviarMensagem(client, pedido.telefone, msg);
+        }
         await pedidoService.addMensagemHistorico(db, pedido.id, msg, 'boas_vindas', 'bot', pedido.cliente_id);
         await pedidoService.updateCamposPedido(db, pedido.id, { mensagemUltimoStatus: 'boas_vindas' }, pedido.cliente_id);
         await logService.addLog(db, pedido.cliente_id || 1, 'mensagem_automatica', JSON.stringify({ pedidoId: pedido.id, tipo: 'boas_vindas' }));
