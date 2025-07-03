@@ -1444,14 +1444,14 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
 
     // ---- Integrações ----
     const supportedPlatforms = [
-        { id: 'kiwify', name: 'Kiwify', logo: 'https://via.placeholder.com/80?text=Kiwify' },
-        { id: 'hotmart', name: 'Hotmart', logo: 'https://via.placeholder.com/80?text=Hotmart' },
-        { id: 'monetizze', name: 'Monetizze', logo: 'https://via.placeholder.com/80?text=Monetizze' },
-        { id: 'braip', name: 'Braip', logo: 'https://via.placeholder.com/80?text=Braip' },
-        { id: 'perfectpay', name: 'Perfect Pay', logo: 'https://via.placeholder.com/80?text=PerfectPay' },
-        { id: 'logzz', name: 'Logzz', logo: 'https://via.placeholder.com/80?text=Logzz' },
-        { id: 'payt', name: 'Payt', logo: 'https://via.placeholder.com/80?text=Payt' },
-        { id: 'keedpay', name: 'Keedpay', logo: 'https://via.placeholder.com/80?text=Keedpay' },
+        { id: 'kiwify', name: 'Kiwify', logo: '/logos/kiwify.jpg' },
+        { id: 'hotmart', name: 'Hotmart', logo: '/logos/hotmart.png' },
+        { id: 'monetizze', name: 'Monetizze', logo: '/logos/monetizze.png' },
+        { id: 'braip', name: 'Braip', logo: '/logos/braip.png' },
+        { id: 'perfectpay', name: 'Perfect Pay', logo: '/logos/perfect pay.png' },
+        { id: 'logzz', name: 'Logzz', logo: '/logos/logozz.png' },
+        { id: 'payt', name: 'Payt', logo: '/logos/payt.png' },
+        { id: 'keedpay', name: 'Keedpay', logo: '/logos/keendpay.png' }
     ];
 
     // Novas variáveis para a tela de setup
