@@ -92,7 +92,15 @@ exports.criarIntegracao = async (req, res) => {
         const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
         const webhookUrl = `${baseUrl}/api/postback/${uniquePath}`;
 
-        res.status(201).json({ id: result.id, unique_path: uniquePath, webhook_url: webhookUrl });
+        const integrationData = {
+            id: result.id,
+            name,
+            platform,
+            unique_path: uniquePath,
+            webhook_url: webhookUrl
+        };
+
+        res.status(201).json(integrationData);
     } catch (err) {
         console.error('Erro ao criar integração', err);
         res.status(500).json({ error: 'Falha ao criar integração' });
