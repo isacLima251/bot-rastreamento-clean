@@ -19,6 +19,7 @@ const initDb = () => {
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         cliente_id INTEGER,
                         nome TEXT,
+                        email TEXT,
                         telefone TEXT NOT NULL UNIQUE,
                         produto TEXT,
                         codigoRastreio TEXT,
@@ -301,6 +302,11 @@ const initDb = () => {
                     db.run("ALTER TABLE automacoes ADD COLUMN cliente_id INTEGER", [], (e) => {
                         if (e && !e.message.includes('duplicate')) return reject(e);
                         db.run("UPDATE automacoes SET cliente_id = 1 WHERE cliente_id IS NULL");
+                    });
+
+                    // Nova coluna de e-mail para pedidos
+                    db.run("ALTER TABLE pedidos ADD COLUMN email TEXT", [], (e) => {
+                        if (e && !e.message.includes('duplicate column')) return reject(e);
                     });
 
                     // Novas colunas para detalhes de rastreio
