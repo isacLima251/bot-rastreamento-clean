@@ -101,13 +101,37 @@ exports.criarIntegracao = async (req, res) => {
 
 exports.atualizarIntegracao = async (req, res) => {
     const { id } = req.params;
+    const clienteId = req.user.id;
     const { name, secret_key } = req.body;
     try {
-        await integrationService.updateIntegration(req.db, id, { name, secret_key });
-        res.status(200).json({ message: 'Integração atualizada' });
+        const result = await integrationService.updateIntegration(
+            req.db,
+            id,
+            { name, secret_key },
+            clienteId
+        );
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'Integração não encontrada.' });
+        }
+        res.status(200).json({ message: 'Integração atualizada com sucesso.' });
     } catch (err) {
         console.error('Erro ao atualizar integração', err);
         res.status(500).json({ error: 'Falha ao atualizar integração' });
+    }
+};
+
+exports.deletarIntegracao = async (req, res) => {
+    const { id } = req.params;
+    const clienteId = req.user.id;
+    try {
+        const result = await integrationService.deleteIntegration(req.db, id, clienteId);
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'Integração não encontrada.' });
+        }
+        res.status(200).json({ message: 'Integração excluída com sucesso.' });
+    } catch (err) {
+        console.error('Erro ao excluir integração', err);
+        res.status(500).json({ error: 'Falha ao excluir integração' });
     }
 };
 

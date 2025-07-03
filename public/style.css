@@ -120,6 +120,11 @@ body {
 .btn-salvar { background-color: var(--primary-color); }
 .btn-icon { background-color: transparent; border: none; color: var(--text-secondary); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .btn-icon:hover { background-color: var(--hover-bg); }
+/* Destaque para o botão de excluir integração */
+.btn-delete-integration:hover {
+    color: var(--error-color);
+    background-color: #fee2e2;
+}
 #btn-adicionar-novo { background-color: var(--primary-color); color: white; font-size: 1.8rem; line-height: 1; }
 #btn-adicionar-novo:hover { background-color: #2563eb; }
 .btn-editar-main, .btn-atualizar-foto { background-color: var(--primary-color); border: none; color: #fff; padding: 10px 16px; border-radius: 6px; cursor: pointer; margin-left: 10px; display: flex; align-items: center; gap: 6px; }
