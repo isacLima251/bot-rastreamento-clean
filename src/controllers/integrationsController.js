@@ -52,6 +52,22 @@ exports.receberPostback = async (req, res) => {
         const dados = mapper(payload);
 
         switch (dados.eventType) {
+            case 'VENDA_APROVADA': {
+                const pedidoExistente = await pedidoService.findPedidoByEmail(req.db, dados.clientEmail, nossoUsuario.id);
+                if (!pedidoExistente) {
+                    const pedidoCriado = await pedidoService.criarPedido(req.db, {
+                        nome: dados.clientName,
+                        telefone: dados.clientPhone,
+                        email: dados.clientEmail,
+                        produto: dados.productName,
+                    }, req.venomClient, nossoUsuario.id);
+
+                    req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });
+
+                    console.log(`[Webhook] Contato para ${dados.clientName} criado com sucesso.`);
+                }
+                break;
+            }
             case 'RASTREIO_ADICIONADO':
                 const pedido = await pedidoService.findPedidoByEmail(req.db, dados.clientEmail, nossoUsuario.id);
                 // etc...
