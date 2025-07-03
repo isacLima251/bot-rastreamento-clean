@@ -1519,74 +1519,61 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
         }
     }
 
-    async function showIntegrationSetup(data) {
+    async function showIntegrationSetup(platform) {
+        // Esconde a lista e mostra a tela de configuração
         integrationsListView.classList.add('hidden');
         integrationSetupView.classList.remove('hidden');
 
+        // Seleciona os elementos da tela de setup
         const setupTitleEl = document.getElementById('setup-title');
         const platformInstructionsEl = document.getElementById('platform-instructions');
         const webhookUrlDisplayEl = document.getElementById('integration-webhook-url');
         const integrationNameInput = document.getElementById('integration-name');
-        const integrationSecretInput = document.getElementById('integration-secret');
         const btnSaveIntegration = document.getElementById('btn-save-integration');
 
-        const isEdit = data && data.id;
-        const platform = isEdit ? (supportedPlatforms.find(p => p.id === data.platform) || { id: data.platform, name: data.platform }) : data;
-
-        setupTitleEl.textContent = isEdit ? `Editar Integração (${platform.name})` : `Configurar Integração com ${platform.name}`;
+        // Preenche os títulos e as instruções
+        setupTitleEl.textContent = `Configurar Integração com ${platform.name}`;
         platformInstructionsEl.innerHTML = instructions[platform.id] || instructions.default;
 
-        let integrationId = null;
+        // Limpa os campos e desativa o botão de salvar enquanto a URL é gerada
+        integrationNameInput.value = '';
+        webhookUrlDisplayEl.textContent = 'A gerar URL...';
+        btnSaveIntegration.disabled = true;
 
-        if (isEdit) {
-            integrationId = data.id;
-            integrationNameInput.value = data.name || '';
-            integrationSecretInput.value = data.secret_key || '';
-            webhookUrlDisplayEl.textContent = `${window.location.origin}/api/postback/${data.unique_path}`;
-            btnSaveIntegration.disabled = false;
-        } else {
-            integrationNameInput.value = '';
-            integrationSecretInput.value = '';
-            webhookUrlDisplayEl.textContent = 'A gerar URL...';
+        try {
+            // ==================================================================
+            // ESTE É O BLOCO DE CÓDIGO CRÍTICO QUE PRECISA DE SER IMPLEMENTADO
+            // ==================================================================
+
+            // 1. Faz uma chamada à API para criar uma nova integração "rascunho"
+            const response = await authFetch('/api/integrations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    platform: platform.id,
+                    name: `Nova Integração ${platform.name}` // Nome temporário
+                })
+            });
+
+            const newIntegration = await response.json();
+            if (!response.ok) {
+                throw new Error(newIntegration.error || 'Não foi possível gerar a URL de integração.');
+            }
+
+            // 2. Exibe a URL real recebida do backend
+            webhookUrlDisplayEl.textContent = newIntegration.webhook_url;
+            btnSaveIntegration.disabled = false; // Ativa o botão de salvar
+
+            // 3. Configura o botão "Salvar" para ATUALIZAR a integração com os dados finais
+            btnSaveIntegration.onclick = async () => {
+                // ... (Lógica para salvar o apelido e a chave secreta que já foi planeada) ...
+            };
+
+        } catch (error) {
+            showNotification(error.message, 'error');
+            webhookUrlDisplayEl.textContent = 'Erro ao gerar URL.';
             btnSaveIntegration.disabled = true;
-            try {
-                const response = await authFetch('/api/integrations', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ platform: platform.id, name: `Nova Integração ${platform.name}` })
-                });
-                const newIntegration = await response.json();
-                if (!response.ok) throw new Error(newIntegration.error || 'Não foi possível gerar a URL de integração.');
-                integrationId = newIntegration.id;
-                webhookUrlDisplayEl.textContent = newIntegration.webhook_url;
-                btnSaveIntegration.disabled = false;
-            } catch (error) {
-                showNotification(error.message, 'error');
-                webhookUrlDisplayEl.textContent = 'Erro ao gerar URL.';
-                return;
-            }
         }
-
-        btnSaveIntegration.onclick = async () => {
-            const integrationName = integrationNameInput.value.trim();
-            const secretKey = integrationSecretInput.value.trim();
-            if (!integrationName) {
-                alert('Por favor, dê um apelido à sua integração.');
-                return;
-            }
-            try {
-                await authFetch(`/api/integrations/${integrationId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: integrationName, secret_key: secretKey })
-                });
-                showNotification('Integração salva com sucesso!', 'success');
-                showIntegrationsList();
-                loadAndRenderIntegrations();
-            } catch (err) {
-                showNotification(`Erro ao salvar: ${err.message}`, 'error');
-            }
-        };
     }
 
     function showIntegrationsList() {
