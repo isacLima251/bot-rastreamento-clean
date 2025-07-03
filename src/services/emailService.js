@@ -59,7 +59,6 @@ async function sendWelcomeEmail(to, password) {
             subject: 'Bem-vindo(a) ao WhatsShip! Suas credenciais de acesso.',
             html: html
         });
-        console.log(`E-mail de boas-vindas enviado com sucesso para ${to}`);
     } catch (err) {
         console.error('Erro ao enviar email de boas-vindas:', err);
     }

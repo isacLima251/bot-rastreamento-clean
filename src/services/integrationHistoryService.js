@@ -1,12 +1,3 @@
-function addEntry(db, userId, clientName, clientCell, productName, status) {
-    return new Promise((resolve, reject) => {
-        const sql = `INSERT INTO integration_history (user_id, client_name, client_cell, product_name, status) VALUES (?, ?, ?, ?, ?)`;
-        db.run(sql, [userId, clientName, clientCell, productName, status], function(err) {
-            if (err) return reject(err);
-            resolve({ id: this.lastID });
-        });
-    });
-}
 
 function getPaginated(db, userId, limit, offset) {
     return new Promise((resolve, reject) => {
@@ -27,4 +18,4 @@ function countAll(db, userId) {
     });
 }
 
-module.exports = { addEntry, getPaginated, countAll };
+module.exports = { getPaginated, countAll };

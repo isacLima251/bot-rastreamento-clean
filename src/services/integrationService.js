@@ -17,13 +17,4 @@ function findIntegrationByPath(db, uniquePath) {
     });
 }
 
-function listIntegrationsByUser(db, userId) {
-    return new Promise((resolve, reject) => {
-        db.all('SELECT * FROM integrations WHERE user_id = ?', [userId], (err, rows) => {
-            if (err) return reject(err);
-            resolve(rows);
-        });
-    });
-}
-
-module.exports = { createIntegration, findIntegrationByPath, listIntegrationsByUser };
+module.exports = { createIntegration, findIntegrationByPath };

@@ -53,7 +53,6 @@ function personalizarMensagem(mensagem, pedido) {
 }
 
 async function enviarMensagensComRegras(db, broadcast) {
-    console.log('🤖 Verificando mensagens automáticas para enviar...');
     try {
         const automacoes = await automationService.getAutomations(db);
         const pedidos = await pedidoService.getAllPedidos(db);
@@ -97,7 +96,6 @@ async function enviarMensagensComRegras(db, broadcast) {
                 await whatsappService.enviarMensagem(telefone, mensagemParaEnviar);
                 await pedidoService.addMensagemHistorico(db, id, mensagemParaEnviar, novoStatusDaMensagem, 'bot', pedido.cliente_id);
                 await pedidoService.updateCamposPedido(db, id, { mensagemUltimoStatus: novoStatusDaMensagem });
-                console.log(`✅ Mensagem automática de '${novoStatusDaMensagem}' enviada para ${nome}.`);
 
                 await logService.addLog(db, pedido.cliente_id || 1, 'mensagem_automatica', JSON.stringify({ pedidoId: id, tipo: novoStatusDaMensagem }));
                 if (broadcast) broadcast({ type: 'nova_mensagem', pedidoId: id });

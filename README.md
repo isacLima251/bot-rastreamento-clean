@@ -68,13 +68,7 @@ O acompanhamento dos pedidos é feito de forma automática enquanto o WhatsApp e
 Após iniciar, abra [http://localhost:3000](http://localhost:3000/) no navegador para acessar a página de apresentação.
 Nela há um botão que direciona para o fluxo de login e cadastro.
 
-### 2. Opcional: iniciar apenas o bot do WhatsApp
-
-```bash
-node index.js
-```
-
-### 3. Criar ou promover administradores
+### 2. Criar ou promover administradores
 
 Para gerenciar contas de administrador via terminal execute o script `criar-admin.js`:
 
@@ -91,7 +85,6 @@ Ele irá perguntar o e-mail e, se o usuário não existir, será criado como adm
 ```
 meu-bot-rastreamento/
 ├── server.js               # Servidor Express com API e WebSocket
-├── index.js                # Script opcional para iniciar apenas o bot
 ├── public/                 # Páginas HTML e scripts de painel
 └── src/
     ├── controllers/        # Lógica das rotas da API
