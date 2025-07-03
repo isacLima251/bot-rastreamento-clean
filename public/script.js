@@ -195,8 +195,10 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
         if (viewId === 'contacts-view') loadContacts();
         if (viewId === 'automations-view') loadAutomations();
         if (viewId === 'integrations-view') {
+            showIntegrationsList();
             loadIntegrationInfo();
             loadIntegrationHistory();
+            loadAndRenderIntegrations();
         }
         if (viewId === 'settings-view') loadUserSettings();
         if (viewId === 'reports-view') loadReportData();
@@ -1468,6 +1470,53 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
         default: `<p>Consulte a documentação da sua plataforma sobre como configurar um Webhook ou Postback. Use a URL acima e configure para os eventos de venda e rastreio.</p>`
     };
 
+    async function loadAndRenderIntegrations() {
+        const integrationsListEl = document.getElementById('integrations-list');
+        if (!integrationsListEl) return;
+
+        integrationsListEl.innerHTML = '<p class="info-mensagem">A carregar integrações...</p>';
+
+        try {
+            const response = await authFetch('/api/integrations');
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Falha ao carregar os dados.');
+            }
+
+            integrationsListEl.innerHTML = '';
+
+            if (!result.data || result.data.length === 0) {
+                integrationsListEl.innerHTML = '<div class="placeholder-view"><p>Nenhuma integração configurada ainda.</p></div>';
+                return;
+            }
+
+            result.data.forEach(integration => {
+                const card = document.createElement('div');
+                card.className = 'integration-card-item';
+
+                const logoUrl = `/path/to/logos/${integration.platform}.png`;
+
+                card.innerHTML = `
+                    <div class="integration-item-header">
+                        <img src="${logoUrl}" alt="${integration.platform}" class="platform-logo-small">
+                        <h4>${integration.name}</h4>
+                    </div>
+                    <div class="integration-item-body">
+                        <span class="status-badge ${integration.status === 'active' ? 'success' : 'default'}">${integration.status === 'active' ? 'Ativado' : 'Desativado'}</span>
+                    </div>
+                    <div class="integration-item-footer">
+                        <button class="btn-icon" title="Configurar"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311a1.464 1.464 0 0 1-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413-1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/></svg></button>
+                    </div>
+                `;
+                integrationsListEl.appendChild(card);
+            });
+
+        } catch (err) {
+            integrationsListEl.innerHTML = `<div class="placeholder-view"><p style="color: red;">${err.message}</p></div>`;
+        }
+    }
+
     async function showIntegrationSetup(platform) {
         integrationsListView.classList.add('hidden');
         integrationSetupView.classList.remove('hidden');
@@ -1530,8 +1579,7 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
                     });
                     showNotification('Integração salva com sucesso!', 'success');
                     showIntegrationsList();
-                    // Aqui, você deve recarregar a lista de integrações da página principal
-                    // loadActiveIntegrations();
+                    loadAndRenderIntegrations();
                 } catch (err) {
                     showNotification(`Erro ao salvar: ${err.message}`, 'error');
                 }

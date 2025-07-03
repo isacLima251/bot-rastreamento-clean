@@ -111,6 +111,21 @@ exports.atualizarIntegracao = async (req, res) => {
     }
 };
 
+exports.listarIntegracoes = async (req, res) => {
+    const db = req.db;
+    const clienteId = req.user.id;
+    try {
+        db.all('SELECT * FROM integrations WHERE user_id = ? ORDER BY id DESC', [clienteId], (err, rows) => {
+            if (err) {
+                return res.status(500).json({ error: "Falha ao buscar integrações." });
+            }
+            res.status(200).json({ data: rows });
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Erro interno no servidor." });
+    }
+};
+
 exports.updateIntegrationSettings = async (req, res) => {
     try {
         await integrationConfigService.updateConfig(req.db, req.user.id, req.body);
