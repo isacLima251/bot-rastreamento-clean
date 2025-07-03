@@ -86,6 +86,18 @@ exports.criarIntegracao = async (req, res) => {
     }
 };
 
+exports.atualizarIntegracao = async (req, res) => {
+    const { id } = req.params;
+    const { name, secret_key } = req.body;
+    try {
+        await integrationService.updateIntegration(req.db, id, { name, secret_key });
+        res.status(200).json({ message: 'Integração atualizada' });
+    } catch (err) {
+        console.error('Erro ao atualizar integração', err);
+        res.status(500).json({ error: 'Falha ao atualizar integração' });
+    }
+};
+
 exports.updateIntegrationSettings = async (req, res) => {
     try {
         await integrationConfigService.updateConfig(req.db, req.user.id, req.body);

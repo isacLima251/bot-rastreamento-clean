@@ -1,9 +1,31 @@
-function createIntegration(db, userId, platform, name, uniquePath, status = 'active') {
+function createIntegration(db, userId, platform, name, uniquePath, secretKey = null, status = 'active') {
     return new Promise((resolve, reject) => {
-        const sql = `INSERT INTO integrations (user_id, platform, name, unique_path, status) VALUES (?, ?, ?, ?, ?)`;
-        db.run(sql, [userId, platform, name, uniquePath, status], function(err) {
+        const sql = `INSERT INTO integrations (user_id, platform, name, unique_path, secret_key, status) VALUES (?, ?, ?, ?, ?, ?)`;
+        db.run(sql, [userId, platform, name, uniquePath, secretKey, status], function(err) {
             if (err) return reject(err);
             resolve({ id: this.lastID });
+        });
+    });
+}
+
+function updateIntegration(db, id, fields) {
+    const sets = [];
+    const params = [];
+    if (fields.name !== undefined) {
+        sets.push('name = ?');
+        params.push(fields.name);
+    }
+    if (fields.secret_key !== undefined) {
+        sets.push('secret_key = ?');
+        params.push(fields.secret_key);
+    }
+    if (!sets.length) return Promise.resolve();
+    params.push(id);
+    const sql = `UPDATE integrations SET ${sets.join(', ')} WHERE id = ?`;
+    return new Promise((resolve, reject) => {
+        db.run(sql, params, function(err) {
+            if (err) return reject(err);
+            resolve({ changes: this.changes });
         });
     });
 }
@@ -17,4 +39,4 @@ function findIntegrationByPath(db, uniquePath) {
     });
 }
 
-module.exports = { createIntegration, findIntegrationByPath };
+module.exports = { createIntegration, findIntegrationByPath, updateIntegration };

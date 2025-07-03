@@ -224,6 +224,7 @@ const initDb = () => {
                             platform TEXT NOT NULL,
                             name TEXT NOT NULL,
                             unique_path TEXT NOT NULL UNIQUE,
+                            secret_key TEXT,
                             status TEXT DEFAULT 'active',
                             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
                         )
@@ -314,6 +315,10 @@ const initDb = () => {
                     });
                     db.run("ALTER TABLE pedidos ADD COLUMN notas TEXT", [], (e) => {
                         if (e && !e.message.includes('duplicate column')) return reject(e);
+                    });
+
+                    db.run("ALTER TABLE integrations ADD COLUMN secret_key TEXT", [], (e) => {
+                        if (e && !e.message.includes('duplicate')) return reject(e);
                     });
 
                     // Bloco movido para dentro da criação da tabela 'users'

@@ -1446,6 +1446,7 @@ const platformGrid = document.getElementById('platform-grid');
     const setupTitle = document.getElementById('setup-title');
     const platformInstructions = document.getElementById('platform-instructions');
     const inputIntegrationName = document.getElementById('integration-name');
+    const inputIntegrationSecret = document.getElementById('integration-secret');
     const webhookDisplay = document.getElementById('integration-webhook-url');
 
     const instructions = {
@@ -1463,6 +1464,7 @@ const platformGrid = document.getElementById('platform-grid');
         const platformInstructionsEl = document.getElementById('platform-instructions');
         const webhookUrlDisplayEl = document.getElementById('integration-webhook-url');
         const integrationNameInput = document.getElementById('integration-name');
+        const integrationSecretInput = document.getElementById('integration-secret');
         const btnSaveIntegration = document.getElementById('btn-save-integration');
 
         setupTitleEl.textContent = `Configurar Integração com ${platform.name}`;
@@ -1470,6 +1472,7 @@ const platformGrid = document.getElementById('platform-grid');
 
         // Limpa os campos e desativa o botão de salvar
         integrationNameInput.value = '';
+        integrationSecretInput.value = '';
         webhookUrlDisplayEl.textContent = 'A gerar URL...';
         btnSaveIntegration.disabled = true;
 
@@ -1497,16 +1500,20 @@ const platformGrid = document.getElementById('platform-grid');
             // 3. Configura o botão "Salvar" para atualizar o nome da integração
             btnSaveIntegration.onclick = async () => {
                 const integrationName = integrationNameInput.value.trim();
+                const secretKey = integrationSecretInput.value.trim();
                 if (!integrationName) {
                     alert('Por favor, dê um apelido à sua integração.');
                     return;
                 }
                 try {
-                    // Atualiza o nome da integração que acabámos de criar
+                    // Atualiza o nome e a chave secreta da integração
                     await authFetch(`/api/integrations/${newIntegration.id}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: integrationName })
+                        body: JSON.stringify({ 
+                            name: integrationName,
+                            secret_key: secretKey
+                        })
                     });
                     showNotification('Integração salva com sucesso!', 'success');
                     showIntegrationsList();
