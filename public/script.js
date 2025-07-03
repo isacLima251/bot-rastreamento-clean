@@ -121,6 +121,7 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
     let contactsCurrentPage = 1;
     const contactsLimit = 10;
     let contactsTotal = 0;
+    let integrationsCache = [];
 
 
      const accordionHeaders = document.querySelectorAll('.accordion-header');
@@ -1473,55 +1474,55 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
     async function loadAndRenderIntegrations() {
         const integrationsListEl = document.getElementById('integrations-list');
         if (!integrationsListEl) return;
-
         integrationsListEl.innerHTML = '<p class="info-mensagem">A carregar integrações...</p>';
-
         try {
             const response = await authFetch('/api/integrations');
             const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Falha ao carregar os dados.');
 
-            if (!response.ok) {
-                throw new Error(result.error || 'Falha ao carregar os dados.');
-            }
-
+            integrationsCache = result.data || [];
             integrationsListEl.innerHTML = '';
-
-            if (!result.data || result.data.length === 0) {
+            if (!integrationsCache.length) {
                 integrationsListEl.innerHTML = '<div class="placeholder-view"><p>Nenhuma integração configurada ainda.</p></div>';
                 return;
             }
 
-            result.data.forEach(integration => {
+            integrationsCache.forEach(integration => {
                 const card = document.createElement('div');
                 card.className = 'integration-card-item';
+                card.dataset.integrationId = integration.id;
 
-                const logoUrl = `/path/to/logos/${integration.platform}.png`;
+                const logoFilename = integration.platform === 'perfectpay' ? 'perfect pay.png' : `${integration.platform}.png`;
+                const logoUrl = `/logos/${logoFilename}`;
 
                 card.innerHTML = `
                     <div class="integration-item-header">
-                        <img src="${logoUrl}" alt="${integration.platform}" class="platform-logo-small">
+                        <img src="${logoUrl}" alt="${integration.platform}" class="platform-logo-small" onerror="this.style.display='none'">
                         <h4>${integration.name}</h4>
                     </div>
                     <div class="integration-item-body">
                         <span class="status-badge ${integration.status === 'active' ? 'success' : 'default'}">${integration.status === 'active' ? 'Ativado' : 'Desativado'}</span>
                     </div>
                     <div class="integration-item-footer">
-                        <button class="btn-icon" title="Configurar"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311a1.464 1.464 0 0 1-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413-1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/></svg></button>
+                        <button class="btn-icon btn-edit-integration" title="Configurar">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311a1.464 1.464 0 0 1-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413-1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/></svg>
+                        </button>
+                        <button class="btn-icon btn-delete-integration" title="Excluir">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/><path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/></svg>
+                        </button>
                     </div>
                 `;
                 integrationsListEl.appendChild(card);
             });
-
         } catch (err) {
             integrationsListEl.innerHTML = `<div class="placeholder-view"><p style="color: red;">${err.message}</p></div>`;
         }
     }
 
-    async function showIntegrationSetup(platform) {
+    async function showIntegrationSetup(data) {
         integrationsListView.classList.add('hidden');
         integrationSetupView.classList.remove('hidden');
 
-        // Elementos da tela de setup
         const setupTitleEl = document.getElementById('setup-title');
         const platformInstructionsEl = document.getElementById('platform-instructions');
         const webhookUrlDisplayEl = document.getElementById('integration-webhook-url');
@@ -1529,66 +1530,63 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
         const integrationSecretInput = document.getElementById('integration-secret');
         const btnSaveIntegration = document.getElementById('btn-save-integration');
 
-        setupTitleEl.textContent = `Configurar Integração com ${platform.name}`;
+        const isEdit = data && data.id;
+        const platform = isEdit ? (supportedPlatforms.find(p => p.id === data.platform) || { id: data.platform, name: data.platform }) : data;
+
+        setupTitleEl.textContent = isEdit ? `Editar Integração (${platform.name})` : `Configurar Integração com ${platform.name}`;
         platformInstructionsEl.innerHTML = instructions[platform.id] || instructions.default;
 
-        // Limpa os campos e desativa o botão de salvar
-        integrationNameInput.value = '';
-        integrationSecretInput.value = '';
-        webhookUrlDisplayEl.textContent = 'A gerar URL...';
-        btnSaveIntegration.disabled = true;
+        let integrationId = null;
 
-        try {
-            // **A LÓGICA REAL COMEÇA AQUI**
-            // 1. Faz uma chamada à API para criar uma nova integração "rascunho"
-            const response = await authFetch('/api/integrations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    platform: platform.id,
-                    name: `Nova Integração ${platform.name}` // Nome temporário
-                })
-            });
-
-            const newIntegration = await response.json();
-            if (!response.ok) {
-                throw new Error(newIntegration.error || 'Não foi possível gerar a URL de integração.');
+        if (isEdit) {
+            integrationId = data.id;
+            integrationNameInput.value = data.name || '';
+            integrationSecretInput.value = data.secret_key || '';
+            webhookUrlDisplayEl.textContent = `${window.location.origin}/api/postback/${data.unique_path}`;
+            btnSaveIntegration.disabled = false;
+        } else {
+            integrationNameInput.value = '';
+            integrationSecretInput.value = '';
+            webhookUrlDisplayEl.textContent = 'A gerar URL...';
+            btnSaveIntegration.disabled = true;
+            try {
+                const response = await authFetch('/api/integrations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ platform: platform.id, name: `Nova Integração ${platform.name}` })
+                });
+                const newIntegration = await response.json();
+                if (!response.ok) throw new Error(newIntegration.error || 'Não foi possível gerar a URL de integração.');
+                integrationId = newIntegration.id;
+                webhookUrlDisplayEl.textContent = newIntegration.webhook_url;
+                btnSaveIntegration.disabled = false;
+            } catch (error) {
+                showNotification(error.message, 'error');
+                webhookUrlDisplayEl.textContent = 'Erro ao gerar URL.';
+                return;
             }
-
-            // 2. Exibe a URL real recebida do backend
-            webhookUrlDisplayEl.textContent = newIntegration.webhook_url;
-            btnSaveIntegration.disabled = false; // Ativa o botão de salvar
-
-            // 3. Configura o botão "Salvar" para atualizar o nome da integração
-            btnSaveIntegration.onclick = async () => {
-                const integrationName = integrationNameInput.value.trim();
-                const secretKey = integrationSecretInput.value.trim();
-                if (!integrationName) {
-                    alert('Por favor, dê um apelido à sua integração.');
-                    return;
-                }
-                try {
-                    // Atualiza o nome e a chave secreta da integração
-                    await authFetch(`/api/integrations/${newIntegration.id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            name: integrationName,
-                            secret_key: secretKey
-                        })
-                    });
-                    showNotification('Integração salva com sucesso!', 'success');
-                    showIntegrationsList();
-                    loadAndRenderIntegrations();
-                } catch (err) {
-                    showNotification(`Erro ao salvar: ${err.message}`, 'error');
-                }
-            };
-
-        } catch (error) {
-            showNotification(error.message, 'error');
-            webhookUrlDisplayEl.textContent = 'Erro ao gerar URL.';
         }
+
+        btnSaveIntegration.onclick = async () => {
+            const integrationName = integrationNameInput.value.trim();
+            const secretKey = integrationSecretInput.value.trim();
+            if (!integrationName) {
+                alert('Por favor, dê um apelido à sua integração.');
+                return;
+            }
+            try {
+                await authFetch(`/api/integrations/${integrationId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: integrationName, secret_key: secretKey })
+                });
+                showNotification('Integração salva com sucesso!', 'success');
+                showIntegrationsList();
+                loadAndRenderIntegrations();
+            } catch (err) {
+                showNotification(`Erro ao salvar: ${err.message}`, 'error');
+            }
+        };
     }
 
     function showIntegrationsList() {
@@ -1614,6 +1612,41 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
 
     function closePlatformModal() {
         modalPlatformSelect.classList.remove('active');
+    }
+
+    const integrationsListEl = document.getElementById('integrations-list');
+    if (integrationsListEl) {
+        integrationsListEl.addEventListener('click', (e) => {
+            const editButton = e.target.closest('.btn-edit-integration');
+            const deleteButton = e.target.closest('.btn-delete-integration');
+
+            if (editButton) {
+                const card = editButton.closest('.integration-card-item');
+                const integrationId = card.dataset.integrationId;
+                const integrationData = integrationsCache.find(i => String(i.id) === integrationId);
+                if (integrationData) {
+                    showIntegrationSetup(integrationData);
+                }
+            }
+
+            if (deleteButton) {
+                const card = deleteButton.closest('.integration-card-item');
+                const integrationId = card.dataset.integrationId;
+
+                showConfirmationModal('Tem a certeza que deseja excluir esta integração? Esta ação não pode ser desfeita.', async () => {
+                    try {
+                        const response = await authFetch(`/api/integrations/${integrationId}`, { method: 'DELETE' });
+                        const result = await response.json();
+                        if (!response.ok) throw new Error(result.error);
+
+                        showNotification('Integração excluída com sucesso!', 'success');
+                        loadAndRenderIntegrations();
+                    } catch (err) {
+                        showNotification(`Erro ao excluir: ${err.message}`, 'error');
+                    }
+                });
+            }
+        });
     }
 
     if (btnAddIntegration) btnAddIntegration.addEventListener('click', openPlatformModal);
