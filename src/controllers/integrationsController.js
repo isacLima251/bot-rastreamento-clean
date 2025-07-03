@@ -21,7 +21,7 @@ exports.receberPostback = async (req, res) => {
         console.log('DADOS TRADUZIDOS:', dados);
 
         const user = { id: integracao.user_id };
-        const sub = await subscriptionService.getUserSubscription(req.db, user.id);
+        const subscriptionInfo = await subscriptionService.getUserSubscription(req.db, user.id);
 
         switch (dados.eventType) {
             case 'VENDA_APROVADA':
@@ -47,22 +47,37 @@ exports.receberPostback = async (req, res) => {
                 );
                 break;
             case 'RASTREIO_ADICIONADO':
-                if (sub && sub.monthly_limit !== -1 && sub.usage >= sub.monthly_limit) {
-                    return res.status(403).json({ error: 'Limite do plano excedido.' });
+                console.log(`PROCESSANDO RASTREIO PARA: ${dados.clientEmail}`);
+
+                if (!dados.clientEmail || !dados.trackingCode) {
+                    console.error('Webhook de rastreio recebido sem email ou código.');
+                    break;
                 }
-                console.log(`Processando rastreio para: ${dados.clientEmail}`);
+
                 const pedido = await pedidoService.findPedidoByEmail(req.db, dados.clientEmail, user.id);
 
                 if (pedido) {
-                    await pedidoService.updateCamposPedido(req.db, pedido.id, { codigoRastreio: dados.trackingCode }, user.id);
-                    if (sub) await subscriptionService.incrementUsage(req.db, sub.id);
+                    if (pedido.codigoRastreio) {
+                        console.log(`Pedido ${pedido.id} já possui um código de rastreio. Nenhuma ação necessária.`);
+                        break;
+                    }
+
+                    const sub = await subscriptionService.getUserSubscription(req.db, user.id);
+                    if (sub.monthly_limit !== -1 && sub.usage >= sub.monthly_limit) {
+                        console.warn(`Limite do plano excedido para usuário ${user.id}. Não foi possível adicionar o código de rastreio.`);
+                        break;
+                    }
+
+                    await pedidoService.updateCamposPedido(req.db, pedido.id, { codigoRastreio: dados.trackingCode });
+                    await subscriptionService.incrementUsage(req.db, sub.id);
+
                     console.log(`Código de rastreio ${dados.trackingCode} adicionado ao pedido ${pedido.id}.`);
                 } else {
-                    console.warn(`Nenhum pedido encontrado para o email ${dados.clientEmail} para o usuário ${user.id}`);
+                    console.warn(`Nenhum pedido encontrado para o email ${dados.clientEmail} no evento de rastreio.`);
                 }
                 break;
             case 'VENDA_CANCELADA':
-                if (sub) await subscriptionService.decrementUsage(req.db, sub.id);
+                if (subscriptionInfo) await subscriptionService.decrementUsage(req.db, subscriptionInfo.id);
                 break;
         }
         res.status(200).json({ message: 'Webhook processado.' });
