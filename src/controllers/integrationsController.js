@@ -18,16 +18,30 @@ exports.receberPostback = async (req, res) => {
         const mapper = mappers[integracao.platform] || mappers.generico;
         if (!mapper) return res.status(400).json({ error: 'Plataforma não suportada.' });
         const dados = mapper(payload);
+        console.log('DADOS TRADUZIDOS:', dados);
 
         const user = { id: integracao.user_id };
         const sub = await subscriptionService.getUserSubscription(req.db, user.id);
 
         switch (dados.eventType) {
             case 'VENDA_APROVADA':
+                console.log('PROCESSANDO VENDA APROVADA...');
+                if (dados.clientName && dados.clientPhone) {
+                    await pedidoService.criarPedido(
+                        req.db,
+                        { nome: dados.clientName, telefone: dados.clientPhone, produto: dados.productName },
+                        req.venomClient,
+                        user.id
+                    );
+                    console.log(`Contato para ${dados.clientName} criado com sucesso.`);
+                } else {
+                    console.error('Dados insuficientes para criar contato no evento de venda aprovada.');
+                }
+                break;
             case 'PEDIDO_AGENDADO':
                 await pedidoService.criarPedido(
                     req.db,
-                    { nome: dados.clientName, telefone: dados.clientPhone, email: dados.clientEmail, produto: dados.productName },
+                    { nome: dados.clientName, telefone: dados.clientPhone, produto: dados.productName },
                     req.venomClient,
                     user.id
                 );
