@@ -306,6 +306,7 @@ const startApp = async () => {
         // Rotas de Integrações (UNIFICADAS)
         app.get('/api/integrations/info', planCheck, integrationsController.getIntegrationInfo);
         app.post('/api/integrations', planCheck, integrationsController.criarIntegracao);
+        app.put('/api/integrations/:id', planCheck, integrationsController.atualizarIntegracao);
         app.post('/api/integrations/regenerate', planCheck, integrationsController.regenerateApiKey);
         app.put('/api/integrations/settings', planCheck, integrationsController.updateIntegrationSettings);
         app.get('/api/integrations/history', planCheck, integrationsController.listarHistorico);
