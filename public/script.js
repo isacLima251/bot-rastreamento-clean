@@ -1454,38 +1454,73 @@ const platformGrid = document.getElementById('platform-grid');
         default: `<p>Consulte a documentação da sua plataforma sobre como configurar um Webhook ou Postback. Use a URL acima e configure para os eventos de venda e rastreio.</p>`
     };
 
-    function showIntegrationSetup(platform) {
+    async function showIntegrationSetup(platform) {
         integrationsListView.classList.add('hidden');
         integrationSetupView.classList.remove('hidden');
-        integrationSetupView.dataset.platformId = platform.id;
-        if(inputIntegrationName) inputIntegrationName.value = '';
 
-        setupTitle.textContent = `Configurar Integração com ${platform.name}`;
+        // Elementos da tela de setup
+        const setupTitleEl = document.getElementById('setup-title');
+        const platformInstructionsEl = document.getElementById('platform-instructions');
+        const webhookUrlDisplayEl = document.getElementById('integration-webhook-url');
+        const integrationNameInput = document.getElementById('integration-name');
+        const btnSaveIntegration = document.getElementById('btn-save-integration');
 
-        // Limpa instruções anteriores antes de adicionar novas
-        platformInstructions.innerHTML = '';
+        setupTitleEl.textContent = `Configurar Integração com ${platform.name}`;
+        platformInstructionsEl.innerHTML = instructions[platform.id] || instructions.default;
 
-        // Adiciona as instruções padrão
-        const standardInstructions = document.createElement('div');
-        standardInstructions.innerHTML = instructions[platform.id] || instructions.default;
-        platformInstructions.appendChild(standardInstructions);
+        // Limpa os campos e desativa o botão de salvar
+        integrationNameInput.value = '';
+        webhookUrlDisplayEl.textContent = 'A gerar URL...';
+        btnSaveIntegration.disabled = true;
 
-        // **NOVA LÓGICA: Adiciona o aviso se a plataforma for KeedPay**
-        if (platform.id === 'keedpay') {
-            const warningDiv = document.createElement('div');
-            warningDiv.className = 'platform-warning';
-            warningDiv.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
-            </svg>
-            <div>
-                <strong>Atenção:</strong> A automação do código de rastreio para a KeedPay pode ser limitada. Para vendas que não são do tipo "Pagamento na Entrega", pode ser necessário adicionar o código manualmente no painel.
-            </div>
-        `;
-            platformInstructions.appendChild(warningDiv);
+        try {
+            // **A LÓGICA REAL COMEÇA AQUI**
+            // 1. Faz uma chamada à API para criar uma nova integração "rascunho"
+            const response = await authFetch('/api/integrations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    platform: platform.id,
+                    name: `Nova Integração ${platform.name}` // Nome temporário
+                })
+            });
+
+            const newIntegration = await response.json();
+            if (!response.ok) {
+                throw new Error(newIntegration.error || 'Não foi possível gerar a URL de integração.');
+            }
+
+            // 2. Exibe a URL real recebida do backend
+            webhookUrlDisplayEl.textContent = newIntegration.webhook_url;
+            btnSaveIntegration.disabled = false; // Ativa o botão de salvar
+
+            // 3. Configura o botão "Salvar" para atualizar o nome da integração
+            btnSaveIntegration.onclick = async () => {
+                const integrationName = integrationNameInput.value.trim();
+                if (!integrationName) {
+                    alert('Por favor, dê um apelido à sua integração.');
+                    return;
+                }
+                try {
+                    // Atualiza o nome da integração que acabámos de criar
+                    await authFetch(`/api/integrations/${newIntegration.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: integrationName })
+                    });
+                    showNotification('Integração salva com sucesso!', 'success');
+                    showIntegrationsList();
+                    // Aqui, você deve recarregar a lista de integrações da página principal
+                    // loadActiveIntegrations();
+                } catch (err) {
+                    showNotification(`Erro ao salvar: ${err.message}`, 'error');
+                }
+            };
+
+        } catch (error) {
+            showNotification(error.message, 'error');
+            webhookUrlDisplayEl.textContent = 'Erro ao gerar URL.';
         }
-
-        if(webhookDisplay) webhookDisplay.textContent = `https://whatsship.com.br/api/postback/exemplo123_${platform.id}`;
     }
 
     function showIntegrationsList() {
@@ -1519,26 +1554,6 @@ const platformGrid = document.getElementById('platform-grid');
         if (e.target === modalPlatformSelect) closePlatformModal();
     });
     if (btnCancelSetup) btnCancelSetup.addEventListener('click', showIntegrationsList);
-    if (btnSaveIntegration) btnSaveIntegration.addEventListener('click', async () => {
-        const name = inputIntegrationName ? inputIntegrationName.value.trim() : '';
-        const platformId = integrationSetupView.dataset.platformId;
-        if (!name || !platformId) {
-            showNotification('Preencha o nome da integração.', 'error');
-            return;
-        }
-        try {
-            const resp = await authFetch('/api/integrations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, platform: platformId })
-            });
-            if (!resp.ok) throw new Error('Falha ao salvar integração');
-            showNotification('Integração salva com sucesso.', 'success');
-            showIntegrationsList();
-        } catch (err) {
-            showNotification(err.message, 'error');
-        }
-    });
 
     // --- 7. Inicialização ---
     fetchErenderizarTudo();
