@@ -1428,27 +1428,54 @@ const platformGrid = document.getElementById('platform-grid');
 
     // ---- Integrações ----
     const supportedPlatforms = [
-        { id: 'kiwify', name: 'Kiwify' },
-        { id: 'hotmart', name: 'Hotmart' },
-        { id: 'monetizze', name: 'Monetizze' },
-        { id: 'braip', name: 'Braip' },
-        { id: 'perfectpay', name: 'Perfect Pay' },
-        { id: 'logzz', name: 'Logzz' },
-        { id: 'payt', name: 'Payt' },
-        { id: 'keedpay', name: 'Keedpay' },
+        { id: 'kiwify', name: 'Kiwify', logo: 'https://via.placeholder.com/80?text=Kiwify' },
+        { id: 'hotmart', name: 'Hotmart', logo: 'https://via.placeholder.com/80?text=Hotmart' },
+        { id: 'monetizze', name: 'Monetizze', logo: 'https://via.placeholder.com/80?text=Monetizze' },
+        { id: 'braip', name: 'Braip', logo: 'https://via.placeholder.com/80?text=Braip' },
+        { id: 'perfectpay', name: 'Perfect Pay', logo: 'https://via.placeholder.com/80?text=PerfectPay' },
+        { id: 'logzz', name: 'Logzz', logo: 'https://via.placeholder.com/80?text=Logzz' },
+        { id: 'payt', name: 'Payt', logo: 'https://via.placeholder.com/80?text=Payt' },
+        { id: 'keedpay', name: 'Keedpay', logo: 'https://via.placeholder.com/80?text=Keedpay' },
     ];
 
+    // Novas variáveis para a tela de setup
+    const integrationsListView = document.getElementById('integrations-list').parentElement;
+    const integrationSetupView = document.getElementById('integration-setup-view');
+    const btnCancelSetup = document.getElementById('btn-cancel-setup');
+    const setupTitle = document.getElementById('setup-title');
+    const platformInstructions = document.getElementById('platform-instructions');
+
+    const instructions = {
+        braip: `<p>1. No painel da Braip, vá para Ferramentas > Postback.</p><p>2. Clique em "Nova Configuração".</p><p>3. Cole a URL de Webhook acima.</p><p>4. Selecione os eventos: <strong>Pagamento Aprovado, Agendado, Cancelada, Chargeback, Devolvida, e TRACKING_CODE_ADDED</strong>.</p><p>5. Salve a configuração.</p>`,
+        kiwify: `<p>1. Na Kiwify, vá em Apps > Webhooks.</p><p>2. Crie um novo webhook, cole a URL acima e selecione os eventos de Venda e de Rastreio.</p>`,
+        default: `<p>Consulte a documentação da sua plataforma sobre como configurar um Webhook ou Postback. Use a URL acima e configure para os eventos de venda e rastreio.</p>`
+    };
+
+    function showIntegrationSetup(platform) {
+        integrationsListView.classList.add('hidden');
+        integrationSetupView.classList.remove('hidden');
+
+        setupTitle.textContent = `Configurar Integração com ${platform.name}`;
+        platformInstructions.innerHTML = instructions[platform.id] || instructions.default;
+
+        document.getElementById('integration-webhook-url').textContent = `https://whatsship.com.br/api/postback/exemplo123_${platform.id}`;
+    }
+
+    function showIntegrationsList() {
+        integrationSetupView.classList.add('hidden');
+        integrationsListView.classList.remove('hidden');
+    }
+
     function openPlatformModal() {
-        if (!modalPlatformSelect || !platformGrid) return;
         platformGrid.innerHTML = '';
         supportedPlatforms.forEach(platform => {
             const platformTile = document.createElement('div');
             platformTile.className = 'platform-tile';
             platformTile.dataset.platformId = platform.id;
-            platformTile.textContent = platform.name;
+            platformTile.innerHTML = `<img src="${platform.logo}" alt="${platform.name}"><span>${platform.name}</span>`;
             platformTile.addEventListener('click', () => {
-                alert(`Configurar integração para: ${platform.name}`);
                 closePlatformModal();
+                showIntegrationSetup(platform);
             });
             platformGrid.appendChild(platformTile);
         });
@@ -1456,7 +1483,7 @@ const platformGrid = document.getElementById('platform-grid');
     }
 
     function closePlatformModal() {
-        if (modalPlatformSelect) modalPlatformSelect.classList.remove('active');
+        modalPlatformSelect.classList.remove('active');
     }
 
     if (btnAddIntegration) btnAddIntegration.addEventListener('click', openPlatformModal);
@@ -1464,6 +1491,7 @@ const platformGrid = document.getElementById('platform-grid');
     if (modalPlatformSelect) modalPlatformSelect.addEventListener('click', (e) => {
         if (e.target === modalPlatformSelect) closePlatformModal();
     });
+    if (btnCancelSetup) btnCancelSetup.addEventListener('click', showIntegrationsList);
 
     // --- 7. Inicialização ---
     fetchErenderizarTudo();

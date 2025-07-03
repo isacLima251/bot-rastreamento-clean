@@ -257,6 +257,46 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="integration-setup-view" class="hidden">
+                    <div class="page-header">
+                        <div>
+                            <h1 id="setup-title">Configurar Integração</h1>
+                            <p id="setup-subtitle">Dê um nome à sua integração e siga os passos abaixo.</p>
+                        </div>
+                        <div>
+                            <button class="btn-secondary" id="btn-cancel-setup">Cancelar</button>
+                            <button class="btn-primary" id="btn-save-integration">Salvar Integração</button>
+                        </div>
+                    </div>
+
+                    <div class="setup-grid">
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>1. Identificação</h3>
+                            </div>
+                            <div class="settings-card-body">
+                                <label for="integration-name">Apelido da Integração</label>
+                                <input type="text" id="integration-name" placeholder="Ex: Minha Loja na Kiwify">
+                                
+                                <label for="integration-webhook-url">Sua URL de Webhook</label>
+                                <div class="webhook-url-container">
+                                    <div id="integration-webhook-url" class="webhook-url-display">Aguardando...</div>
+                                    <button class="btn-secondary" id="btn-copy-setup-webhook">Copiar</button>
+                                </div>
+                                <p class="form-hint">Cole esta URL no campo "Postback" ou "Webhook" na sua plataforma de vendas.</p>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>2. Instruções da Plataforma</h3>
+                            </div>
+                            <div id="platform-instructions" class="settings-card-body instructions-text">
+                                </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="settings-view" class="view-container hidden">
