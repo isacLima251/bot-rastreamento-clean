@@ -1,9 +1,22 @@
-function createIntegration(db, userId, platform, name, uniquePath, secretKey = null, status = 'active') {
+const crypto = require('crypto');
+
+function createIntegration(db, userId, platform, name) {
     return new Promise((resolve, reject) => {
-        const sql = `INSERT INTO integrations (user_id, platform, name, unique_path, secret_key, status) VALUES (?, ?, ?, ?, ?, ?)`;
-        db.run(sql, [userId, platform, name, uniquePath, secretKey, status], function(err) {
+        const unique_path = crypto.randomBytes(16).toString('hex');
+        const sql = 'INSERT INTO integrations (user_id, platform, name, unique_path) VALUES (?, ?, ?, ?)';
+
+        db.run(sql, [userId, platform, name, unique_path], function(err) {
             if (err) return reject(err);
-            resolve({ id: this.lastID });
+            const newId = this.lastID;
+            const baseUrl = process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`;
+            const webhook_url = `${baseUrl}/api/postback/${unique_path}`;
+
+            resolve({
+                id: newId,
+                platform: platform,
+                name: name,
+                webhook_url: webhook_url
+            });
         });
     });
 }
