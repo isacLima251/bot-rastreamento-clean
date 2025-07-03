@@ -10,7 +10,6 @@ const integrationService = require('../services/integrationConfigService');
  * @param {object} db A instância do banco de dados.
  */
 async function verificarRastreios(db) {
-    console.log('🔍 Iniciando verificação de rastreios...');
     try {
         const pedidos = await pedidoService.getAllPedidos(db);
         
@@ -18,11 +17,9 @@ async function verificarRastreios(db) {
         const pedidosParaRastrear = pedidos.filter(p => p.codigoRastreio && p.statusInterno !== 'entregue');
 
         if (pedidosParaRastrear.length === 0) {
-            console.log('ℹ️ Nenhum pedido para rastrear no momento.');
             return;
         }
 
-        console.log(`🚚 Rastreando ${pedidosParaRastrear.length} pedido(s)...`);
 
         for (const pedido of pedidosParaRastrear) {
             try {
@@ -45,7 +42,6 @@ async function verificarRastreios(db) {
                     };
 
                     await pedidoService.updateCamposPedido(db, pedido.id, dadosParaAtualizar);
-                    console.log(`🔄 Pedido #${pedido.id} (${pedido.nome}) atualizado para: ${novoStatus}`);
 
                     await logService.addLog(db, pedido.cliente_id || 1, 'rastreamento', JSON.stringify({ pedidoId: pedido.id, status: novoStatus }));
                 }

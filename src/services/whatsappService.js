@@ -61,7 +61,6 @@ async function scrapeProfilePicViaPuppeteer(telefone) {
 
   // O Puppeteer pode retornar um 'blob:', que precisamos converter
   if (fotoUrl && fotoUrl.startsWith('blob:')) {
-    console.log("[Fallback] Imagem é um blob. Convertendo para Base64...");
     const dataUri = await page.evaluate(async (url) => {
         const response = await window.fetch(url);
         const blob = await response.blob();
@@ -82,7 +81,6 @@ async function scrapeProfilePicViaPuppeteer(telefone) {
 
 function iniciarWhatsApp(venomClient) {
     client = venomClient;
-    console.log('✅ WhatsApp Service pronto.');
 }
 
 async function enviarMensagem(telefone, mensagem) {
@@ -106,10 +104,8 @@ async function getProfilePicUrl(telefone) {
 
     // --- ESTRATÉGIA 1: TENTATIVA VIA API OFICIAL DO VENOM ---
     try {
-        console.log(`[API] Tentando via API para o contato: ${contatoId}`);
         const viaApi = await client.getProfilePicFromServer(contatoId);
         if (viaApi) {
-            console.log(`[API] Sucesso! Foto encontrada via API.`);
             return viaApi;
         }
     } catch (error) {
@@ -117,11 +113,9 @@ async function getProfilePicUrl(telefone) {
     }
 
     // --- ESTRATÉGIA 2: FALLBACK VIA SCRAPING ROBUSTO COM PUPPETEER ---
-    console.log(`[Fallback] Acionando fallback via Puppeteer.`);
     try {
         const viaScrape = await scrapeProfilePicViaPuppeteer(telefone);
         if (viaScrape) {
-            console.log("[Fallback] Sucesso! Foto encontrada via Puppeteer.");
         }
         return viaScrape;
     } catch (err) {

@@ -72,16 +72,6 @@ function updateSubscriptionStatus(db, userId, status) {
     });
 }
 
-async function calculateUsage(db, sub) {
-    // Garante que o contador foi resetado, se necessário
-    await resetUsageIfNeeded(db, sub.id);
-    return new Promise((resolve, reject) => {
-        db.get('SELECT usage FROM subscriptions WHERE id = ?', [sub.id], (err, row) => {
-            if (err) return reject(err);
-            resolve(row ? row.usage : 0);
-        });
-    });
-}
 
 // Adiciona a função para devolver 1 uso ao limite do plano em caso de reembolso
 function decrementUsage(db, subscriptionId) {
@@ -101,7 +91,6 @@ module.exports = {
     createSubscription,
     updateUserPlan,
     updateSubscriptionStatus,
-    calculateUsage,
     decrementUsage,
 };
 

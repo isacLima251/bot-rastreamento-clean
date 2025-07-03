@@ -5,7 +5,6 @@ exports.receberWebhook = async (req, res) => {
     const db = req.db;
     const evento = req.body;
 
-    console.log('[Webhook Site Rastreio] Novo evento recebido:', evento);
 
     const codigoRastreio = evento.code;
     const statusAtual = evento.status;
@@ -27,7 +26,6 @@ exports.receberWebhook = async (req, res) => {
                 ultimaAtualizacao: dataEvento,
             });
 
-            console.log(`✅ Pedido #${pedido.id} atualizado via Webhook para status: ${statusAtual}`);
 
             // Opcional: você pode disparar uma mensagem WhatsApp aqui se quiser
         }
