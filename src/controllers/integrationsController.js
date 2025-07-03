@@ -1,216 +1,95 @@
-// src/controllers/integrationsController.js (VERSÃO CORRETA E UNIFICADA)
 const userService = require('../services/userService');
-const integrationService = require('../services/integrationConfigService');
+const integrationConfigService = require('../services/integrationConfigService');
+const integrationService = require('../services/integrationService');
 const subscriptionService = require('../services/subscriptionService');
-const emailService = require('../services/emailService');
-const crypto = require('crypto');
 const integrationHistoryService = require('../services/integrationHistoryService');
 const pedidoService = require('../services/pedidoService');
+const mappers = require('../services/platformMappers');
+const crypto = require('crypto');
 
-// Função auxiliar para identificar a plataforma de origem
-function detectarPlataforma(payload, headers) {
-    if (headers['x-hotmart-signature'] || (payload.event && payload.event.startsWith('purchase.'))) {
-        return 'hotmart';
-    }
-    if (headers['x-kiwify-signature'] || payload.platform === 'kiwify' || payload.checkout_id) {
-        return 'kiwify';
-    }
-    return 'generico';
-}
-
-// Tradutores individuais para cada plataforma
-function traduzirHotmart(payload) {
-    let evento = (payload.event || '').toLowerCase();
-    if (evento === 'purchase.approved') evento = 'purchase_approved';
-    if (evento === 'purchase.tracking.code.changed') evento = 'tracking_code_added';
-
-    const buyer = payload.buyer || payload.customer || {};
-    const telefone =
-        (buyer.phone?.ddd || '') + (buyer.phone?.number || buyer.phone?.local_number || buyer.phone || '');
-    return {
-        event: evento,
-        customer: {
-            name: buyer.name,
-            email: buyer.email,
-            phone: telefone,
-        },
-        product: {
-            name: payload.product?.name || payload.product_name,
-        },
-        tracking_code:
-            payload.tracking_code || payload.purchase?.tracking_code || payload.data?.tracking?.code,
-    };
-}
-
-function traduzirKiwify(payload) {
-    let evento = (payload.event || payload.type || '').toLowerCase();
-    if (evento === 'sale_approved' || evento === 'order.approved') evento = 'purchase_approved';
-    if (evento === 'tracking_code_added' || evento === 'order.tracking_code') evento = 'tracking_code_added';
-
-    const cliente = payload.customer || payload.cliente || {};
-    const telefone =
-        (cliente.phone?.ddd || '') + (cliente.phone?.number || cliente.phone || payload.phone || '');
-    return {
-        event: evento,
-        customer: {
-            name: cliente.name,
-            email: cliente.email || payload.email,
-            phone: telefone,
-        },
-        product: {
-            name: payload.product?.name || payload.product_name || payload.produto,
-        },
-        tracking_code: payload.tracking_code || payload.codigo_rastreio,
-    };
-}
-
-function traduzirGenerico(payload) {
-    let evento = (payload.event || '').toLowerCase();
-    if (!evento && payload.status) evento = payload.status.toLowerCase();
-    return {
-        event: evento,
-        customer: payload.customer || payload.buyer || {},
-        product: payload.product || {},
-        tracking_code: payload.tracking_code || payload.codigoRastreio || payload.codigo_rastreio,
-    };
-}
-
-function traduzirWebhook(payload, headers) {
-    const plataforma = detectarPlataforma(payload, headers);
-    switch (plataforma) {
-        case 'hotmart':
-            return traduzirHotmart(payload);
-        case 'kiwify':
-            return traduzirKiwify(payload);
-        default:
-            return traduzirGenerico(payload);
-    }
-}
-
-/**
- * Função 1: Recebe o postback de uma plataforma externa.
- * Agora suporta dois tipos de eventos:
- *  - purchase_approved: cria o contato/pedido sem código de rastreio
- *  - tracking_code_added: atualiza o pedido existente com o código recebido
- */
 exports.receberPostback = async (req, res) => {
-    console.log('--- WEBHOOK RECEBIDO ---');
-    console.log(JSON.stringify(req.body, null, 2));
-    console.log('------------------------');
-
-    const db = req.db;
-    const payloadOriginal = req.body;
-    const payload = traduzirWebhook(payloadOriginal, req.headers);
-
-    const evento = (payload.event || '').toLowerCase();
-
-    const emailClienteFinal = payload?.customer?.email || payload?.buyer?.email;
-    const telefoneClienteFinal =
-        (payload?.customer?.phone?.ddd || '') + (payload?.customer?.phone?.number || payload?.customer?.phone || '');
-
-    if (!emailClienteFinal && !telefoneClienteFinal) {
-        return res.status(400).json({ error: 'Dados de identificação do cliente ausentes no webhook.' });
-    }
+    const { unique_path } = req.params;
+    const payload = req.body;
 
     try {
-        const nossoUsuario = req.user;
+        const integracao = await integrationService.findIntegrationByPath(req.db, unique_path);
+        if (!integracao) return res.status(404).json({ error: 'Integração não encontrada.' });
 
-        switch (evento) {
-            case 'purchase_approved':
-            case 'venda_aprovada': {
-                if (!telefoneClienteFinal) {
-                    return res.status(400).json({ error: 'Telefone do cliente não encontrado no webhook.' });
-                }
+        const mapper = mappers[integracao.platform] || mappers.generico;
+        if (!mapper) return res.status(400).json({ error: 'Plataforma não suportada.' });
+        const dados = mapper(payload);
 
-                const nomeCliente = payload?.customer?.name || payload?.buyer?.name || 'Cliente';
-                const produto = payload?.product?.name || payload?.product_name || '';
+        const user = { id: integracao.user_id };
+        const sub = await subscriptionService.getUserSubscription(req.db, user.id);
 
-                const existente = await pedidoService.findPedidoByTelefone(db, telefoneClienteFinal, nossoUsuario.id);
-                if (!existente) {
-                    await pedidoService.criarPedido(
-                        db,
-                        { nome: nomeCliente, telefone: telefoneClienteFinal, produto },
-                        req.venomClient,
-                        nossoUsuario.id
-                    );
-                    console.log(`Pedido criado para ${telefoneClienteFinal}`);
-                } else {
-                    console.log(`Pedido já existente para ${telefoneClienteFinal}`);
-                }
+        switch (dados.eventType) {
+            case 'VENDA_APROVADA':
+            case 'PEDIDO_AGENDADO':
+                await pedidoService.criarPedido(
+                    req.db,
+                    { nome: dados.clientName, telefone: dados.clientPhone, email: dados.clientEmail, produto: dados.productName },
+                    req.venomClient,
+                    user.id
+                );
                 break;
-            }
-
-            case 'tracking_code_added':
-            case 'codigo_rastreio_adicionado': {
-                const codigoRastreio = payload.tracking_code || payload.codigoRastreio || payload.codigo_rastreio;
-                if (!codigoRastreio) {
-                    return res.status(400).json({ error: 'Código de rastreio não encontrado no webhook.' });
+            case 'RASTREIO_ADICIONADO':
+                if (sub && sub.monthly_limit !== -1 && sub.usage >= sub.monthly_limit) {
+                    return res.status(403).json({ error: 'Limite do plano excedido.' });
                 }
-
-                if (!telefoneClienteFinal) {
-                    return res.status(400).json({ error: 'Telefone do cliente não encontrado no webhook.' });
-                }
-
-                const pedido = await pedidoService.findPedidoByTelefone(db, telefoneClienteFinal, nossoUsuario.id);
-
+                const pedido = await pedidoService.findPedidoByEmail(req.db, dados.clientEmail, user.id);
                 if (pedido) {
-                    const sub = await subscriptionService.getUserSubscription(db, nossoUsuario.id);
-                    if (sub && sub.monthly_limit !== -1 && sub.usage >= sub.monthly_limit) {
-                        return res.status(403).json({ error: 'Limite do plano excedido.' });
-                    }
-
-                    await pedidoService.updateCamposPedido(db, pedido.id, { codigoRastreio }, nossoUsuario.id);
-                    if (sub) await subscriptionService.incrementUsage(db, sub.id);
-
-                    console.log(`Código ${codigoRastreio} adicionado ao pedido ${pedido.id}`);
-                } else {
-                    return res.status(404).json({ error: 'Pedido não encontrado para o cliente informado.' });
+                    await pedidoService.updateCamposPedido(req.db, pedido.id, { codigoRastreio: dados.trackingCode }, user.id);
+                    if (sub) await subscriptionService.incrementUsage(req.db, sub.id);
                 }
                 break;
-            }
-
-            default:
-                console.log(`Evento '${evento}' recebido, mas nenhuma ação configurada.`);
+            case 'VENDA_CANCELADA':
+                if (sub) await subscriptionService.decrementUsage(req.db, sub.id);
+                break;
         }
-
         res.status(200).json({ message: 'Webhook processado.' });
     } catch (error) {
-        console.error('Erro ao processar webhook genérico:', error);
-        res.status(500).json({ error: 'Erro interno ao processar webhook.' });
+        console.error('Erro ao processar postback:', error);
+        res.status(500).json({ error: 'Erro interno.' });
     }
 };
 
-/**
- * Função 2: Envia as informações necessárias para a página de integração.
- */
 exports.getIntegrationInfo = async (req, res) => {
     try {
         const user = await userService.findUserById(req.db, req.user.id);
         if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
-        const settings = await integrationService.getConfig(req.db, req.user.id);
+        const settings = await integrationConfigService.getConfig(req.db, req.user.id);
         res.status(200).json({ apiKey: user.api_key, settings });
     } catch (err) {
         res.status(500).json({ error: 'Falha ao obter chave' });
     }
 };
 
-/**
- * Função 3: Regenera a chave de API para o link de postback.
- */
 exports.regenerateApiKey = async (req, res) => {
     try {
         const novaChave = await userService.regenerateApiKey(req.db, req.user.id);
-        console.log(`[Integração] Nova chave de API gerada: ${novaChave}`);
         res.status(200).json({ message: 'Nova chave de API gerada com sucesso!', newApiKey: novaChave });
     } catch (err) {
         res.status(500).json({ error: 'Falha ao gerar chave' });
     }
 };
 
+exports.criarIntegracao = async (req, res) => {
+    const { name, platform } = req.body;
+    if (!name || !platform) return res.status(400).json({ error: 'Dados inválidos' });
+    try {
+        const uniquePath = crypto.randomUUID();
+        const result = await integrationService.createIntegration(req.db, req.user.id, platform, name, uniquePath);
+        res.status(201).json({ id: result.id, unique_path: uniquePath });
+    } catch (err) {
+        console.error('Erro ao criar integração', err);
+        res.status(500).json({ error: 'Falha ao criar integração' });
+    }
+};
+
 exports.updateIntegrationSettings = async (req, res) => {
     try {
-        await integrationService.updateConfig(req.db, req.user.id, req.body);
-        const settings = await integrationService.getConfig(req.db, req.user.id);
+        await integrationConfigService.updateConfig(req.db, req.user.id, req.body);
+        const settings = await integrationConfigService.getConfig(req.db, req.user.id);
         res.status(200).json({ message: 'Configurações atualizadas', settings });
     } catch (err) {
         console.error('Erro ao atualizar configurações', err);
