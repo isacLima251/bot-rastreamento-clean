@@ -9,9 +9,9 @@ const integrationService = require('../services/integrationConfigService');
  * e actualiza o banco de dados se houver alguma novidade.
  * @param {object} db A instância do banco de dados.
  */
-async function verificarRastreios(db) {
+async function verificarRastreios(db, client, clienteId, broadcast) {
     try {
-        const pedidos = await pedidoService.getAllPedidos(db);
+        const pedidos = await pedidoService.getAllPedidos(db, clienteId);
         
         // Filtra apenas os pedidos que têm código e ainda não foram marcados como "entregue"
         const pedidosParaRastrear = pedidos.filter(p => p.codigoRastreio && p.statusInterno !== 'entregue');
@@ -41,7 +41,8 @@ async function verificarRastreios(db) {
                         descricaoUltimoEvento: dadosRastreio.descricaoUltimoEvento,
                     };
 
-                    await pedidoService.updateCamposPedido(db, pedido.id, dadosParaAtualizar);
+                    await pedidoService.updateCamposPedido(db, pedido.id, dadosParaAtualizar, clienteId);
+                    if (broadcast) broadcast({ type: 'pedido_atualizado', pedidoId: pedido.id });
 
                     await logService.addLog(db, pedido.cliente_id || 1, 'rastreamento', JSON.stringify({ pedidoId: pedido.id, status: novoStatus }));
                 }
