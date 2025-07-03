@@ -38,6 +38,26 @@ function mapKiwify(payload) {
     };
 }
 
+function mapBraip(payload) {
+    let eventType = 'UNKNOWN';
+    if (payload.type === 'TRACKING_CODE_ADDED') {
+        eventType = 'RASTREIO_ADICIONADO';
+    } else if (payload.trans_status === 'Pagamento Aprovado' || payload.trans_status === 'Agendado') {
+        eventType = 'VENDA_APROVADA';
+    } else if (['Cancelada', 'Chargeback', 'Devolvida'].includes(payload.trans_status)) {
+        eventType = 'VENDA_CANCELADA';
+    }
+
+    return {
+        eventType,
+        clientEmail: payload.client_email,
+        clientName: payload.client_name,
+        clientPhone: payload.client_cel,
+        productName: payload.product_name,
+        trackingCode: payload.tracking_code
+    };
+}
+
 function mapGeneric(payload) {
     let evento = (payload.event || payload.status || '').toLowerCase();
     if (evento === 'purchase_approved') evento = 'VENDA_APROVADA';
@@ -61,5 +81,6 @@ function mapGeneric(payload) {
 module.exports = {
     hotmart: mapHotmart,
     kiwify: mapKiwify,
+    braip: mapBraip,
     generico: mapGeneric
 };
