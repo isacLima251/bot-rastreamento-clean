@@ -304,6 +304,7 @@ const startApp = async () => {
         app.get('/api/logs', planCheck, logsController.listarLogs);
 
         // Rotas de Integrações (UNIFICADAS)
+        app.get('/api/integrations', integrationsController.listarIntegracoes);
         app.get('/api/integrations/info', planCheck, integrationsController.getIntegrationInfo);
         app.post('/api/integrations', planCheck, integrationsController.criarIntegracao);
         app.put('/api/integrations/:id', planCheck, integrationsController.atualizarIntegracao);
