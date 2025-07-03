@@ -112,6 +112,22 @@ const findPedidoByTelefone = (db, telefone, clienteId = null) => {
         });
     });
 };
+
+/**
+ * Busca um pedido pelo e-mail do cliente.
+ */
+const findPedidoByEmail = (db, email, clienteId) => {
+    return new Promise((resolve, reject) => {
+        const sql = "SELECT * FROM pedidos WHERE email = ? AND cliente_id = ? ORDER BY id DESC LIMIT 1";
+        db.get(sql, [email, clienteId], (err, row) => {
+            if (err) {
+                console.error(`Erro ao buscar pedido por email ${email}`, err);
+                return reject(err);
+            }
+            resolve(row);
+        });
+    });
+};
 /**
  * Atualiza um ou mais campos de um pedido específico.
  */
@@ -252,7 +268,7 @@ const marcarComoLido = (db, pedidoId, clienteId = null) => {
  */
 const criarPedido = (db, dadosPedido, client, clienteId = null) => {
     return new Promise(async (resolve, reject) => {
-        const { nome, telefone, produto, codigoRastreio } = dadosPedido;
+        const { nome, telefone, email, produto, codigoRastreio } = dadosPedido;
         const telefoneValidado = normalizeTelefone(telefone);
 
         if (!telefoneValidado || !nome) {
@@ -269,13 +285,13 @@ const criarPedido = (db, dadosPedido, client, clienteId = null) => {
             }
         }
         
-        const sql = 'INSERT INTO pedidos (cliente_id, nome, telefone, produto, codigoRastreio, fotoPerfilUrl) VALUES (?, ?, ?, ?, ?, ?)';
-        const params = [clienteId, nome, telefoneValidado, produto || null, codigoRastreio || null, fotoUrl];
+        const sql = 'INSERT INTO pedidos (cliente_id, nome, email, telefone, produto, codigoRastreio, fotoPerfilUrl) VALUES (?, ?, ?, ?, ?, ?, ?)';
+        const params = [clienteId, nome, email || null, telefoneValidado, produto || null, codigoRastreio || null, fotoUrl];
         
         db.run(sql, params, function (err) {
             if (err) return reject(err);
             resolve({
-                id: this.lastID, nome, telefone: telefoneValidado, produto, codigoRastreio, fotoPerfilUrl: fotoUrl
+                id: this.lastID, nome, email: email || null, telefone: telefoneValidado, produto, codigoRastreio, fotoPerfilUrl: fotoUrl
             });
         });
     });
@@ -286,6 +302,7 @@ module.exports = {
     getAllPedidos,
     getPedidoById,
     findPedidoByTelefone,
+    findPedidoByEmail,
     updateCamposPedido,
     addMensagemHistorico,
     getHistoricoPorPedidoId,

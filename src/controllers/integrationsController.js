@@ -29,7 +29,7 @@ exports.receberPostback = async (req, res) => {
                 if (dados.clientName && dados.clientPhone) {
                     await pedidoService.criarPedido(
                         req.db,
-                        { nome: dados.clientName, telefone: dados.clientPhone, produto: dados.productName },
+                        { nome: dados.clientName, telefone: dados.clientPhone, email: dados.clientEmail, produto: dados.productName },
                         req.venomClient,
                         user.id
                     );
@@ -41,7 +41,7 @@ exports.receberPostback = async (req, res) => {
             case 'PEDIDO_AGENDADO':
                 await pedidoService.criarPedido(
                     req.db,
-                    { nome: dados.clientName, telefone: dados.clientPhone, produto: dados.productName },
+                    { nome: dados.clientName, telefone: dados.clientPhone, email: dados.clientEmail, produto: dados.productName },
                     req.venomClient,
                     user.id
                 );
@@ -50,10 +50,15 @@ exports.receberPostback = async (req, res) => {
                 if (sub && sub.monthly_limit !== -1 && sub.usage >= sub.monthly_limit) {
                     return res.status(403).json({ error: 'Limite do plano excedido.' });
                 }
+                console.log(`Processando rastreio para: ${dados.clientEmail}`);
                 const pedido = await pedidoService.findPedidoByEmail(req.db, dados.clientEmail, user.id);
+
                 if (pedido) {
                     await pedidoService.updateCamposPedido(req.db, pedido.id, { codigoRastreio: dados.trackingCode }, user.id);
                     if (sub) await subscriptionService.incrementUsage(req.db, sub.id);
+                    console.log(`Código de rastreio ${dados.trackingCode} adicionado ao pedido ${pedido.id}.`);
+                } else {
+                    console.warn(`Nenhum pedido encontrado para o email ${dados.clientEmail} para o usuário ${user.id}`);
                 }
                 break;
             case 'VENDA_CANCELADA':
