@@ -306,7 +306,7 @@ const initDb = () => {
 
                     // Nova coluna de e-mail para pedidos
                     db.run("ALTER TABLE pedidos ADD COLUMN email TEXT", [], (e) => {
-                        if (e && !e.message.includes('duplicate column')) return reject(e);
+                        if (e && !e.message.includes('duplicate column')) console.error("Erro ao adicionar coluna email:", e);
                     });
 
                     // Novas colunas para detalhes de rastreio
