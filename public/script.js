@@ -1442,8 +1442,11 @@ const platformGrid = document.getElementById('platform-grid');
     const integrationsListView = document.getElementById('integrations-list').parentElement;
     const integrationSetupView = document.getElementById('integration-setup-view');
     const btnCancelSetup = document.getElementById('btn-cancel-setup');
+    const btnSaveIntegration = document.getElementById('btn-save-integration');
     const setupTitle = document.getElementById('setup-title');
     const platformInstructions = document.getElementById('platform-instructions');
+    const inputIntegrationName = document.getElementById('integration-name');
+    const webhookDisplay = document.getElementById('integration-webhook-url');
 
     const instructions = {
         braip: `<p>1. No painel da Braip, vá para Ferramentas > Postback.</p><p>2. Clique em "Nova Configuração".</p><p>3. Cole a URL de Webhook acima.</p><p>4. Selecione os eventos: <strong>Pagamento Aprovado, Agendado, Cancelada, Chargeback, Devolvida, e TRACKING_CODE_ADDED</strong>.</p><p>5. Salve a configuração.</p>`,
@@ -1454,6 +1457,8 @@ const platformGrid = document.getElementById('platform-grid');
     function showIntegrationSetup(platform) {
         integrationsListView.classList.add('hidden');
         integrationSetupView.classList.remove('hidden');
+        integrationSetupView.dataset.platformId = platform.id;
+        if(inputIntegrationName) inputIntegrationName.value = '';
 
         setupTitle.textContent = `Configurar Integração com ${platform.name}`;
 
@@ -1480,7 +1485,7 @@ const platformGrid = document.getElementById('platform-grid');
             platformInstructions.appendChild(warningDiv);
         }
 
-        document.getElementById('integration-webhook-url').textContent = `https://whatsship.com.br/api/postback/exemplo123_${platform.id}`;
+        if(webhookDisplay) webhookDisplay.textContent = `https://whatsship.com.br/api/postback/exemplo123_${platform.id}`;
     }
 
     function showIntegrationsList() {
@@ -1514,6 +1519,26 @@ const platformGrid = document.getElementById('platform-grid');
         if (e.target === modalPlatformSelect) closePlatformModal();
     });
     if (btnCancelSetup) btnCancelSetup.addEventListener('click', showIntegrationsList);
+    if (btnSaveIntegration) btnSaveIntegration.addEventListener('click', async () => {
+        const name = inputIntegrationName ? inputIntegrationName.value.trim() : '';
+        const platformId = integrationSetupView.dataset.platformId;
+        if (!name || !platformId) {
+            showNotification('Preencha o nome da integração.', 'error');
+            return;
+        }
+        try {
+            const resp = await authFetch('/api/integrations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, platform: platformId })
+            });
+            if (!resp.ok) throw new Error('Falha ao salvar integração');
+            showNotification('Integração salva com sucesso.', 'success');
+            showIntegrationsList();
+        } catch (err) {
+            showNotification(err.message, 'error');
+        }
+    });
 
     // --- 7. Inicialização ---
     fetchErenderizarTudo();

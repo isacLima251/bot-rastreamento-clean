@@ -219,8 +219,8 @@ const startApp = async () => {
         app.post('/api/register', authController.register);
         app.post('/api/login', authController.login);
 
-        // Postback - validação por API Key
-        app.post('/api/postback', apiKeyMiddleware, integrationsController.receberPostback);
+        // Postback dinâmico por caminho único
+        app.post('/api/postback/:unique_path', integrationsController.receberPostback);
 
         // Rota da página de administração (verificação feita no frontend)
         app.get('/admin', (req, res) => {
@@ -305,6 +305,7 @@ const startApp = async () => {
 
         // Rotas de Integrações (UNIFICADAS)
         app.get('/api/integrations/info', planCheck, integrationsController.getIntegrationInfo);
+        app.post('/api/integrations', planCheck, integrationsController.criarIntegracao);
         app.post('/api/integrations/regenerate', planCheck, integrationsController.regenerateApiKey);
         app.put('/api/integrations/settings', planCheck, integrationsController.updateIntegrationSettings);
         app.get('/api/integrations/history', planCheck, integrationsController.listarHistorico);

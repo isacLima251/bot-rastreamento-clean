@@ -15,7 +15,7 @@ module.exports = async (req, res, next) => {
 
         const addingCode =
             ((req.method === 'POST' && req.path === '/api/pedidos' && req.body.codigoRastreio) ||
-            (req.method === 'POST' && req.path === '/api/postback' && req.body.codigoRastreio) ||
+            (req.method === 'POST' && req.path.startsWith('/api/postback') && req.body.codigoRastreio) ||
             (req.method === 'PUT' && /^\/api\/pedidos\/\d+$/.test(req.path) && req.body.codigoRastreio));
 
         const usage = sub.usage;

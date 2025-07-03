@@ -213,8 +213,27 @@ const initDb = () => {
                         return reject(err);
                     }
                     console.log("✔️ Tabela 'subscriptions' pronta.");
-                    db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id)`);
+                db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id)`);
                 });
+
+                    // Tabela de Integrações
+                    db.run(`
+                        CREATE TABLE IF NOT EXISTS integrations (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER NOT NULL,
+                            platform TEXT NOT NULL,
+                            name TEXT NOT NULL,
+                            unique_path TEXT NOT NULL UNIQUE,
+                            status TEXT DEFAULT 'active',
+                            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+                        )
+                    `, (err) => {
+                        if (err) {
+                            console.error("❌ Erro ao criar tabela 'integrations':", err.message);
+                            return reject(err);
+                        }
+                        console.log("✔️ Tabela 'integrations' pronta.");
+                    });
 
                     // Tabela de Configurações de Integração
                     db.run(`
