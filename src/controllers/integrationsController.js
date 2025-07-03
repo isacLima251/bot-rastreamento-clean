@@ -74,36 +74,37 @@ exports.regenerateApiKey = async (req, res) => {
 };
 
 exports.criarIntegracao = async (req, res) => {
-    const { name, platform } = req.body;
-    if (!name || !platform) {
-        return res.status(400).json({ error: 'Dados inválidos' });
+    const db = req.db;
+    const clienteId = req.user.id;
+    const { platform, name } = req.body;
+
+    if (!platform || !name) {
+        return res.status(400).json({ error: 'Nome e plataforma são obrigatórios.' });
     }
 
     try {
-        const uniquePath = crypto.randomUUID();
-        const result = await integrationService.createIntegration(
-            req.db,
-            req.user.id,
-            platform,
-            name,
-            uniquePath
-        );
+        const uniquePath = crypto.randomBytes(16).toString('hex');
 
-        const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+        const sql = 'INSERT INTO integrations (user_id, platform, name, unique_path) VALUES (?, ?, ?, ?)';
+        const newIntegrationId = await new Promise((resolve, reject) => {
+            db.run(sql, [clienteId, platform, name, uniquePath], function(err) {
+                if (err) return reject(err);
+                resolve(this.lastID);
+            });
+        });
+
+        const baseUrl = process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`;
         const webhookUrl = `${baseUrl}/api/postback/${uniquePath}`;
 
-        const integrationData = {
-            id: result.id,
-            name,
+        res.status(201).json({
+            id: newIntegrationId,
             platform,
-            unique_path: uniquePath,
+            name,
             webhook_url: webhookUrl
-        };
-
-        res.status(201).json(integrationData);
-    } catch (err) {
-        console.error('Erro ao criar integração', err);
-        res.status(500).json({ error: 'Falha ao criar integração' });
+        });
+    } catch (error) {
+        console.error('Erro ao criar integração:', error);
+        res.status(500).json({ error: 'Falha ao criar a integração.' });
     }
 };
 
