@@ -34,9 +34,8 @@ const path = require('path');
 
 
 // --- GERENCIAMENTO DE ESTADO ---
-let whatsappStatus = 'DISCONNECTED';
-let qrCodeData = null;
-let botInfo = null;
+// Mapa que guarda as sessões ativas por usuário
+// Estrutura: userId -> { client, status, qrCode, botInfo }
 const activeSessions = new Map();
 
 const app = express();
@@ -56,28 +55,47 @@ function broadcast(data) {
     }
 }
 
-function broadcastStatus(newStatus, data = {}) {
-    whatsappStatus = newStatus;
-    qrCodeData = data.qrCode || null;
-    console.log(`Status do WhatsApp alterado para: ${newStatus}`);
-    broadcast({ type: 'status_update', status: newStatus, ...data });
+function broadcastStatus(userId, newStatus, data = {}) {
+    const session = activeSessions.get(userId) || {};
+    session.status = newStatus;
+    if (Object.prototype.hasOwnProperty.call(data, 'qrCode')) {
+        session.qrCode = data.qrCode;
+    }
+    if (Object.prototype.hasOwnProperty.call(data, 'botInfo')) {
+        session.botInfo = data.botInfo;
+    }
+    activeSessions.set(userId, session);
+    console.log(`Status do WhatsApp do usuário ${userId} alterado para: ${newStatus}`);
+    broadcast({ type: 'status_update', userId, status: newStatus, ...data });
 }
 
 wss.on('connection', (ws) => {
     console.log('🔗 Novo painel conectado via WebSocket.');
     clients.add(ws);
-    ws.send(JSON.stringify({ type: 'status_update', status: whatsappStatus, qrCode: qrCodeData, botInfo: botInfo }));
+    for (const [uid, session] of activeSessions.entries()) {
+        ws.send(JSON.stringify({
+            type: 'status_update',
+            userId: uid,
+            status: session.status || 'DISCONNECTED',
+            qrCode: session.qrCode || null,
+            botInfo: session.botInfo || null
+        }));
+    }
     ws.on('close', () => clients.delete(ws));
 });
 
 // --- Lógica de Conexão e Desconexão do WhatsApp ---
 async function connectToWhatsApp(userId) {
-    if (activeSessions.has(userId) || whatsappStatus === 'CONNECTING' || whatsappStatus === 'CONNECTED') {
+    const existing = activeSessions.get(userId);
+    if (existing && (existing.status === 'CONNECTING' || existing.status === 'CONNECTED')) {
         console.warn(`⚠️ Tentativa de conectar com sessão já ativa para o usuário ${userId}.`);
         return;
     }
     console.log(`Iniciando conexão com o WhatsApp para usuário ${userId}...`);
-    broadcastStatus('CONNECTING');
+    broadcastStatus(userId, 'CONNECTING');
+
+    const sessionState = { client: null, status: 'CONNECTING', qrCode: null, botInfo: null };
+    activeSessions.set(userId, sessionState);
 
     venom.create({
         session: `whatsship-bot-${userId}`,
@@ -85,12 +103,12 @@ async function connectToWhatsApp(userId) {
         headless: 'new',
         browserArgs: ['--no-sandbox', '--disable-setuid-sandbox']
     },
-    (base64Qr) => broadcastStatus('QR_CODE', { qrCode: base64Qr }),
+    (base64Qr) => broadcastStatus(userId, 'QR_CODE', { qrCode: base64Qr }),
     (statusSession) => console.log('[Status da Sessão]', statusSession)
     )
     .then(async (client) => {
         console.log('✅ Cliente Venom criado com SUCESSO.');
-        activeSessions.set(userId, client);
+        sessionState.client = client;
         
         try {
             const hostDevice = await client.getHostDevice();
@@ -108,26 +126,26 @@ async function connectToWhatsApp(userId) {
                     fotoUrl = hostDevice.eurl || null; // Fallback para a propriedade 'eurl'
                 }
 
-                botInfo = { numero: numeroBot, nome: nomeBot, fotoUrl: fotoUrl };
-                console.log('Informações do Bot Coletadas:', botInfo);
+                sessionState.botInfo = { numero: numeroBot, nome: nomeBot, fotoUrl: fotoUrl };
+                console.log('Informações do Bot Coletadas:', sessionState.botInfo);
             }
         } catch (error) {
             console.error('❌ Erro ao obter dados do hostDevice:', error);
         } finally {
             start(client, userId);
-            broadcastStatus('CONNECTED', { botInfo });
+            broadcastStatus(userId, 'CONNECTED', { botInfo: sessionState.botInfo });
         }
     })
     .catch((erro) => {
         console.error('❌ Erro DETALHADO ao criar cliente Venom:', erro);
-        broadcastStatus('DISCONNECTED');
+        broadcastStatus(userId, 'DISCONNECTED');
         activeSessions.delete(userId);
-        botInfo = null;
     });
 }
 
 async function disconnectFromWhatsApp(userId) {
-    const client = activeSessions.get(userId);
+    const session = activeSessions.get(userId);
+    const client = session ? session.client : null;
     if (client) {
         try {
             await client.logout();
@@ -136,8 +154,7 @@ async function disconnectFromWhatsApp(userId) {
             console.error('Erro ao desconectar o cliente:', error);
         } finally {
             activeSessions.delete(userId);
-            botInfo = null;
-            broadcastStatus('DISCONNECTED');
+            broadcastStatus(userId, 'DISCONNECTED');
             console.log('🔌 Cliente WhatsApp desconectado.');
         }
     }
@@ -236,7 +253,8 @@ const startApp = async () => {
         // Middleware de autenticação para rotas abaixo
         app.use(authMiddleware);
         app.use((req, res, next) => {
-            req.venomClient = activeSessions.get(req.user.id) || null;
+            const session = activeSessions.get(req.user.id);
+            req.venomClient = session ? session.client : null;
             next();
         });
 
@@ -326,7 +344,15 @@ const startApp = async () => {
         app.put('/api/users/me/password', userController.updatePassword);
 
         // Rotas do WhatsApp
-        app.get('/api/whatsapp/status', (req, res) => res.json({ status: whatsappStatus, qrCode: qrCodeData, botInfo: botInfo }));
+        app.get('/api/whatsapp/status', (req, res) => {
+            const session = activeSessions.get(req.user.id);
+            if (!session) return res.json({ status: 'DISCONNECTED' });
+            res.json({
+                status: session.status || 'DISCONNECTED',
+                qrCode: session.qrCode || null,
+                botInfo: session.botInfo || null
+            });
+        });
         app.post('/api/whatsapp/connect', planCheck, (req, res) => {
             connectToWhatsApp(req.user.id);
             res.status(202).json({ message: "Processo de conexão iniciado." });
@@ -338,7 +364,12 @@ const startApp = async () => {
 
         // Tarefas em Background
         setInterval(() => {
-            if (activeSessions.size > 0) rastreamentoController.verificarRastreios(db, broadcast);
+            console.log(`Verificando rastreios para ${activeSessions.size} sessões ativas...`);
+            for (const [uid, session] of activeSessions.entries()) {
+                if (session.status === 'CONNECTED') {
+                    rastreamentoController.verificarRastreios(db, session.client, uid, broadcast);
+                }
+            }
         }, 300000);
         setInterval(() => {
             if (activeSessions.size > 0) envioController.enviarMensagensComRegras(db, broadcast, activeSessions);

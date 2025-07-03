@@ -54,12 +54,15 @@ function personalizarMensagem(mensagem, pedido) {
 
 async function enviarMensagensComRegras(db, broadcast, sessions) {
     try {
-        const automacoes = await automationService.getAutomations(db);
-        const pedidos = await pedidoService.getAllPedidos(db);
-        
-        for (const pedido of pedidos) {
-            let mensagemParaEnviar = null;
-            let novoStatusDaMensagem = null;
+        for (const [userId, sess] of sessions.entries()) {
+            if (sess.status !== 'CONNECTED') continue;
+
+            const automacoes = await automationService.getAutomations(db, userId);
+            const pedidos = await pedidoService.getAllPedidos(db, userId);
+
+            for (const pedido of pedidos) {
+                let mensagemParaEnviar = null;
+                let novoStatusDaMensagem = null;
             
             const { id, nome, telefone, codigoRastreio, statusInterno, mensagemUltimoStatus } = pedido;
 
@@ -93,17 +96,19 @@ async function enviarMensagensComRegras(db, broadcast, sessions) {
             }
 
             if (mensagemParaEnviar && novoStatusDaMensagem) {
-                const client = sessions.get(pedido.cliente_id);
+                const client = sess.client;
                 if (!client) continue;
                 await whatsappService.enviarMensagem(client, telefone, mensagemParaEnviar);
                 await pedidoService.addMensagemHistorico(db, id, mensagemParaEnviar, novoStatusDaMensagem, 'bot', pedido.cliente_id);
-                await pedidoService.updateCamposPedido(db, id, { mensagemUltimoStatus: novoStatusDaMensagem });
+                await pedidoService.updateCamposPedido(db, id, { mensagemUltimoStatus: novoStatusDaMensagem }, userId);
 
                 await logService.addLog(db, pedido.cliente_id || 1, 'mensagem_automatica', JSON.stringify({ pedidoId: id, tipo: novoStatusDaMensagem }));
                 if (broadcast) broadcast({ type: 'nova_mensagem', pedidoId: id });
             }
         }
-    } catch (err) {
+    }
+    }
+    catch (err) {
         console.error("❌ Falha no ciclo de envio de mensagens:", err);
     }
 }
