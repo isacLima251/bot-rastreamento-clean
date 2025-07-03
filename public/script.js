@@ -1459,6 +1459,50 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
     const integrationSetupView = document.getElementById('integration-setup-view');
     const btnCancelSetup = document.getElementById('btn-cancel-setup');
     const btnSaveIntegration = document.getElementById('btn-save-integration');
+
+    // Garanta que esta lógica esteja associada ao clique do botão 'btn-save-integration'
+    if (btnSaveIntegration) {
+        btnSaveIntegration.onclick = async () => {
+            const integrationNameInput = document.getElementById('integration-name');
+            const integrationSecretInput = document.getElementById('integration-secret');
+
+            const integrationName = integrationNameInput.value.trim();
+            const secretKey = integrationSecretInput.value.trim();
+
+            // Pega o ID da integração que foi criada quando a tela abriu
+            // Esta parte depende de como a ID está a ser armazenada. Exemplo:
+            const integrationId = integrationSetupView.dataset.editingId;
+
+            if (!integrationName) {
+                alert('Por favor, dê um apelido à sua integração.');
+                return;
+            }
+
+            try {
+                // Lógica para enviar os dados para o backend (PUT para atualizar)
+                await authFetch(`/api/integrations/${integrationId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: integrationName,
+                        secret_key: secretKey
+                    })
+                });
+
+                // FEEDBACK + AÇÕES DE REDIRECIONAMENTO E ATUALIZAÇÃO
+                showNotification('Integração salva com sucesso!', 'success');
+
+                // PASSO 1: VOLTA PARA A TELA DA LISTA
+                showIntegrationsList();
+
+                // PASSO 2: RECARREGA OS DADOS DA LISTA DO SERVIDOR
+                loadAndRenderIntegrations();
+
+            } catch (err) {
+                showNotification(`Erro ao salvar: ${err.message}`, 'error');
+            }
+        };
+    }
     const setupTitle = document.getElementById('setup-title');
     const platformInstructions = document.getElementById('platform-instructions');
     const inputIntegrationName = document.getElementById('integration-name');
@@ -1564,10 +1608,8 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
             webhookUrlDisplayEl.textContent = newIntegration.webhook_url;
             btnSaveIntegration.disabled = false; // Ativa o botão de salvar
 
-            // 3. Configura o botão "Salvar" para ATUALIZAR a integração com os dados finais
-            btnSaveIntegration.onclick = async () => {
-                // ... (Lógica para salvar o apelido e a chave secreta que já foi planeada) ...
-            };
+            // Armazena o ID para ser utilizado no salvamento
+            integrationSetupView.dataset.editingId = newIntegration.id;
 
         } catch (error) {
             showNotification(error.message, 'error');
