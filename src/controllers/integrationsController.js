@@ -35,13 +35,14 @@ exports.receberPostback = async (req, res) => {
     const payload = req.body;
 
     try {
+        // Encontra a integração e o usuário dono dela
         const integracao = await integrationService.findIntegrationByPath(req.db, unique_path);
         if (!integracao) {
             return res.status(404).json({ error: 'Integração não encontrada.' });
         }
         const nossoUsuario = await userService.findUserById(req.db, integracao.user_id);
         if (!nossoUsuario) {
-            return res.status(404).json({ error: 'Usuário dono da integração não encontrado.' });
+            return res.status(404).json({ error: 'Usuário da integração não encontrado.' });
         }
 
         const mapper = platformMappers[integracao.platform];
@@ -50,34 +51,69 @@ exports.receberPostback = async (req, res) => {
         }
 
         const dados = mapper(payload);
+        console.log(`[Webhook] Evento '${dados.eventType}' para usuário ${nossoUsuario.id}`);
 
         switch (dados.eventType) {
             case 'VENDA_APROVADA': {
-                const pedidoExistente = await pedidoService.findPedidoByEmail(req.db, dados.clientEmail, nossoUsuario.id);
-                if (!pedidoExistente) {
-                    const pedidoCriado = await pedidoService.criarPedido(req.db, {
-                        nome: dados.clientName,
-                        telefone: dados.clientPhone,
-                        email: dados.clientEmail,
-                        produto: dados.productName,
-                    }, req.venomClient, nossoUsuario.id);
-
-                    req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });
-
-                    console.log(`[Webhook] Contato para ${dados.clientName} criado com sucesso.`);
+                if (!dados.clientName || !dados.clientPhone) {
+                    break; // Sai se não tiver dados mínimos
                 }
+                const pedidoExistente = await pedidoService.findPedidoByTelefone(req.db, dados.clientPhone, nossoUsuario.id);
+                if (pedidoExistente) {
+                    console.log(`[Webhook] Contato com telefone ${dados.clientPhone} já existe. Ignorando.`);
+                    break;
+                }
+
+                const pedidoCriado = await pedidoService.criarPedido(req.db, {
+                    nome: dados.clientName,
+                    telefone: dados.clientPhone,
+                    email: dados.clientEmail,
+                    produto: dados.productName,
+                }, req.venomClient, nossoUsuario.id);
+
+                // AVISA O FRONTEND QUE UM NOVO CONTATO FOI CRIADO
+                req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });
+                console.log(`[Webhook] Contato para ${dados.clientName} criado e notificação enviada.`);
                 break;
             }
-            case 'RASTREIO_ADICIONADO':
+
+            case 'RASTREIO_ADICIONADO': {
+                if (!dados.clientEmail || !dados.trackingCode) {
+                    break; // Sai se não tiver dados mínimos
+                }
                 const pedido = await pedidoService.findPedidoByEmail(req.db, dados.clientEmail, nossoUsuario.id);
-                // etc...
+                if (!pedido || pedido.codigoRastreio) {
+                    console.log(`[Webhook] Pedido não encontrado ou já possui rastreio para o email ${dados.clientEmail}.`);
+                    break;
+                }
+
+                const sub = await subscriptionService.getUserSubscription(req.db, nossoUsuario.id);
+                if (sub.monthly_limit !== -1 && sub.usage >= sub.monthly_limit) {
+                    console.warn(`[Webhook] Limite do plano excedido para usuário ${nossoUsuario.id}.`);
+                    break;
+                }
+
+                // Salva o código no banco de dados
+                await pedidoService.updateCamposPedido(req.db, pedido.id, { codigoRastreio: dados.trackingCode, statusInterno: 'codigo_enviado' });
+                // Incrementa o uso do plano
+                await subscriptionService.incrementUsage(req.db, sub.id);
+                
+                // AVISA O FRONTEND QUE UM PEDIDO FOI ATUALIZADO
+                req.broadcast({ type: 'pedido_atualizado', pedidoId: pedido.id });
+                console.log(`[Webhook] Rastreio ${dados.trackingCode} adicionado ao pedido ${pedido.id} e notificação enviada.`);
                 break;
+            }
+
+            case 'VENDA_CANCELADA': {
+                // ... (lógica de devolução de crédito) ...
+                break;
+            }
         }
 
         res.status(200).json({ message: 'Webhook processado.' });
 
     } catch (error) {
-        console.error(`[Webhook Erro] Para o caminho ${unique_path}:`, error);
+        console.error(`[Webhook Erro]`, error);
         res.status(500).json({ error: 'Erro interno do servidor.' });
     }
 };
