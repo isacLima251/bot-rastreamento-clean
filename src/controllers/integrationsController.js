@@ -75,11 +75,24 @@ exports.regenerateApiKey = async (req, res) => {
 
 exports.criarIntegracao = async (req, res) => {
     const { name, platform } = req.body;
-    if (!name || !platform) return res.status(400).json({ error: 'Dados inválidos' });
+    if (!name || !platform) {
+        return res.status(400).json({ error: 'Dados inválidos' });
+    }
+
     try {
         const uniquePath = crypto.randomUUID();
-        const result = await integrationService.createIntegration(req.db, req.user.id, platform, name, uniquePath);
-        res.status(201).json({ id: result.id, unique_path: uniquePath });
+        const result = await integrationService.createIntegration(
+            req.db,
+            req.user.id,
+            platform,
+            name,
+            uniquePath
+        );
+
+        const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+        const webhookUrl = `${baseUrl}/api/postback/${uniquePath}`;
+
+        res.status(201).json({ id: result.id, unique_path: uniquePath, webhook_url: webhookUrl });
     } catch (err) {
         console.error('Erro ao criar integração', err);
         res.status(500).json({ error: 'Falha ao criar integração' });

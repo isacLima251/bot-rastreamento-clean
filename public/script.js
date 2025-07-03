@@ -94,6 +94,7 @@ const btnAddIntegration = document.getElementById('btn-add-integration');
 const modalPlatformSelect = document.getElementById('modal-platform-select');
 const btnClosePlatformModal = document.getElementById('btn-close-platform-modal');
 const platformGrid = document.getElementById('platform-grid');
+const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
     if (loggedUserEl) loggedUserEl.textContent = userData.email || 'Usuário';
 
     const variableTooltips = {
@@ -1108,6 +1109,18 @@ const platformGrid = document.getElementById('platform-grid');
             const urlToCopy = webhookUrlDisplayEl ? webhookUrlDisplayEl.textContent : '';
             if (navigator.clipboard && urlToCopy && urlToCopy !== "A carregar...") {
                 navigator.clipboard.writeText(urlToCopy)
+                    .then(() => showNotification('Link copiado para a área de transferência!', 'success'))
+                    .catch(() => showNotification('Falha ao copiar o link.', 'error'));
+            }
+        });
+    }
+
+    if (btnCopySetupWebhook) {
+        btnCopySetupWebhook.addEventListener('click', () => {
+            const url = document.getElementById('integration-webhook-url');
+            const text = url ? url.textContent : '';
+            if (navigator.clipboard && text && text !== 'A gerar URL...' && text !== 'Erro ao gerar URL.') {
+                navigator.clipboard.writeText(text)
                     .then(() => showNotification('Link copiado para a área de transferência!', 'success'))
                     .catch(() => showNotification('Falha ao copiar o link.', 'error'));
             }
