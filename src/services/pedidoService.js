@@ -278,20 +278,20 @@ const criarPedido = (db, dadosPedido, client, clienteId = null) => {
         let fotoUrl = null;
         if (client) {
             try {
-                fotoUrl = await whatsappService.getProfilePicUrl(client, telefoneValidado);
+                fotoUrl = await whatsappService.getProfilePicUrl(telefoneValidado);
             } catch (e) {
                 console.warn(`Não foi possível obter a foto para o novo contato ${telefoneValidado}.`);
                 fotoUrl = null;
             }
         }
-        
+
         const sql = 'INSERT INTO pedidos (cliente_id, nome, email, telefone, produto, codigoRastreio, fotoPerfilUrl) VALUES (?, ?, ?, ?, ?, ?, ?)';
         const params = [clienteId, nome, email || null, telefoneValidado, produto || null, codigoRastreio || null, fotoUrl];
-        
+
         db.run(sql, params, function (err) {
             if (err) return reject(err);
             resolve({
-                id: this.lastID, nome, email: email || null, telefone: telefoneValidado, produto, codigoRastreio, fotoPerfilUrl: fotoUrl
+                id: this.lastID, nome, telefone: telefoneValidado, email, produto, codigoRastreio, fotoPerfilUrl: fotoUrl
             });
         });
     });
