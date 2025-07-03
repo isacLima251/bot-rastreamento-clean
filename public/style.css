@@ -1506,6 +1506,7 @@ input:checked ~ .toggle-label { color: var(--success-color); font-weight: 600; }
     font-size: 0.9rem;
     transition: background-color 0.2s ease-out, transform 0.2s ease-out;
     height: 120px; /* Adiciona altura fixa para alinhar as opções */
+    flex-direction: column;
 }
 .platform-tile img {
     max-width: 60px;
