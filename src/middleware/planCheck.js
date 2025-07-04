@@ -1,7 +1,7 @@
 const subscriptionService = require('../services/subscriptionService');
 
 module.exports = async (req, res, next) => {
-    // Se for admin, não aplica nenhuma restrição
+    // Se for admin, não aplica nenhuma restrição e sai imediatamente.
     if (req.user && req.user.is_admin) {
         return next();
     }
@@ -13,32 +13,42 @@ module.exports = async (req, res, next) => {
 
     try {
         let sub = await subscriptionService.getUserSubscription(req.db, userId);
+
+        // Se o usuário não tem uma assinatura (cenário de primeiro login),
+        // cria uma assinatura do plano Grátis (ID 1) para ele.
         if (!sub) {
-            // Se não tiver assinatura, talvez seja um usuário recém-criado, vamos criar uma gratuita
-            await subscriptionService.createSubscription(req.db, userId, 1); // ID 1 = Plano Grátis
+            console.log(`[PlanCheck] Usuário ${userId} sem assinatura. A criar plano Grátis...`);
+            await subscriptionService.createSubscription(req.db, userId, 1);
+            // Após criar, busca novamente para ter a certeza de que temos os dados.
             sub = await subscriptionService.getUserSubscription(req.db, userId);
         }
 
+        // Se, mesmo após a tentativa de criação, a assinatura não existir, há um problema.
+        if (!sub) {
+            return res.status(403).json({ error: 'Não foi possível verificar ou criar um plano para este usuário.' });
+        }
+        
+        // A partir daqui, 'sub' tem a garantia de ser um objeto válido.
         await subscriptionService.resetUsageIfNeeded(req.db, sub.id);
-        sub = await subscriptionService.getUserSubscription(req.db, userId); // Recarrega para ter o 'usage' atualizado
+        
+        // Recarrega os dados da assinatura para ter o 'usage' mais atualizado.
+        const subAtualizada = await subscriptionService.getUserSubscription(req.db, userId);
 
-        if (sub.status !== 'active') {
+        if (subAtualizada.status !== 'active') {
             return res.status(403).json({ error: 'Seu plano está inativo. Por favor, contacte o suporte.' });
         }
 
-        // Verifica se a ROTA ATUAL é uma que deve ser bloqueada se o limite for atingido
-        const isCreatingOrUpdatingRastreio =
+        // Verifica se a rota atual é uma que deve ser bloqueada se o limite for atingido.
+        const isCreatingOrUpdatingRastreio = 
             (req.method === 'POST' && req.path === '/api/pedidos' && req.body.codigoRastreio) ||
-            (req.method === 'POST' && req.path.startsWith('/api/postback/') && req.body.tracking_code) ||
+            (req.method.startsWith('TRACKING_CODE_ADDED')) ||
             (req.method === 'PUT' && /^\/api\/pedidos\/\d+$/.test(req.path) && req.body.codigoRastreio && !req.originalPedido?.codigoRastreio);
-
-        // Se a ação é uma que consome o limite E o limite foi atingido
-        if (isCreatingOrUpdatingRastreio && sub.monthly_limit !== -1 && sub.usage >= sub.monthly_limit) {
+        
+        if (isCreatingOrUpdatingRastreio && subAtualizada.monthly_limit !== -1 && subAtualizada.usage >= subAtualizada.monthly_limit) {
             return res.status(403).json({ error: 'Limite do plano excedido. Faça um upgrade para adicionar mais rastreios.' });
         }
 
-        // Para todas as outras rotas (como GET /api/pedidos), permite o acesso
-        req.subscription = sub;
+        req.subscription = subAtualizada;
         next();
 
     } catch (e) {
