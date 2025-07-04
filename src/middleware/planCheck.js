@@ -1,7 +1,7 @@
 const subscriptionService = require('../services/subscriptionService');
 
 module.exports = async (req, res, next) => {
-    // Se for admin, não aplica nenhuma restrição e sai imediatamente.
+    // Se for admin, não aplica nenhuma restrição.
     if (req.user && req.user.is_admin) {
         return next();
     }
@@ -12,30 +12,21 @@ module.exports = async (req, res, next) => {
     }
 
     try {
+        // Passo 1: Apenas busca a assinatura. Não tenta mais criar.
         let sub = await subscriptionService.getUserSubscription(req.db, userId);
 
-        // Se o usuário não tem uma assinatura (cenário de primeiro login),
-        // cria uma assinatura do plano Grátis (ID 1) para ele.
+        // Se, por algum motivo, o usuário não tiver uma assinatura, bloqueia o acesso.
+        // A criação é responsabilidade do fluxo de registo.
         if (!sub) {
-            console.log(`[PlanCheck] Usuário ${userId} sem assinatura. A criar plano Grátis...`);
-            await subscriptionService.createSubscription(req.db, userId, 1);
-            // Após criar, busca novamente para ter a certeza de que temos os dados.
-            sub = await subscriptionService.getUserSubscription(req.db, userId);
-        }
-
-        // Se, mesmo após a tentativa de criação, a assinatura não existir, há um problema.
-        if (!sub) {
-            return res.status(403).json({ error: 'Não foi possível verificar ou criar um plano para este usuário.' });
+            return res.status(403).json({ error: 'Nenhum plano de assinatura ativo foi encontrado para este usuário.' });
         }
         
-        // A partir daqui, 'sub' tem a garantia de ser um objeto válido.
+        // A partir daqui, o código continua como antes, mas de forma mais segura.
         await subscriptionService.resetUsageIfNeeded(req.db, sub.id);
-        
-        // Recarrega os dados da assinatura para ter o 'usage' mais atualizado.
         const subAtualizada = await subscriptionService.getUserSubscription(req.db, userId);
 
         if (subAtualizada.status !== 'active') {
-            return res.status(403).json({ error: 'Seu plano está inativo. Por favor, contacte o suporte.' });
+            return res.status(403).json({ error: 'Seu plano está inativo.' });
         }
 
         // Verifica se a rota atual é uma que deve ser bloqueada se o limite for atingido.
@@ -45,7 +36,7 @@ module.exports = async (req, res, next) => {
             (req.method === 'PUT' && /^\/api\/pedidos\/\d+$/.test(req.path) && req.body.codigoRastreio && !req.originalPedido?.codigoRastreio);
         
         if (isCreatingOrUpdatingRastreio && subAtualizada.monthly_limit !== -1 && subAtualizada.usage >= subAtualizada.monthly_limit) {
-            return res.status(403).json({ error: 'Limite do plano excedido. Faça um upgrade para adicionar mais rastreios.' });
+            return res.status(403).json({ error: 'Limite do plano excedido.' });
         }
 
         req.subscription = subAtualizada;
