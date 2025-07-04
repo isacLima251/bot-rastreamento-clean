@@ -56,14 +56,22 @@ exports.receberPostback = async (req, res) => {
         switch (dados.eventType) {
             case 'VENDA_APROVADA': {
                 if (!dados.clientName || !dados.clientPhone) {
-                    break; // Sai se não tiver dados mínimos
-                }
-                const pedidoExistente = await pedidoService.findPedidoByTelefone(req.db, dados.clientPhone, nossoUsuario.id);
-                if (pedidoExistente) {
-                    console.log(`[Webhook] Contato com telefone ${dados.clientPhone} já existe. Ignorando.`);
+                    console.log('[Webhook] Dados insuficientes para criar contato.');
                     break;
                 }
 
+                // --- INÍCIO DA CORREÇÃO ---
+
+                // 1. Verifica se o contato já existe
+                const pedidoExistente = await pedidoService.findPedidoByTelefone(req.db, dados.clientPhone, nossoUsuario.id);
+
+                // 2. Se já existir, ignora e segue em frente sem dar erro
+                if (pedidoExistente) {
+                    console.log(`[Webhook] Contato com telefone ${dados.clientPhone} já existe para este usuário. Ignorando criação.`);
+                    break;
+                }
+
+                // 3. Se não existir, aí sim ele cria o novo contato
                 const pedidoCriado = await pedidoService.criarPedido(req.db, {
                     nome: dados.clientName,
                     telefone: dados.clientPhone,
@@ -71,9 +79,10 @@ exports.receberPostback = async (req, res) => {
                     produto: dados.productName,
                 }, req.venomClient, nossoUsuario.id);
 
-                // AVISA O FRONTEND QUE UM NOVO CONTATO FOI CRIADO
                 req.broadcast({ type: 'novo_contato', pedido: pedidoCriado });
-                console.log(`[Webhook] Contato para ${dados.clientName} criado e notificação enviada.`);
+                console.log(`[Webhook] Contato para ${dados.clientName} criado com sucesso.`);
+
+                // --- FIM DA CORREÇÃO ---
                 break;
             }
 
