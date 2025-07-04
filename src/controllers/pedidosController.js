@@ -205,6 +205,10 @@ exports.enviarMensagemManual = async (req, res) => {
         const pedido = await pedidoService.getPedidoById(db, id, clienteId);
         if (!pedido) return res.status(404).json({ error: "Pedido não encontrado." });
 
+        if (!req.venomClient) {
+            return res.status(409).json({ error: 'A sua conta não está conectada ao WhatsApp.' });
+        }
+
         await whatsappService.enviarMensagem(req.venomClient, pedido.telefone, mensagem);
         await pedidoService.addMensagemHistorico(db, id, mensagem, 'manual', 'bot', clienteId);
 
