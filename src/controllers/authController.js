@@ -24,7 +24,7 @@ exports.register = async (req, res) => {
         if (!freePlan) {
             await new Promise((resolve, reject) => {
                 req.db.run(
-                    'INSERT INTO plans (id, name, price, monthly_limit) VALUES (1, ? , 0, 50)',
+                    'INSERT INTO plans (id, name, price, monthly_limit) VALUES (1, ? , 0, 10)',
                     ['Start'],
                     err => {
                         if (err) return reject(err);
