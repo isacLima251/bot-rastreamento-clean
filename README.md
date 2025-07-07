@@ -46,7 +46,7 @@ cp .env.example .env
 ```
 
 Edite o `.env` com suas chaves e URLs de callback. As principais variáveis são:
-- `JWT_SECRET` – chave usada para assinar os tokens JWT
+- `JWT_SECRET` – **obrigatória**. Chave usada para assinar os tokens JWT; o servidor não inicia sem ela
 - `SITERASTREIO_API_KEY` – chave da API do Site Rastreio
 - `TICTO_SECRET` – token para validar os webhooks da Ticto (enviado no header `X-Ticto-Token`)
 - `PORT` – porta em que o servidor irá rodar (padrão 3000)
