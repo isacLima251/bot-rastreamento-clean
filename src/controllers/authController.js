@@ -14,8 +14,26 @@ exports.register = async (req, res) => {
     try {
         const existing = await userService.findUserByEmail(req.db, email);
         if (existing) return res.status(409).json({ error: 'Usuário já existe.' });
-        // Indica que o usuário não precisa trocar a senha ao primeiro login
-        // (isAdmin=0, isActive=1, needsPasswordChange=0)
+        // Verifica se o plano gratuito existe
+        const freePlan = await new Promise((resolve, reject) => {
+            req.db.get('SELECT id FROM plans WHERE id = ?', [1], (err, row) => {
+                if (err) return reject(err);
+                resolve(row);
+            });
+        });
+        if (!freePlan) {
+            await new Promise((resolve, reject) => {
+                req.db.run(
+                    'INSERT INTO plans (id, name, price, monthly_limit) VALUES (1, ? , 0, 50)',
+                    ['Start'],
+                    err => {
+                        if (err) return reject(err);
+                        resolve();
+                    }
+                );
+            });
+        }
+        // Indica que o usuário não precisa trocar a senha ao primeiro login (isAdmin=0, isActive=1, needsPasswordChange=0)
         const user = await userService.createUser(req.db, email, password, 0, 1, 0);
         await subscriptionService.createSubscription(req.db, user.id, 1);
         res.status(201).json({ id: user.id, email: user.email, apiKey: user.api_key });
