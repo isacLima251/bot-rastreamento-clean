@@ -1614,7 +1614,12 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
         integrationSetupView.dataset.mode = '';
     }
 
-    async function cancelIntegrationSetup() {
+    async function cancelIntegrationSetup(event) {
+        if (event) event.preventDefault();
+        const nameInput = document.getElementById('integration-name');
+        const secretInput = document.getElementById('integration-secret');
+        if (nameInput) nameInput.value = '';
+        if (secretInput) secretInput.value = '';
         showIntegrationsList();
         loadAndRenderIntegrations();
     }

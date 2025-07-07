@@ -119,16 +119,16 @@ exports.criarIntegracao = async (req, res) => {
     if (!name || !name.trim()) {
         return res.status(400).json({ error: 'Nome da integração é obrigatório.' });
     }
-    if (secret_key !== undefined && !secret_key.trim()) {
-        return res.status(400).json({ error: 'A chave secreta não pode estar vazia.' });
+    if (!secret_key || !secret_key.trim()) {
+        return res.status(400).json({ error: 'A chave secreta é obrigatória.' });
     }
 
     try {
         const uniquePath = crypto.randomBytes(16).toString('hex');
 
-        const sql = 'INSERT INTO integrations (user_id, platform, name, unique_path) VALUES (?, ?, ?, ?)';
+        const sql = 'INSERT INTO integrations (user_id, platform, name, unique_path, secret_key) VALUES (?, ?, ?, ?, ?)';
         const newIntegrationId = await new Promise((resolve, reject) => {
-            db.run(sql, [clienteId, platform, name, uniquePath], function(err) {
+            db.run(sql, [clienteId, platform, name, uniquePath, secret_key], function(err) {
                 if (err) return reject(err);
                 resolve(this.lastID);
             });
