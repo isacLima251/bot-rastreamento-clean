@@ -1621,6 +1621,20 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
     function showIntegrationsList() {
         integrationSetupView.classList.add('hidden');
         integrationsListView.classList.remove('hidden');
+        integrationSetupView.dataset.editingId = '';
+    }
+
+    async function cancelIntegrationSetup() {
+        const id = integrationSetupView.dataset.editingId;
+        if (id) {
+            try {
+                await authFetch(`/api/integrations/${id}`, { method: 'DELETE' });
+            } catch (err) {
+                console.error('Falha ao cancelar integração provisória', err);
+            }
+        }
+        showIntegrationsList();
+        loadAndRenderIntegrations();
     }
 
     function openPlatformModal() {
@@ -1683,7 +1697,7 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
     if (modalPlatformSelect) modalPlatformSelect.addEventListener('click', (e) => {
         if (e.target === modalPlatformSelect) closePlatformModal();
     });
-    if (btnCancelSetup) btnCancelSetup.addEventListener('click', showIntegrationsList);
+    if (btnCancelSetup) btnCancelSetup.addEventListener('click', cancelIntegrationSetup);
 
     // --- 7. Inicialização ---
     fetchErenderizarTudo();
