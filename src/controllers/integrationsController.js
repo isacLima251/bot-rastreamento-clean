@@ -111,10 +111,16 @@ exports.regenerateApiKey = async (req, res) => {
 exports.criarIntegracao = async (req, res) => {
     const db = req.db;
     const clienteId = req.user.id;
-    const { platform, name } = req.body;
+    const { platform, name, secret_key } = req.body;
 
-    if (!platform || !name || !name.trim()) {
-        return res.status(400).json({ error: 'Nome e plataforma são obrigatórios.' });
+    if (!platform || !platform.trim()) {
+        return res.status(400).json({ error: 'Plataforma é obrigatória.' });
+    }
+    if (!name || !name.trim()) {
+        return res.status(400).json({ error: 'Nome da integração é obrigatório.' });
+    }
+    if (secret_key !== undefined && !secret_key.trim()) {
+        return res.status(400).json({ error: 'A chave secreta não pode estar vazia.' });
     }
 
     try {
@@ -149,6 +155,9 @@ exports.atualizarIntegracao = async (req, res) => {
     const { name, secret_key } = req.body;
     if (!name || !name.trim()) {
         return res.status(400).json({ error: 'O nome da integração é obrigatório.' });
+    }
+    if (secret_key !== undefined && !secret_key.trim()) {
+        return res.status(400).json({ error: 'A chave secreta não pode estar vazia.' });
     }
     try {
         const result = await integrationService.updateIntegration(
@@ -203,6 +212,18 @@ exports.listarIntegracoes = async (req, res) => {
 };
 
 exports.updateIntegrationSettings = async (req, res) => {
+    const { postback_secret, rastreio_api_key, webhook_url } = req.body;
+
+    if (postback_secret !== undefined && !postback_secret.trim()) {
+        return res.status(400).json({ error: 'O segredo do postback não pode estar vazio.' });
+    }
+    if (rastreio_api_key !== undefined && !rastreio_api_key.trim()) {
+        return res.status(400).json({ error: 'A chave de rastreio não pode estar vazia.' });
+    }
+    if (webhook_url !== undefined && !webhook_url.trim()) {
+        return res.status(400).json({ error: 'A URL de webhook não pode estar vazia.' });
+    }
+
     try {
         await integrationConfigService.updateConfig(req.db, req.user.id, req.body);
         const settings = await integrationConfigService.getConfig(req.db, req.user.id);
