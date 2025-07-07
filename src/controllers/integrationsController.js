@@ -113,7 +113,7 @@ exports.criarIntegracao = async (req, res) => {
     const clienteId = req.user.id;
     const { platform, name } = req.body;
 
-    if (!platform || !name) {
+    if (!platform || !name || !name.trim()) {
         return res.status(400).json({ error: 'Nome e plataforma são obrigatórios.' });
     }
 
@@ -147,6 +147,9 @@ exports.atualizarIntegracao = async (req, res) => {
     const { id } = req.params;
     const clienteId = req.user.id;
     const { name, secret_key } = req.body;
+    if (!name || !name.trim()) {
+        return res.status(400).json({ error: 'O nome da integração é obrigatório.' });
+    }
     try {
         const result = await integrationService.updateIntegration(
             req.db,
