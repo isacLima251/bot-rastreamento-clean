@@ -50,7 +50,16 @@ Edite o `.env` com suas chaves e URLs de callback. As principais variáveis são
 - `SITERASTREIO_API_KEY` – chave da API do Site Rastreio
 - `TICTO_SECRET` – token para validar os webhooks da Ticto (enviado no header `X-Ticto-Token`)
 - `PORT` – porta em que o servidor irá rodar (padrão 3000)
+- `DB_CLIENT` – `sqlite3` (padrão) ou `pg`
 - `DB_PATH` – caminho para o arquivo SQLite (opcional)
+- `DATABASE_URL` – string de conexão do PostgreSQL (em produção)
+
+Para usar o PostgreSQL defina `DB_CLIENT=pg` e a variável `DATABASE_URL` com a
+string de conexão. Em seguida execute as migrações:
+
+```bash
+npx knex migrate:latest --env production
+```
 
 ---
 
@@ -89,7 +98,7 @@ meu-bot-rastreamento/
 └── src/
     ├── controllers/        # Lógica das rotas da API
     ├── services/           # Integrações (WhatsApp, rastreamento, etc.)
-    ├── database/           # Inicialização do SQLite
+    ├── database/           # Configuração do Knex (SQLite ou PostgreSQL)
     └── middleware/         # Autenticação e checagem de planos
 ```
 

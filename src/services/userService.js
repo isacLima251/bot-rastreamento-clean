@@ -6,22 +6,20 @@ function generateApiKey() {
     return crypto.randomBytes(20).toString('hex');
 }
 
-function createUser(db, email, password, isAdmin = 0, isActive = 1, needsPasswordChange = 1) {
-    return new Promise((resolve, reject) => {
-        const hashed = bcrypt.hashSync(password, 10);
-        const apiKey = generateApiKey();
-        const stmt = db.prepare('INSERT INTO users (email, password, api_key, is_admin, is_active, precisa_trocar_senha) VALUES (?, ?, ?, ?, ?, ?)');
-        stmt.run(email, hashed, apiKey, isAdmin, isActive, needsPasswordChange, function(err) {
-            if (err) return reject(err);
-            const userId = this.lastID;
-            integrationConfigService.createDefault(db, userId)
-                .then(() => {
-                    resolve({ id: userId, email, api_key: apiKey, is_admin: isAdmin, is_active: isActive, precisa_trocar_senha: needsPasswordChange });
-                })
-                .catch(reject);
-        });
-        stmt.finalize();
-    });
+async function createUser(db, email, password, isAdmin = 0, isActive = 1, needsPasswordChange = 1) {
+    const hashed = bcrypt.hashSync(password, 10);
+    const apiKey = generateApiKey();
+    const [row] = await db('users').insert({
+        email,
+        password: hashed,
+        api_key: apiKey,
+        is_admin: isAdmin,
+        is_active: isActive,
+        precisa_trocar_senha: needsPasswordChange
+    }, ['id']);
+    const userId = row && row.id ? row.id : row;
+    await integrationConfigService.createDefault(db, userId);
+    return { id: userId, email, api_key: apiKey, is_admin: isAdmin, is_active: isActive, precisa_trocar_senha: needsPasswordChange };
 }
 
 function findUserByEmail(db, email) {
@@ -109,28 +107,16 @@ function setUserActive(db, id, active) {
     return updateUser(db, id, { is_active: active });
 }
 
-function deleteUserCascade(db, userId) {
-    return new Promise((resolve, reject) => {
-        db.serialize(() => {
-            db.run('BEGIN TRANSACTION');
-            db.run('DELETE FROM historico_mensagens WHERE cliente_id = ?', [userId]);
-            db.run('DELETE FROM pedidos WHERE cliente_id = ?', [userId]);
-            db.run('DELETE FROM logs WHERE cliente_id = ?', [userId]);
-            db.run('DELETE FROM automacoes WHERE cliente_id = ?', [userId]);
-            db.run('DELETE FROM subscriptions WHERE user_id = ?', [userId]);
-            db.run('DELETE FROM integration_settings WHERE user_id = ?', [userId]);
-            db.run('DELETE FROM user_settings WHERE user_id = ?', [userId]);
-            db.run('DELETE FROM users WHERE id = ?', [userId], function(err){
-                if (err) {
-                    db.run('ROLLBACK');
-                    return reject(err);
-                }
-                db.run('COMMIT', err2 => {
-                    if (err2) return reject(err2);
-                    resolve();
-                });
-            });
-        });
+async function deleteUserCascade(db, userId) {
+    await db.transaction(async trx => {
+        await trx('historico_mensagens').where({ cliente_id: userId }).del();
+        await trx('pedidos').where({ cliente_id: userId }).del();
+        await trx('logs').where({ cliente_id: userId }).del();
+        await trx('automacoes').where({ cliente_id: userId }).del();
+        await trx('subscriptions').where({ user_id: userId }).del();
+        await trx('integration_settings').where({ user_id: userId }).del();
+        await trx('user_settings').where({ user_id: userId }).del();
+        await trx('users').where({ id: userId }).del();
     });
 }
 
