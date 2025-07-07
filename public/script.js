@@ -299,7 +299,7 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
 
     const connectWebSocket = () => {
         const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const ws = new WebSocket(`${wsProtocol}://${window.location.host}`);
+        const ws = new WebSocket(`${wsProtocol}://${window.location.host}?token=${token}`);
         ws.onopen = () => console.log('🔗 Conexão WebSocket estabelecida.');
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
