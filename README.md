@@ -59,6 +59,7 @@ string de conexão. Em seguida execute as migrações:
 
 ```bash
 npx knex migrate:latest --env production
+npx knex seed:run --env production
 ```
 
 ---
