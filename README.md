@@ -54,6 +54,27 @@ Edite o `.env` com suas chaves e URLs de callback. As principais variáveis são
 
 ---
 
+## 🐳 Docker
+
+Também é possível rodar o projeto em contêiner usando o Docker.
+
+### 1. Construir a imagem
+
+```bash
+docker build -t rastreamento-bot .
+```
+
+### 2. Executar o container
+
+```bash
+docker run -p 3000:3000 --env-file .env rastreamento-bot
+```
+
+Crie um arquivo `.env` (ou exporte variáveis no comando `docker run`) com as configurações necessárias, como `JWT_SECRET`, `SITERASTREIO_API_KEY` e `TICTO_SECRET`.
+
+---
+
+
 ## 🔹 Como Usar
 
 ### 1. Iniciar o servidor
