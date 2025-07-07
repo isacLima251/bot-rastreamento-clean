@@ -3,7 +3,10 @@ const bcrypt = require('bcryptjs');
 const userService = require('../services/userService');
 const subscriptionService = require('../services/subscriptionService');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required');
+}
 
 exports.register = async (req, res) => {
     const { email, password } = req.body;
