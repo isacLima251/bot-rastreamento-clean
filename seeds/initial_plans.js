@@ -5,7 +5,7 @@ exports.seed = async function(knex) {
       id: 1,
       name: 'Gr\u00e1tis',
       price: 0,
-      monthly_limit: 50,
+      monthly_limit: 10,
       checkout_url: null
     }
   ]).onConflict('id').ignore();
