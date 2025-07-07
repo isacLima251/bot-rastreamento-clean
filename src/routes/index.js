@@ -38,7 +38,6 @@ module.exports = function setupRoutes(app, db, sessionManager) {
 
   app.use((req, res, next) => {
     req.db = db;
-    req.broadcast = broadcast;
     next();
   });
 
@@ -66,6 +65,7 @@ module.exports = function setupRoutes(app, db, sessionManager) {
   app.use(authMiddleware);
   app.use((req, res, next) => {
     req.venomClient = activeSessions.get(req.user.id) || null;
+    req.broadcast = (data) => broadcast(req.user.id, data);
     next();
   });
 
@@ -154,7 +154,7 @@ module.exports = function setupRoutes(app, db, sessionManager) {
 
   // Rotas do WhatsApp
   app.get('/api/whatsapp/status', (req, res) =>
-    res.json({ status: getStatus(), qrCode: getQrCode(), botInfo: getBotInfo() })
+    res.json({ status: getStatus(req.user.id), qrCode: getQrCode(req.user.id), botInfo: getBotInfo(req.user.id) })
   );
   app.post('/api/whatsapp/connect', planCheck, (req, res) => {
     connectToWhatsApp(req.user.id);
