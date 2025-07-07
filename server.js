@@ -19,7 +19,6 @@ const logsController = require('./src/controllers/logsController');
 const whatsappService = require('./src/services/whatsappService');
 const pedidoService = require('./src/services/pedidoService');
 const settingsService = require('./src/services/settingsService');
-const paymentController = require('./src/controllers/paymentController');
 const webhookRastreioController = require('./src/controllers/webhookRastreioController');
 const authController = require('./src/controllers/authController');
 const adminController = require('./src/controllers/adminController');
@@ -188,8 +187,6 @@ const startApp = async () => {
         app.set('db', db);
         logger.info('Banco de dados pronto.');
 
-        // Webhook precisa do corpo raw para validação
-        app.post('/api/payment/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
 
         app.use(helmet({
             contentSecurityPolicy: {
