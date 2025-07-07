@@ -122,8 +122,7 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
     const contactsLimit = 10;
     let contactsTotal = 0;
     let integrationsCache = [];
-    let pendingIntegrationRequest = null;
-    let cancelPendingCreation = false;
+    // usado anteriormente para criação imediata de integrações
 
 
      const accordionHeaders = document.querySelectorAll('.accordion-header');
@@ -1471,9 +1470,9 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
             const integrationName = integrationNameInput.value.trim();
             const secretKey = integrationSecretInput.value.trim();
 
-            // Pega o ID da integração que foi criada quando a tela abriu
-            // Esta parte depende de como a ID está a ser armazenada. Exemplo:
+            const mode = integrationSetupView.dataset.mode;
             const integrationId = integrationSetupView.dataset.editingId;
+            const platformId = integrationSetupView.dataset.platformId;
 
             if (!integrationName) {
                 showNotification('Erro: Preencha todos os campos obrigatórios para salvar.', 'error');
@@ -1481,25 +1480,30 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
             }
 
             try {
-                // Lógica para enviar os dados para o backend (PUT para atualizar)
-                await authFetch(`/api/integrations/${integrationId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: integrationName,
-                        secret_key: secretKey
-                    })
-                });
+                if (mode === 'edit') {
+                    await authFetch(`/api/integrations/${integrationId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: integrationName,
+                            secret_key: secretKey
+                        })
+                    });
+                } else {
+                    await authFetch('/api/integrations', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            platform: platformId,
+                            name: integrationName,
+                            secret_key: secretKey
+                        })
+                    });
+                }
 
-                // FEEDBACK + AÇÕES DE REDIRECIONAMENTO E ATUALIZAÇÃO
                 showNotification('Integração salva com sucesso!', 'success');
-
-                // PASSO 1: VOLTA PARA A TELA DA LISTA
                 showIntegrationsList();
-
-                // PASSO 2: RECARREGA OS DADOS DA LISTA DO SERVIDOR
                 loadAndRenderIntegrations();
-
             } catch (err) {
                 showNotification(`Erro ao salvar: ${err.message}`, 'error');
             }
@@ -1579,6 +1583,7 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
 
         const isEditMode = data && data.unique_path !== undefined;
         integrationSetupView.dataset.mode = isEditMode ? 'edit' : 'new';
+        integrationSetupView.dataset.platformId = isEditMode ? data.platform : data.id;
 
         if (isEditMode) {
             const platformInfo = supportedPlatforms.find(p => p.id === data.platform) || { id: data.platform, name: data.platform };
@@ -1596,34 +1601,9 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
 
             integrationNameInput.value = '';
             document.getElementById('integration-secret').value = '';
-            webhookUrlDisplayEl.textContent = 'A gerar URL...';
-            btnSaveIntegration.disabled = true;
-            cancelPendingCreation = false;
-            pendingIntegrationRequest = authFetch('/api/integrations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    platform: data.id,
-                    name: `Nova Integração ${data.name}`
-                })
-            }).then(async (response) => {
-                const newIntegration = await response.json();
-                if (!response.ok) throw new Error(newIntegration.error || 'Não foi possível gerar a URL de integração.');
-
-                if (cancelPendingCreation) {
-                    await authFetch(`/api/integrations/${newIntegration.id}`, { method: 'DELETE' });
-                    return null;
-                }
-
-                webhookUrlDisplayEl.textContent = newIntegration.webhook_url;
-                btnSaveIntegration.disabled = false;
-                integrationSetupView.dataset.editingId = newIntegration.id;
-                return newIntegration;
-            }).catch(error => {
-                showNotification(error.message, 'error');
-                webhookUrlDisplayEl.textContent = 'Erro ao gerar URL.';
-                btnSaveIntegration.disabled = true;
-            });
+            webhookUrlDisplayEl.textContent = 'Será gerada ao salvar.';
+            btnSaveIntegration.disabled = false;
+            integrationSetupView.dataset.editingId = '';
         }
     }
 
@@ -1632,23 +1612,9 @@ const btnCopySetupWebhook = document.getElementById('btn-copy-setup-webhook');
         integrationsListView.classList.remove('hidden');
         integrationSetupView.dataset.editingId = '';
         integrationSetupView.dataset.mode = '';
-        cancelPendingCreation = false;
     }
 
     async function cancelIntegrationSetup() {
-        const id = integrationSetupView.dataset.editingId;
-        const mode = integrationSetupView.dataset.mode;
-        if (mode === 'new') {
-            if (id) {
-                try {
-                    await authFetch(`/api/integrations/${id}`, { method: 'DELETE' });
-                } catch (err) {
-                    console.error('Falha ao cancelar integração provisória', err);
-                }
-            } else {
-                cancelPendingCreation = true;
-            }
-        }
         showIntegrationsList();
         loadAndRenderIntegrations();
     }
