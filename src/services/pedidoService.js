@@ -285,15 +285,31 @@ const criarPedido = (db, dadosPedido, client, clienteId = null) => {
             }
         }
         
-        const sql = 'INSERT INTO pedidos (cliente_id, nome, email, telefone, produto, codigoRastreio, fotoPerfilUrl) VALUES (?, ?, ?, ?, ?, ?, ?)';
-        const params = [clienteId, nome, email || null, telefoneValidado, produto || null, codigoRastreio || null, fotoUrl];
-        
-        db.run(sql, params, function (err) {
-            if (err) return reject(err);
+        const insertData = {
+            cliente_id: clienteId,
+            nome,
+            email: email || null,
+            telefone: telefoneValidado,
+            produto: produto || null,
+            codigoRastreio: codigoRastreio || null,
+            fotoPerfilUrl: fotoUrl
+        };
+
+        try {
+            const result = await db('pedidos').insert(insertData, ['id']);
+            const insertedId = Array.isArray(result) ? (result[0].id ?? result[0]) : result.id;
             resolve({
-                id: this.lastID, nome, email: email || null, telefone: telefoneValidado, produto, codigoRastreio, fotoPerfilUrl: fotoUrl
+                id: insertedId,
+                nome,
+                email: email || null,
+                telefone: telefoneValidado,
+                produto,
+                codigoRastreio,
+                fotoPerfilUrl: fotoUrl
             });
-        });
+        } catch (err) {
+            reject(err);
+        }
     });
 };
 
